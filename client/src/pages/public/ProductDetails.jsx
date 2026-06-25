@@ -1,0 +1,578 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { Minus, Plus, ShoppingBag } from "lucide-react";
+import { useTranslation } from "react-i18next";
+
+import Button from "../../components/ui/Button";
+import Card from "../../components/ui/Card";
+import Container from "../../components/ui/Container";
+import SectionLabel from "../../components/ui/SectionLabel";
+
+import { useCart } from "../../context/cartContext";
+import { getPublicProductBySlugRequest } from "../../services/productService";
+import { trackViewContent } from "../../utils/metaPixel";
+import { formatCurrency } from "../../utils/translatedLabels";
+import {
+  getLocalizedBadges,
+  getLocalizedColor,
+  getLocalizedImageAlt,
+  getLocalizedProduct,
+} from "../../utils/localizedContent";
+
+const getActiveColors = (product) => {
+  if (!Array.isArray(product?.colors)) return [];
+  return product.colors.filter((color) => color.isActive !== false);
+};
+
+const getActiveSizes = (color) => {
+  if (!Array.isArray(color?.sizes)) return [];
+  return color.sizes.filter((size) => size.isActive !== false);
+};
+
+const getFirstAvailableSize = (color) => {
+  const sizes = getActiveSizes(color);
+  return sizes.find((size) => Number(size.stock || 0) > 0) || sizes[0] || null;
+};
+
+const ProductDetails = () => {
+  const { t, i18n } = useTranslation(["catalog", "common"]);
+  const language = i18n.resolvedLanguage === "ar" ? "ar" : "en";
+  const formatMoney = (value) => formatCurrency(value, language);
+  const { slug } = useParams();
+  const { addItem } = useCart();
+  const viewedProductRef = useRef("");
+
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["public-product", slug],
+    queryFn: () => getPublicProductBySlugRequest(slug),
+    enabled: Boolean(slug),
+  });
+
+  const product = data?.product;
+  // TODO(Phase 4B3): Decide whether checkout/order snapshots should preserve
+  // the customer's localized product and color labels at purchase time.
+  const localizedProduct = useMemo(
+    () => getLocalizedProduct(product, language),
+    [product, language]
+  );
+  const localizedBadges = useMemo(
+    () => getLocalizedBadges(product, language),
+    [product, language]
+  );
+  const activeColors = useMemo(() => getActiveColors(product), [product]);
+
+  const [selectedColorId, setSelectedColorId] = useState("");
+  const [selectedSizeLabel, setSelectedSizeLabel] = useState("");
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [quantity, setQuantity] = useState(1);
+  const [cartMessage, setCartMessage] = useState("");
+
+  const selectedColor = useMemo(() => {
+    return (
+      activeColors.find(
+        (color) =>
+          (color._id && color._id === selectedColorId) ||
+          color.slug === selectedColorId ||
+          color.name === selectedColorId
+      ) ||
+      activeColors[0] ||
+      null
+    );
+  }, [activeColors, selectedColorId]);
+
+  const selectedSizes = useMemo(
+    () => getActiveSizes(selectedColor),
+    [selectedColor]
+  );
+
+  const selectedSize = useMemo(() => {
+    return (
+      selectedSizes.find((size) => size.label === selectedSizeLabel) ||
+      getFirstAvailableSize(selectedColor) ||
+      null
+    );
+  }, [selectedColor, selectedSizes, selectedSizeLabel]);
+
+  const images = useMemo(() => {
+    if (!Array.isArray(selectedColor?.images)) return [];
+
+    return selectedColor.images
+      .filter((image) => image.url)
+      .sort((a, b) => Number(a.position || 0) - Number(b.position || 0));
+  }, [selectedColor]);
+
+  const selectedImage = images[selectedImageIndex] || images[0] || null;
+  const localizedSelectedColor = useMemo(
+    () => getLocalizedColor(selectedColor, language),
+    [selectedColor, language]
+  );
+  const selectedStock = Number(selectedSize?.stock || 0);
+  const isInStock = selectedStock > 0;
+  const isOnSale = product?.compareAtPrice > product?.price;
+
+  useEffect(() => {
+    if (!product?._id || viewedProductRef.current === product._id) return;
+
+    viewedProductRef.current = product._id;
+
+    trackViewContent({
+      productId: product._id,
+      name: product.name,
+      category: product.category?.name || "",
+      price: product.price,
+    });
+  }, [product]);
+
+  const handleColorChange = (color) => {
+    const colorKey = color._id || color.slug || color.name;
+    const firstAvailableSize = getFirstAvailableSize(color);
+
+    setSelectedColorId(colorKey);
+    setSelectedSizeLabel(firstAvailableSize?.label || "");
+    setSelectedImageIndex(0);
+    setQuantity(1);
+    setCartMessage("");
+  };
+
+  const decreaseQuantity = () => {
+    setQuantity((current) => Math.max(1, current - 1));
+  };
+
+  const increaseQuantity = () => {
+    setQuantity((current) => {
+      if (!isInStock) return 1;
+      return Math.min(selectedStock, current + 1);
+    });
+  };
+
+  const handleAddToCart = () => {
+    if (!product || !selectedColor || !selectedSize || !isInStock) {
+      setCartMessage(t("catalog:product.chooseVariant"));
+      return;
+    }
+
+    addItem({
+      productId: product._id,
+      slug: product.slug,
+      name: product.name,
+      category: {
+        id: product.category?._id || "",
+        name: product.category?.name || "",
+        slug: product.category?.slug || "",
+      },
+      color: {
+        id: selectedColor._id || "",
+        key: selectedColor._id || selectedColor.slug || selectedColor.name,
+        name: selectedColor.name,
+        slug: selectedColor.slug || "",
+        hex: selectedColor.hex || "",
+      },
+      size: {
+        id: selectedSize._id || "",
+        label: selectedSize.label,
+        sku: selectedSize.sku || "",
+      },
+      image: selectedImage?.url || product.primaryImage || "",
+      price: Number(product.price || 0),
+      compareAtPrice: Number(product.compareAtPrice || 0),
+      quantity,
+      maxStock: selectedStock,
+    });
+
+    setCartMessage(t("catalog:product.addedToCart"));
+  };
+
+  if (isLoading) {
+    return (
+      <section className="fashion-section">
+        <Container>
+          <div className="grid gap-8 lg:grid-cols-2">
+            <div className="catalog-skeleton aspect-[4/5]" />
+            <div className="space-y-5 py-8">
+              <div className="catalog-skeleton h-4 w-40" />
+              <div className="catalog-skeleton h-28 w-full" />
+              <div className="catalog-skeleton h-48 w-full" />
+            </div>
+          </div>
+        </Container>
+      </section>
+    );
+  }
+
+  if (isError || !product) {
+    return (
+      <section className="fashion-section">
+        <Container>
+          <Card>
+            <SectionLabel>{t("catalog:product.archive")}</SectionLabel>
+            <h1 className="editorial-heading text-7xl">
+              {t("catalog:product.notFound")}
+            </h1>
+            <p className="mt-6 max-w-xl text-sm leading-7 text-[#f5f0e8]/52">
+              {error?.friendlyMessage ||
+                error?.message ||
+                t("catalog:product.notFoundDescription")}
+            </p>
+            <div className="mt-8">
+              <Link to="/shop">
+                <Button>{t("catalog:product.backToShop")}</Button>
+              </Link>
+            </div>
+          </Card>
+        </Container>
+      </section>
+    );
+  }
+
+  return (
+    <>
+      <section className="border-b border-[#c7a852]/20 py-10 sm:py-14 lg:py-20">
+        <Container>
+          <div className="mb-7 flex items-center justify-between border-b border-[#f5f0e8]/10 pb-4">
+            <Link
+              to="/shop"
+              className="text-[0.6rem] font-black uppercase tracking-[0.24em] text-[#8b8075] transition hover:text-[#c7a852]"
+            >
+              {t("catalog:product.breadcrumbShop", {
+                category:
+                  localizedProduct.category?.name || t("common:collection"),
+              })}
+            </Link>
+            <span className="text-[0.6rem] font-black uppercase tracking-[0.24em] text-[#8b8075]">
+              {t("catalog:product.breadcrumbProduct", {
+                slug: product.slug,
+              })}
+            </span>
+          </div>
+
+          <div className="grid gap-8 lg:grid-cols-[1.12fr_0.88fr] lg:items-start">
+            <div className="grid gap-4 sm:grid-cols-[88px_1fr]">
+              {images.length > 1 && (
+                <div className="order-2 grid grid-cols-4 gap-2 sm:order-1 sm:grid-cols-1 sm:self-start">
+                  {images.map((image, index) => (
+                    <button
+                      key={`${image.url}-${index}`}
+                      type="button"
+                      onClick={() => setSelectedImageIndex(index)}
+                      className={`relative overflow-hidden border transition ${
+                        selectedImageIndex === index
+                          ? "border-[#c7a852]"
+                          : "border-[#f5f0e8]/12 hover:border-[#f5f0e8]/35"
+                      }`}
+                      aria-label={t("catalog:product.viewImage", {
+                        number: index + 1,
+                      })}
+                    >
+                      <img
+                        src={image.url}
+                        alt={getLocalizedImageAlt(
+                          image,
+                          localizedProduct.name,
+                          language
+                        )}
+                        className="aspect-[3/4] w-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className="order-1 relative overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f] sm:order-2">
+                {selectedImage?.url ? (
+                  <img
+                    src={selectedImage.url}
+                    alt={getLocalizedImageAlt(
+                      selectedImage,
+                      localizedProduct.name,
+                      language
+                    )}
+                    className="aspect-[3/4] w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex aspect-[3/4] flex-col items-center justify-center bg-[linear-gradient(145deg,#332c27,#1c1917)]">
+                    <span className="brand-wordmark text-8xl text-[#f5f0e8]/10">
+                      D
+                    </span>
+                    <span className="mt-4 text-[0.6rem] font-black uppercase tracking-[0.28em] text-[#8b8075]">
+                      {t("common:imageComingSoon")}
+                    </span>
+                  </div>
+                )}
+
+                <div className="absolute left-0 top-0 flex">
+                  {isOnSale && (
+                    <span className="bg-[#882c30] px-4 py-2 text-[0.6rem] font-black uppercase tracking-[0.22em]">
+                      {t("common:sale")}
+                    </span>
+                  )}
+                  {localizedBadges.slice(0, 1).map((badge) => (
+                    <span
+                      key={badge}
+                      className="bg-[#c7a852] px-4 py-2 text-[0.6rem] font-black uppercase tracking-[0.22em] text-[#1c1917]"
+                    >
+                      {badge}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="lg:sticky lg:top-32">
+              <div className="border border-[#f5f0e8]/12 bg-[#110f0e] p-6 sm:p-9">
+                <SectionLabel>
+                  {localizedProduct.category?.name ||
+                    t("common:davintoPiece")}
+                </SectionLabel>
+
+                <h1 className="editorial-heading text-6xl sm:text-8xl">
+                  {localizedProduct.name}
+                </h1>
+
+                <div className="mt-7 flex flex-wrap items-center gap-4 border-y border-[#f5f0e8]/12 py-5">
+                  <p className="font-serif text-3xl font-semibold">
+                    {formatMoney(product.price)}
+                  </p>
+                  {isOnSale && (
+                    <p className="text-sm text-[#8b8075] line-through">
+                      {formatMoney(product.compareAtPrice)}
+                    </p>
+                  )}
+                </div>
+
+                {localizedProduct.shortDescription && (
+                  <p className="mt-6 text-base leading-8 text-[#f5f0e8]/62">
+                    {localizedProduct.shortDescription}
+                  </p>
+                )}
+
+                {localizedBadges.length > 0 && (
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    {localizedBadges.map((badge) => (
+                      <span
+                        key={badge}
+                        className="border border-[#c7a852]/35 px-3 py-1.5 text-[0.56rem] font-black uppercase tracking-[0.2em] text-[#c7a852]"
+                      >
+                        {badge}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                <div className="mt-9 space-y-8">
+                  <fieldset>
+                    <div className="mb-4 flex items-center justify-between gap-4">
+                      <legend className="text-[0.64rem] font-black uppercase tracking-[0.25em] text-[#c7a852]">
+                        {t("catalog:product.selectColor")}
+                      </legend>
+                      {selectedColor && (
+                        <span className="text-sm text-[#f5f0e8]/65">
+                          {localizedSelectedColor.name}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap gap-2.5">
+                      {activeColors.map((color) => {
+                        const colorKey = color._id || color.slug || color.name;
+                        const localizedColor = getLocalizedColor(
+                          color,
+                          language
+                        );
+                        const isSelected =
+                          colorKey === selectedColorId ||
+                          color.name === selectedColor?.name;
+
+                        return (
+                          <button
+                            key={colorKey}
+                            type="button"
+                            onClick={() => handleColorChange(color)}
+                            aria-pressed={isSelected}
+                            className={`flex min-h-11 items-center gap-2.5 border px-4 text-xs font-bold transition ${
+                              isSelected
+                                ? "border-[#c7a852] bg-[#c7a852]/12 text-[#f5f0e8]"
+                                : "border-[#f5f0e8]/14 text-[#f5f0e8]/55 hover:border-[#f5f0e8]/35 hover:text-[#f5f0e8]"
+                            }`}
+                          >
+                            <span
+                              className="h-4 w-4 rounded-full border border-[#f5f0e8]/35"
+                              style={{ backgroundColor: color.hex || "#777" }}
+                            />
+                            {localizedColor.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
+
+                  <fieldset>
+                    <div className="mb-4 flex items-center justify-between gap-4">
+                      <legend className="text-[0.64rem] font-black uppercase tracking-[0.25em] text-[#c7a852]">
+                        {t("catalog:product.selectSize")}
+                      </legend>
+                      {selectedSize && (
+                        <span className="text-sm text-[#f5f0e8]/65">
+                          {selectedSize.label}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap gap-2.5">
+                      {selectedSizes.map((size) => {
+                        const stock = Number(size.stock || 0);
+                        const disabled = stock <= 0;
+                        const isSelected = selectedSizeLabel === size.label;
+
+                        return (
+                          <button
+                            key={size.label}
+                            type="button"
+                            disabled={disabled}
+                            aria-pressed={isSelected}
+                            onClick={() => {
+                              setSelectedSizeLabel(size.label);
+                              setQuantity(1);
+                              setCartMessage("");
+                            }}
+                            className={`min-h-12 min-w-14 border px-4 text-xs font-black uppercase tracking-[0.16em] transition disabled:cursor-not-allowed disabled:opacity-25 ${
+                              isSelected
+                                ? "border-[#f5f0e8] bg-[#f5f0e8] text-[#1c1917]"
+                                : "border-[#f5f0e8]/14 text-[#f5f0e8]/58 hover:border-[#c7a852] hover:text-[#f5f0e8]"
+                            }`}
+                          >
+                            {size.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
+
+                  <div className="grid gap-4 border-y border-[#f5f0e8]/12 py-5 sm:grid-cols-[1fr_auto] sm:items-center">
+                    <div>
+                      <p className="text-[0.6rem] font-black uppercase tracking-[0.24em] text-[#8b8075]">
+                        {t("catalog:product.availability")}
+                      </p>
+                      <p
+                        className={`mt-2 text-sm font-bold ${
+                          isInStock ? "text-[#c7a852]" : "text-[#e8a3a6]"
+                        }`}
+                      >
+                        {isInStock
+                          ? t("catalog:product.stockAvailable", {
+                              count: selectedStock,
+                            })
+                          : t("catalog:product.outOfStock")}
+                      </p>
+                    </div>
+
+                    <div className="flex h-12 w-fit items-center border border-[#f5f0e8]/16">
+                      <button
+                        type="button"
+                        onClick={decreaseQuantity}
+                        className="flex h-full w-12 items-center justify-center text-[#f5f0e8]/65 transition hover:bg-[#f5f0e8]/8"
+                        aria-label={t("catalog:product.decreaseQuantity")}
+                      >
+                        <Minus size={15} />
+                      </button>
+                      <span className="min-w-11 text-center text-sm font-black">
+                        {quantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={increaseQuantity}
+                        className="flex h-full w-12 items-center justify-center text-[#f5f0e8]/65 transition hover:bg-[#f5f0e8]/8"
+                        aria-label={t("catalog:product.increaseQuantity")}
+                      >
+                        <Plus size={15} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {cartMessage && (
+                    <div className="border border-[#c7a852]/35 bg-[#c7a852]/10 px-4 py-3 text-sm text-[#f5f0e8]">
+                      {cartMessage}
+                    </div>
+                  )}
+
+                  <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+                    <Button
+                      className="w-full gap-2"
+                      disabled={!isInStock}
+                      onClick={handleAddToCart}
+                    >
+                      <ShoppingBag size={16} />
+                      {isInStock
+                        ? t("catalog:product.addToCart")
+                        : t("catalog:product.outOfStock")}
+                    </Button>
+                    <Link to="/cart">
+                      <Button variant="secondary" className="w-full">
+                        {t("catalog:product.viewCart")}
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Container>
+      </section>
+
+      <section className="fashion-section bg-[#110f0e]">
+        <Container>
+          <div className="mb-10">
+            <SectionLabel>{t("catalog:product.notes")}</SectionLabel>
+            <h2 className="editorial-heading text-6xl sm:text-8xl">
+              {t("catalog:product.detailsTitle")}
+            </h2>
+          </div>
+
+          <div className="grid border-t border-[#f5f0e8]/12 lg:grid-cols-3">
+            {[
+              [
+                t("catalog:product.fabric"),
+                localizedProduct.fabric || t("catalog:product.toBeAdded"),
+              ],
+              [
+                t("catalog:product.fit"),
+                localizedProduct.fit || t("catalog:product.toBeAdded"),
+              ],
+              [
+                t("catalog:product.care"),
+                localizedProduct.care ||
+                  localizedProduct.careInstructions ||
+                  t("catalog:product.careFallback"),
+              ],
+            ].map(([label, value]) => (
+              <div
+                key={label}
+                className="border-b border-[#f5f0e8]/12 py-7 lg:border-r lg:px-7 lg:first:pl-0 lg:last:border-r-0"
+              >
+                <p className="text-[0.62rem] font-black uppercase tracking-[0.25em] text-[#c7a852]">
+                  {label}
+                </p>
+                <p className="mt-4 text-base leading-8 text-[#f5f0e8]/68">
+                  {value}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {localizedProduct.description && (
+            <div className="mt-12 grid gap-5 border-l-2 border-[#882c30] pl-6 lg:grid-cols-[220px_1fr]">
+              <p className="text-[0.62rem] font-black uppercase tracking-[0.25em] text-[#c7a852]">
+                {t("catalog:product.fullDescription")}
+              </p>
+              <p className="max-w-3xl text-base leading-9 text-[#f5f0e8]/62">
+                {localizedProduct.description}
+              </p>
+            </div>
+          )}
+        </Container>
+      </section>
+    </>
+  );
+};
+
+export default ProductDetails;

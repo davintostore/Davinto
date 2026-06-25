@@ -1,0 +1,291 @@
+@import "tailwindcss";
+
+:root {
+  --davinto-ink: #1c1917;
+  --davinto-ink-deep: #110f0e;
+  --davinto-ink-soft: #28231f;
+  --davinto-oxblood: #882c30;
+  --davinto-oxblood-dark: #5f1f23;
+  --davinto-gold: #c7a852;
+  --davinto-paper: #f5f0e8;
+  --davinto-paper-muted: #dfd6ca;
+  --davinto-taupe: #8b8075;
+  --davinto-border: rgba(245, 240, 232, 0.16);
+  --davinto-border-strong: rgba(199, 168, 82, 0.48);
+  --davinto-surface: rgba(40, 35, 31, 0.92);
+  --davinto-surface-soft: rgba(245, 240, 232, 0.055);
+  --davinto-display: "Iowan Old Style", "Palatino Linotype", Palatino,
+    "Book Antiqua", Baskerville, "Times New Roman", serif;
+  --davinto-sans: Inter, ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --davinto-arabic: "Noto Sans Arabic", "Noto Kufi Arabic", Tahoma, Arial,
+    sans-serif;
+
+  font-family: var(--davinto-sans);
+  color: var(--davinto-paper);
+  background: var(--davinto-ink);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: var(--davinto-ink);
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background:
+    linear-gradient(rgba(245, 240, 232, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245, 240, 232, 0.018) 1px, transparent 1px),
+    radial-gradient(circle at 88% 8%, rgba(136, 44, 48, 0.2), transparent 31rem),
+    var(--davinto-ink);
+  background-size: 56px 56px, 56px 56px, auto, auto;
+  color: var(--davinto-paper);
+}
+
+html[dir="rtl"] body {
+  font-family: var(--davinto-arabic);
+}
+
+html[dir="rtl"] .page-shell .editorial-heading,
+html[dir="rtl"] .page-shell .brand-wordmark {
+  font-family: var(--davinto-arabic);
+  letter-spacing: -0.02em;
+}
+
+html[dir="rtl"] .page-shell .editorial-heading {
+  line-height: 1.05;
+}
+
+html[dir="rtl"] .page-shell .uppercase {
+  text-transform: none;
+}
+
+html[dir="rtl"] .page-shell [class*="tracking-"] {
+  letter-spacing: 0;
+}
+
+html[dir="rtl"] .page-shell [class*="text-left"] {
+  text-align: right;
+}
+
+html[dir="rtl"] .page-shell [class*="text-right"] {
+  text-align: left;
+}
+
+html[dir="rtl"] .page-shell [class~="border-l-2"] {
+  border-right-width: 2px;
+  border-left-width: 0;
+}
+
+html[dir="rtl"] .page-shell [class~="pl-6"] {
+  padding-right: 1.5rem;
+  padding-left: 0;
+}
+
+html[dir="rtl"] .page-shell [class~="ml-2"] {
+  margin-right: 0.5rem;
+  margin-left: 0;
+}
+
+html[dir="rtl"] .page-shell [class~="left-0"] {
+  right: 0;
+  left: auto;
+}
+
+html[dir="rtl"] .page-shell [class~="right-0"] {
+  right: auto;
+  left: 0;
+}
+
+html[dir="rtl"] .page-shell input[type="email"],
+html[dir="rtl"] .page-shell input[type="tel"] {
+  direction: ltr;
+}
+
+@media (min-width: 64rem) {
+  html[dir="rtl"] .page-shell [class~="lg:border-r"] {
+    border-right-width: 0;
+    border-left-width: 1px;
+  }
+
+  html[dir="rtl"] .page-shell [class~="lg:first:pl-0"]:first-child {
+    padding-right: 0;
+  }
+}
+
+[data-admin-shell] {
+  direction: ltr;
+  font-family: var(--davinto-sans);
+}
+
+[data-admin-shell] .editorial-heading,
+[data-admin-shell] .brand-wordmark {
+  font-family: var(--davinto-display);
+}
+
+[data-admin-shell] .uppercase {
+  text-transform: uppercase;
+}
+
+[data-admin-shell] [class*="tracking-"] {
+  letter-spacing: revert;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  display: block;
+}
+
+:focus-visible {
+  outline: 2px solid var(--davinto-gold);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--davinto-oxblood);
+  color: var(--davinto-paper);
+}
+
+.page-shell {
+  min-height: 100vh;
+  overflow: clip;
+  background:
+    linear-gradient(115deg, rgba(136, 44, 48, 0.055), transparent 32%),
+    transparent;
+}
+
+.editorial-heading {
+  font-family: var(--davinto-display);
+  font-weight: 600;
+  letter-spacing: -0.058em;
+  line-height: 0.88;
+  text-wrap: balance;
+}
+
+.brand-wordmark {
+  font-family: var(--davinto-display);
+  font-weight: 700;
+  letter-spacing: -0.055em;
+}
+
+.soft-border {
+  border: 1px solid var(--davinto-border);
+}
+
+.glass-card,
+.fashion-card {
+  background:
+    linear-gradient(145deg, rgba(245, 240, 232, 0.035), transparent 54%),
+    var(--davinto-surface);
+  border: 1px solid var(--davinto-border);
+  box-shadow: 0 24px 70px rgba(17, 15, 14, 0.22);
+}
+
+.fashion-section {
+  padding-block: clamp(4rem, 8vw, 8rem);
+}
+
+.fashion-panel {
+  border: 1px solid var(--davinto-border);
+  background: var(--davinto-surface-soft);
+}
+
+.fashion-panel-paper {
+  border: 1px solid rgba(28, 25, 23, 0.16);
+  background: var(--davinto-paper);
+  color: var(--davinto-ink);
+}
+
+.fashion-rule {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    var(--davinto-gold),
+    rgba(199, 168, 82, 0.08)
+  );
+}
+
+.editorial-copy {
+  color: rgba(245, 240, 232, 0.66);
+  line-height: 1.85;
+}
+
+.status-panel {
+  border: 1px solid var(--davinto-border);
+  background: rgba(245, 240, 232, 0.035);
+  padding: 1.25rem;
+}
+
+.catalog-skeleton {
+  border: 1px solid var(--davinto-border);
+  background:
+    linear-gradient(
+      110deg,
+      rgba(245, 240, 232, 0.035) 8%,
+      rgba(245, 240, 232, 0.09) 18%,
+      rgba(245, 240, 232, 0.035) 33%
+    ),
+    var(--davinto-ink-soft);
+  background-size: 200% 100%;
+  animation: catalog-shimmer 1.5s linear infinite;
+}
+
+@keyframes catalog-shimmer {
+  to {
+    background-position-x: -200%;
+  }
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: var(--davinto-paper);
+  box-shadow: 0 0 0 1000px var(--davinto-ink-soft) inset;
+  transition: background-color 9999s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

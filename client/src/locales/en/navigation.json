@@ -1,0 +1,27 @@
+{
+  "announcement": "New season / Davinto essentials / Egypt delivery",
+  "clothingHouse": "Clothing house",
+  "home": "Home",
+  "shop": "Shop",
+  "trackOrder": "Track Order",
+  "cart": "Cart",
+  "cartLabel": "Cart with {{count}} items",
+  "account": "Account",
+  "myOrders": "My Orders",
+  "signIn": "Sign In",
+  "signOut": "Sign Out",
+  "signOutCustomer": "Sign out of customer account",
+  "checkout": "Checkout",
+  "openNavigation": "Open navigation",
+  "closeNavigation": "Close navigation",
+  "seasonalCatalogue": "Davinto seasonal catalogue",
+  "footer": {
+    "statement": "Everyday clothing, framed with the energy of a seasonal drop.",
+    "navigate": "Navigate",
+    "nextPiece": "The next piece",
+    "description": "Explore the latest silhouettes, select your color and size, and complete your order in a few deliberate steps.",
+    "enterShop": "Enter The Shop",
+    "location": "Davinto / Cairo, Egypt",
+    "moment": "Clothing for the current moment"
+  }
+}
