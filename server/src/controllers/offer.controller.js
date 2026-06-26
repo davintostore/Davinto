@@ -73,9 +73,12 @@ const normalizePayload = (body = {}, currentOffer = null) => {
     ? body.scope
     : "all";
 
-  const discountType = ["percentage", "fixed", "freeDelivery"].includes(
-    body.discountType
-  )
+  const discountType = [
+    "percentage",
+    "fixed",
+    "fixedPerItem",
+    "freeDelivery",
+  ].includes(body.discountType)
     ? body.discountType
     : "percentage";
 

@@ -70,7 +70,7 @@ const PublicLayout = () => {
 
   return (
     <div className="page-shell">
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-[#c7a852]/25 bg-[#1c1917]/96">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-[#c7a852]/25 bg-[#050505]">
         <Container className="flex h-[4.75rem] items-center justify-between">
           <button
             type="button"
@@ -202,7 +202,7 @@ const PublicLayout = () => {
         {isMenuOpen && (
           <div
             id="public-mobile-navigation"
-            className="border-t border-[#f5f0e8]/10 bg-[#1c1917] lg:hidden"
+            className="border-t border-[#f5f0e8]/10 bg-[#050505] lg:hidden"
           >
             <Container className="py-5">
               <nav className="grid">

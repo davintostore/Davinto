@@ -1,5 +1,6 @@
 const Product = require("../models/Product");
 const Category = require("../models/Category");
+const Offer = require("../models/Offer");
 const asyncHandler = require("../utils/asyncHandler");
 const generateSlug = require("../utils/generateSlug");
 
@@ -307,6 +308,115 @@ const buildStockQuery = () => ({
   },
 });
 
+const toIdString = (value) => {
+  if (!value) return "";
+  return value._id ? value._id.toString() : value.toString();
+};
+
+const getActiveRuleQuery = () => {
+  const now = new Date();
+
+  return {
+    status: "active",
+    $and: [
+      {
+        $or: [{ startsAt: null }, { startsAt: { $lte: now } }],
+      },
+      {
+        $or: [{ endsAt: null }, { endsAt: { $gte: now } }],
+      },
+    ],
+  };
+};
+
+const isProductEligibleForOffer = (offer, product) => {
+  if (offer.scope === "all") return true;
+
+  if (offer.scope === "categories") {
+    const productCategoryId = toIdString(product.category);
+    return (offer.categories || [])
+      .map(toIdString)
+      .includes(productCategoryId);
+  }
+
+  if (offer.scope === "products") {
+    const productId = toIdString(product._id);
+    return (offer.products || []).map(toIdString).includes(productId);
+  }
+
+  return false;
+};
+
+const calculateSingleUnitOfferPreview = (offer, product) => {
+  const price = Number(product.price || 0);
+
+  if (price <= 0) return null;
+  if (Number(offer.minQuantity || 0) > 1) return null;
+  if (Number(offer.minSubtotal || 0) > price) return null;
+
+  let discountAmount = 0;
+
+  if (offer.discountType === "percentage") {
+    discountAmount = price * (Number(offer.discountValue || 0) / 100);
+  }
+
+  if (offer.discountType === "fixedPerItem") {
+    discountAmount = Number(offer.discountValue || 0);
+  }
+
+  if (Number(offer.maxDiscountAmount || 0) > 0) {
+    discountAmount = Math.min(
+      discountAmount,
+      Number(offer.maxDiscountAmount || 0)
+    );
+  }
+
+  discountAmount = Math.round(Math.min(discountAmount, price));
+
+  if (discountAmount <= 0) return null;
+
+  return {
+    title: offer.title,
+    slug: offer.slug,
+    discountType: offer.discountType,
+    discountValue: offer.discountValue,
+    discountAmount,
+    priceAfterOffer: Math.max(price - discountAmount, 0),
+    translations: offer.translations,
+  };
+};
+
+const attachActiveOfferPreviews = async (products = []) => {
+  if (!products.length) return [];
+
+  const offers = await Offer.find(getActiveRuleQuery())
+    .select(
+      "title slug translations discountType discountValue maxDiscountAmount scope categories products minSubtotal minQuantity priority createdAt"
+    )
+    .sort({ priority: -1, createdAt: -1 });
+
+  if (!offers.length) {
+    return products.map((product) => product.toObject());
+  }
+
+  return products.map((product) => {
+    const productObject = product.toObject();
+    const previews = offers
+      .filter((offer) =>
+        ["percentage", "fixedPerItem"].includes(offer.discountType)
+      )
+      .filter((offer) => isProductEligibleForOffer(offer, product))
+      .map((offer) => calculateSingleUnitOfferPreview(offer, product))
+      .filter(Boolean)
+      .sort((left, right) => right.discountAmount - left.discountAmount);
+
+    return {
+      ...productObject,
+      activeOfferPreview: previews[0] || null,
+    };
+  });
+};
+
 const parsePrice = (value) => {
   if (value === undefined || value === null || value === "") return null;
 
@@ -519,6 +629,8 @@ const getPublicProducts = asyncHandler(async (req, res) => {
     buildPublicFilterMetadata(baseQuery),
   ]);
 
+  const productsWithOfferPreviews = await attachActiveOfferPreviews(products);
+
   res.status(200).json({
     success: true,
     count: products.length,
@@ -526,7 +638,7 @@ const getPublicProducts = asyncHandler(async (req, res) => {
     page: numericPage,
     pages: Math.ceil(total / numericLimit),
     filters,
-    products,
+    products: productsWithOfferPreviews,
   });
 });
 
@@ -541,9 +653,11 @@ const getPublicProductBySlug = asyncHandler(async (req, res) => {
     throw new Error("Product not found.");
   }
 
+  const [productWithOfferPreview] = await attachActiveOfferPreviews([product]);
+
   res.status(200).json({
     success: true,
-    product,
+    product: productWithOfferPreview,
   });
 });
 

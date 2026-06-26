@@ -524,6 +524,31 @@ const statusHistorySchema = new mongoose.Schema(
   }
 );
 
+const adminActionBySchema = new mongoose.Schema(
+  {
+    id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Admin",
+      default: null,
+    },
+
+    name: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    email: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+  },
+  {
+    _id: false,
+  }
+);
+
 const paymentGatewaySchema = new mongoose.Schema(
   {
     provider: {
@@ -809,6 +834,45 @@ const orderSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+
+    stockRestoredAt: {
+      type: Date,
+      default: null,
+      index: true,
+    },
+
+    stockRestoredBy: {
+      type: adminActionBySchema,
+      default: () => ({}),
+    },
+
+    cancelledAt: {
+      type: Date,
+      default: null,
+    },
+
+    cancellationReason: {
+      type: String,
+      trim: true,
+      maxlength: [1000, "Cancellation reason cannot exceed 1000 characters."],
+      default: "",
+    },
+
+    cancelledBy: {
+      type: adminActionBySchema,
+      default: () => ({}),
+    },
+
+    deletedAt: {
+      type: Date,
+      default: null,
+      index: true,
+    },
+
+    deletedBy: {
+      type: adminActionBySchema,
+      default: () => ({}),
+    },
   },
   {
     timestamps: true,
@@ -822,6 +886,7 @@ orderSchema.pre("validate", function () {
 orderSchema.index({ createdAt: -1 });
 orderSchema.index({ orderStatus: 1, paymentStatus: 1 });
 orderSchema.index({ customer: 1, createdAt: -1 });
+orderSchema.index({ deletedAt: 1, createdAt: -1 });
 orderSchema.index({
   "customerInfo.phone": 1,
   "customerInfo.email": 1,

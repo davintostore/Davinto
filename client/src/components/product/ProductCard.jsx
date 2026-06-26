@@ -33,10 +33,16 @@ const ProductCard = ({ product }) => {
       name: localizedProduct.name,
     });
   const hasHoverImage = hoverImage && hoverImage !== primaryImage;
-  const isOnSale = product.compareAtPrice > product.price;
-  const displayBadges = isOnSale
-    ? []
-    : (localizedProduct.badges || [])
+  const offerPreview = product.activeOfferPreview;
+  const offerPrice = Number(offerPreview?.priceAfterOffer || 0);
+  const hasOfferPrice = offerPrice > 0 && offerPrice < Number(product.price || 0);
+  const displayPrice = hasOfferPrice ? offerPrice : product.price;
+  const isOnSale = product.compareAtPrice > product.price || hasOfferPrice;
+  const displayBadges = hasOfferPrice
+    ? [t("common:offer")]
+    : product.compareAtPrice > product.price
+      ? [t("common:sale")]
+      : (localizedProduct.badges || [])
         .map((badge) => getSimpleBadge(badge, t))
         .filter(Boolean)
         .slice(0, 1);
@@ -82,16 +88,14 @@ const ProductCard = ({ product }) => {
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#110f0e]/45 via-transparent to-transparent opacity-55" />
 
           <div className="absolute left-0 top-0 flex flex-wrap">
-            {isOnSale && (
-              <span className="bg-[#882c30] px-2 py-1.5 text-[0.52rem] font-black uppercase tracking-[0.14em] text-[#f5f0e8] sm:px-3 sm:py-2 sm:text-[0.56rem] sm:tracking-[0.22em]">
-                {t("common:sale")}
-              </span>
-            )}
-
             {displayBadges.map((badge) => (
                 <span
                   key={badge}
-                  className="border-l border-[#1c1917]/20 bg-[#c7a852] px-2 py-1.5 text-[0.52rem] font-black uppercase tracking-[0.14em] text-[#1c1917] sm:px-3 sm:py-2 sm:text-[0.56rem] sm:tracking-[0.2em]"
+                  className={`border-l border-[#1c1917]/20 px-2 py-1.5 text-[0.52rem] font-black uppercase tracking-[0.14em] sm:px-3 sm:py-2 sm:text-[0.56rem] sm:tracking-[0.2em] ${
+                    isOnSale
+                      ? "bg-[#882c30] text-[#f5f0e8]"
+                      : "bg-[#c7a852] text-[#1c1917]"
+                  }`}
                 >
                   {badge}
                 </span>
@@ -113,11 +117,13 @@ const ProductCard = ({ product }) => {
 
             <div className="shrink-0 text-right">
               <p className="text-xs font-black text-[#f5f0e8] sm:text-sm">
-                {formatMoney(product.price)}
+                {formatMoney(displayPrice)}
               </p>
               {isOnSale && (
                 <p className="mt-1 text-xs text-[#8b8075] line-through">
-                  {formatMoney(product.compareAtPrice)}
+                  {formatMoney(
+                    hasOfferPrice ? product.price : product.compareAtPrice
+                  )}
                 </p>
               )}
             </div>

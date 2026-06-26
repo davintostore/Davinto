@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 
 const Counter = require("../models/Counter");
 const Order = require("../models/Order");
+const Product = require("../models/Product");
 const SiteSettings = require("../models/SiteSettings");
 
 const { calculateQuote } = require("../services/quote.service");
@@ -58,6 +59,12 @@ const normalizeLocale = (value = "") => {
 const createPaymobMerchantOrderId = (orderNumber, mode = "PAY") => {
   return `${orderNumber}-${mode}-${Date.now()}`;
 };
+
+const buildAdminActionBy = (admin) => ({
+  id: admin?._id || null,
+  name: admin?.name || "",
+  email: admin?.email || "",
+});
 
 const getNextOrderNumber = async (session) => {
   const counter = await Counter.findOneAndUpdate(
@@ -574,6 +581,7 @@ const findOrderForEmailTracking = async ({ orderNumber, email }) => {
   const order = await Order.findOne({
     orderNumber: normalizedOrderNumber,
     "customerInfo.email": normalizedEmail,
+    deletedAt: null,
   });
 
   if (!order) {
@@ -593,6 +601,7 @@ const findOrderForGuestTracking = async ({ orderNumber, lookupToken }) => {
 
   const order = await Order.findOne({
     orderNumber: normalizedOrderNumber,
+    deletedAt: null,
   }).select("+lookupToken +lookupTokenHash");
 
   if (!order || !matchesOrderLookupToken(order, normalizedLookupToken)) {
@@ -639,6 +648,7 @@ const retryCustomerPaymobPayment = asyncHandler(async (req, res) => {
 
   const order = await Order.findOne({
     orderNumber: normalizeText(orderNumber).toUpperCase(),
+    deletedAt: null,
   }).select("+lookupToken +lookupTokenHash");
 
   if (!order || !matchesOrderLookupToken(order, normalizeText(lookupToken))) {
@@ -731,6 +741,7 @@ const getMyOrders = asyncHandler(async (req, res) => {
 
   const query = {
     customer: req.customer._id,
+    deletedAt: null,
   };
 
   if (requestedOrderStatus) query.orderStatus = requestedOrderStatus;
@@ -767,6 +778,7 @@ const getMyOrderById = asyncHandler(async (req, res) => {
   const order = await Order.findOne({
     _id: req.params.id,
     customer: req.customer._id,
+    deletedAt: null,
   }).select("-customer -adminNotes -paymentGateway -lookupToken");
 
   if (!order) {
@@ -791,7 +803,9 @@ const getAdminOrders = asyncHandler(async (req, res) => {
     page = 1,
   } = req.query;
 
-  const query = {};
+  const query = {
+    deletedAt: null,
+  };
 
   if (orderStatus) query.orderStatus = orderStatus;
   if (paymentStatus) query.paymentStatus = paymentStatus;
@@ -831,7 +845,10 @@ const getAdminOrders = asyncHandler(async (req, res) => {
 });
 
 const getAdminOrderById = asyncHandler(async (req, res) => {
-  const order = await Order.findById(req.params.id);
+  const order = await Order.findOne({
+    _id: req.params.id,
+    deletedAt: null,
+  });
 
   if (!order) {
     res.status(404);
@@ -864,7 +881,15 @@ const updateAdminOrderStatus = asyncHandler(async (req, res) => {
     throw new Error("Invalid order status.");
   }
 
-  const order = await Order.findById(req.params.id);
+  if (orderStatus === "cancelled") {
+    res.status(400);
+    throw new Error("Use the cancel order action so stock is restored safely.");
+  }
+
+  const order = await Order.findOne({
+    _id: req.params.id,
+    deletedAt: null,
+  });
 
   if (!order) {
     res.status(404);
@@ -906,7 +931,10 @@ const updateAdminPaymentStatus = asyncHandler(async (req, res) => {
     throw new Error("Invalid payment status.");
   }
 
-  const order = await Order.findById(req.params.id);
+  const order = await Order.findOne({
+    _id: req.params.id,
+    deletedAt: null,
+  });
 
   if (!order) {
     res.status(404);
@@ -932,7 +960,10 @@ const retryAdminPaymobPayment = asyncHandler(async (req, res) => {
     );
   }
 
-  const order = await Order.findById(req.params.id).select("+lookupToken");
+  const order = await Order.findOne({
+    _id: req.params.id,
+    deletedAt: null,
+  }).select("+lookupToken");
 
   if (!order) {
     res.status(404);
@@ -979,6 +1010,190 @@ const retryAdminPaymobPayment = asyncHandler(async (req, res) => {
   });
 });
 
+const findMatchingColor = (product, orderItem) => {
+  const colorId = normalizeText(orderItem.color?.id);
+  const colorKey = normalizeText(orderItem.color?.key).toLowerCase();
+  const colorSlug = normalizeText(orderItem.color?.slug).toLowerCase();
+  const colorName = normalizeText(orderItem.color?.name).toLowerCase();
+
+  return product.colors.find((color) => {
+    const currentId = color._id?.toString();
+    const currentSlug = normalizeText(color.slug).toLowerCase();
+    const currentName = normalizeText(color.name).toLowerCase();
+
+    return (
+      (colorId && currentId === colorId) ||
+      (colorKey &&
+        (currentId === colorKey ||
+          currentSlug === colorKey ||
+          currentName === colorKey)) ||
+      (colorSlug && currentSlug === colorSlug) ||
+      (colorName && currentName === colorName)
+    );
+  });
+};
+
+const findMatchingSize = (color, orderItem) => {
+  const sizeId = normalizeText(orderItem.size?.id);
+  const sizeLabel = normalizeText(orderItem.size?.label).toLowerCase();
+  const sizeSku = normalizeText(orderItem.size?.sku).toLowerCase();
+
+  return color.sizes.find((size) => {
+    const currentId = size._id?.toString();
+    const currentLabel = normalizeText(size.label).toLowerCase();
+    const currentSku = normalizeText(size.sku).toLowerCase();
+
+    return (
+      (sizeId && currentId === sizeId) ||
+      (sizeLabel && currentLabel === sizeLabel) ||
+      (sizeSku && currentSku === sizeSku)
+    );
+  });
+};
+
+const restoreOrderStock = async (order, session) => {
+  for (const item of order.items || []) {
+    const product = await Product.findById(item.product).session(session);
+
+    if (!product) {
+      console.warn(
+        `Stock restore skipped for ${order.orderNumber}: product ${item.product} not found.`
+      );
+      continue;
+    }
+
+    const color = findMatchingColor(product, item);
+
+    if (!color) {
+      console.warn(
+        `Stock restore skipped for ${order.orderNumber}: color not found on ${product._id}.`
+      );
+      continue;
+    }
+
+    const size = findMatchingSize(color, item);
+
+    if (!size) {
+      console.warn(
+        `Stock restore skipped for ${order.orderNumber}: size not found on ${product._id}.`
+      );
+      continue;
+    }
+
+    size.stock = Number(size.stock || 0) + Number(item.quantity || 0);
+    await product.save({ session });
+  }
+};
+
+const cancelAdminOrder = asyncHandler(async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    res.status(404);
+    throw new Error("Order not found.");
+  }
+
+  const reason = normalizeText(req.body.reason || req.body.note);
+  const adminSnapshot = buildAdminActionBy(req.admin);
+  const session = await mongoose.startSession();
+  let order;
+  let restoredStock = false;
+
+  try {
+    await session.withTransaction(async () => {
+      order = await Order.findOne({
+        _id: req.params.id,
+        deletedAt: null,
+      }).session(session);
+
+      if (!order) {
+        throw createHttpError("Order not found.", 404);
+      }
+
+      if (order.orderStatus === "cancelled") {
+        return;
+      }
+
+      if (order.orderStatus === "delivered") {
+        throw createHttpError("Delivered orders cannot be cancelled.", 400);
+      }
+
+      if (!order.stockRestoredAt) {
+        await restoreOrderStock(order, session);
+        order.stockRestoredAt = new Date();
+        order.stockRestoredBy = adminSnapshot;
+        restoredStock = true;
+      }
+
+      order.orderStatus = "cancelled";
+      order.cancelledAt = order.cancelledAt || new Date();
+      order.cancellationReason = reason || order.cancellationReason || "";
+      order.cancelledBy = adminSnapshot;
+      order.statusHistory.push({
+        status: "cancelled",
+        note: reason || "Order cancelled by admin.",
+        changedBy: "admin",
+        changedAt: new Date(),
+      });
+
+      await order.save({ session });
+    });
+  } catch (error) {
+    if (res.statusCode === 200) {
+      res.status(error.statusCode || 500);
+    }
+
+    throw error;
+  } finally {
+    session.endSession();
+  }
+
+  res.status(200).json({
+    success: true,
+    message: restoredStock
+      ? "Order cancelled and stock restored."
+      : "Order is already cancelled.",
+    order,
+  });
+});
+
+const deleteAdminOrder = asyncHandler(async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    res.status(404);
+    throw new Error("Order not found.");
+  }
+
+  const order = await Order.findOne({
+    _id: req.params.id,
+    deletedAt: null,
+  });
+
+  if (!order) {
+    res.status(404);
+    throw new Error("Order not found.");
+  }
+
+  if (order.orderStatus !== "cancelled") {
+    res.status(400);
+    throw new Error("Cancel the order before deleting it.");
+  }
+
+  order.deletedAt = new Date();
+  order.deletedBy = buildAdminActionBy(req.admin);
+  order.statusHistory.push({
+    status: "cancelled",
+    note: "Order deleted from admin dashboard.",
+    changedBy: "admin",
+    changedAt: new Date(),
+  });
+
+  await order.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Order deleted from active order lists.",
+    order,
+  });
+});
+
 module.exports = {
   createOrder,
   trackOrder,
@@ -990,5 +1205,7 @@ module.exports = {
   getAdminOrderById,
   updateAdminOrderStatus,
   updateAdminPaymentStatus,
+  cancelAdminOrder,
+  deleteAdminOrder,
   retryAdminPaymobPayment,
 };

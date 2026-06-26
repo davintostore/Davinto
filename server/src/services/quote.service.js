@@ -264,6 +264,13 @@ const buildValidatedOrderItems = async ({
       quantity,
       unitPrice,
       compareAtPrice,
+      originalUnitPrice: unitPrice,
+      finalUnitPrice: unitPrice,
+      itemOfferDiscount: 0,
+      itemOfferDiscountTotal: 0,
+      appliedOfferTitle: "",
+      appliedOfferSlug: "",
+      appliedOfferTitles: [],
       lineSubtotal,
       lineSavings,
     });
@@ -301,7 +308,7 @@ const getEligibleItemsForOffer = (offer, orderItems) => {
   return [];
 };
 
-const calculateOfferDiscount = (offer, eligibleSubtotal) => {
+const calculateOfferDiscount = (offer, eligibleSubtotal, eligibleQuantity = 0) => {
   if (offer.discountType === "freeDelivery") {
     return 0;
   }
@@ -317,6 +324,11 @@ const calculateOfferDiscount = (offer, eligibleSubtotal) => {
     discountAmount = Number(offer.discountValue || 0);
   }
 
+  if (offer.discountType === "fixedPerItem") {
+    discountAmount =
+      Number(offer.discountValue || 0) * Number(eligibleQuantity || 0);
+  }
+
   if (Number(offer.maxDiscountAmount || 0) > 0) {
     discountAmount = Math.min(
       discountAmount,
@@ -327,6 +339,84 @@ const calculateOfferDiscount = (offer, eligibleSubtotal) => {
   discountAmount = Math.min(discountAmount, eligibleSubtotal);
 
   return Math.round(discountAmount);
+};
+
+const applyOfferDiscountToEligibleItems = ({
+  offer,
+  eligibleItems,
+  discountAmount,
+}) => {
+  const safeDiscountAmount = Math.max(0, Math.round(discountAmount || 0));
+
+  if (
+    safeDiscountAmount <= 0 ||
+    offer.discountType === "freeDelivery" ||
+    !eligibleItems.length
+  ) {
+    return;
+  }
+
+  const weights = eligibleItems.map((item) => {
+    if (offer.discountType === "fixedPerItem") {
+      return Number(item.quantity || 0);
+    }
+
+    return Number(item.lineSubtotal || 0);
+  });
+  const totalWeight = weights.reduce((total, weight) => total + weight, 0);
+
+  if (totalWeight <= 0) return;
+
+  const allocations = weights.map((weight, index) => {
+    const rawAllocation = (safeDiscountAmount * weight) / totalWeight;
+
+    return {
+      index,
+      amount: Math.floor(rawAllocation),
+      remainder: rawAllocation - Math.floor(rawAllocation),
+    };
+  });
+
+  let remaining =
+    safeDiscountAmount -
+    allocations.reduce((total, allocation) => total + allocation.amount, 0);
+
+  allocations
+    .slice()
+    .sort((left, right) => right.remainder - left.remainder)
+    .forEach((allocation) => {
+      if (remaining <= 0) return;
+      allocations[allocation.index].amount += 1;
+      remaining -= 1;
+    });
+
+  allocations.forEach((allocation) => {
+    const item = eligibleItems[allocation.index];
+    const quantity = Math.max(1, Number(item.quantity || 1));
+    const currentDiscountTotal = Number(item.itemOfferDiscountTotal || 0);
+    const nextDiscountTotal = Math.min(
+      currentDiscountTotal + allocation.amount,
+      Number(item.lineSubtotal || 0)
+    );
+    const nextUnitDiscount = nextDiscountTotal / quantity;
+    const offerTitles = Array.isArray(item.appliedOfferTitles)
+      ? item.appliedOfferTitles
+      : [];
+
+    if (!offerTitles.includes(offer.title)) {
+      offerTitles.push(offer.title);
+    }
+
+    item.itemOfferDiscountTotal = nextDiscountTotal;
+    item.itemOfferDiscount = nextUnitDiscount;
+    item.finalUnitPrice = Math.max(
+      Number(item.unitPrice || 0) - nextUnitDiscount,
+      0
+    );
+    item.appliedOfferTitle = offerTitles.join(" + ");
+    item.appliedOfferSlug = item.appliedOfferSlug || offer.slug || "";
+    item.appliedOfferTitles = offerTitles;
+  });
 };
 
 const calculateAutomaticOffers = async ({
@@ -364,10 +454,22 @@ const calculateAutomaticOffers = async ({
     if (eligibleSubtotal < Number(offer.minSubtotal || 0)) continue;
     if (eligibleQuantity < Number(offer.minQuantity || 0)) continue;
 
-    const discountAmount = calculateOfferDiscount(offer, eligibleSubtotal);
+    const rawDiscountAmount = calculateOfferDiscount(
+      offer,
+      eligibleSubtotal,
+      eligibleQuantity
+    );
+    const remainingOfferCapacity = Math.max(subtotal - offerDiscountTotal, 0);
+    const discountAmount = Math.min(rawDiscountAmount, remainingOfferCapacity);
     const freeDeliveryApplied = offer.discountType === "freeDelivery";
 
     if (discountAmount <= 0 && !freeDeliveryApplied) continue;
+
+    applyOfferDiscountToEligibleItems({
+      offer,
+      eligibleItems,
+      discountAmount,
+    });
 
     appliedOffers.push({
       offer: offer._id,
@@ -523,7 +625,10 @@ const calculateBundles = async ({ orderItems, subtotal, session = null }) => {
     }
 
     bundleDiscountAmount = Math.round(bundleDiscountAmount);
-    bundleDiscountAmount = Math.min(bundleDiscountAmount, subtotal);
+    bundleDiscountAmount = Math.min(
+      bundleDiscountAmount,
+      Math.max(subtotal - bundleDiscountTotal, 0)
+    );
 
     if (bundleDiscountAmount <= 0) continue;
 

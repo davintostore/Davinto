@@ -11,6 +11,8 @@ const {
   getAdminOrderById,
   updateAdminOrderStatus,
   updateAdminPaymentStatus,
+  cancelAdminOrder,
+  deleteAdminOrder,
   retryAdminPaymobPayment,
 } = require("../controllers/order.controller");
 
@@ -60,6 +62,20 @@ router.patch(
   protectAdmin,
   requireOwnerOrAdmin,
   updateAdminPaymentStatus
+);
+
+router.post(
+  "/admin/:id/cancel",
+  protectAdmin,
+  requireOwnerOrAdmin,
+  cancelAdminOrder
+);
+
+router.delete(
+  "/admin/:id",
+  protectAdmin,
+  requireOwnerOrAdmin,
+  deleteAdminOrder
 );
 
 router.post(

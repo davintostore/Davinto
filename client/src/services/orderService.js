@@ -97,3 +97,13 @@ export const retryAdminPaymobPaymentRequest = async (orderId) => {
   const { data } = await api.post(`/orders/admin/${orderId}/paymob/retry`);
   return data;
 };
+
+export const cancelAdminOrderRequest = async (orderId, payload = {}) => {
+  const { data } = await api.post(`/orders/admin/${orderId}/cancel`, payload);
+  return data;
+};
+
+export const deleteAdminOrderRequest = async (orderId) => {
+  const { data } = await api.delete(`/orders/admin/${orderId}`);
+  return data;
+};

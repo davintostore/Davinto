@@ -154,10 +154,17 @@ const ProductDetails = () => {
   );
   const selectedStock = Number(selectedSize?.stock || 0);
   const isInStock = selectedStock > 0;
-  const isOnSale = product?.compareAtPrice > product?.price;
-  const displayBadges = isOnSale
-    ? []
-    : localizedBadges
+  const offerPreview = product?.activeOfferPreview;
+  const offerPrice = Number(offerPreview?.priceAfterOffer || 0);
+  const hasOfferPrice =
+    offerPrice > 0 && offerPrice < Number(product?.price || 0);
+  const displayPrice = hasOfferPrice ? offerPrice : product?.price;
+  const isOnSale = product?.compareAtPrice > product?.price || hasOfferPrice;
+  const displayBadges = hasOfferPrice
+    ? [t("common:offer")]
+    : product?.compareAtPrice > product?.price
+      ? [t("common:sale")]
+      : localizedBadges
         .map((badge) => getSimpleBadge(badge, t))
         .filter(Boolean)
         .slice(0, 1);
@@ -414,15 +421,14 @@ const ProductDetails = () => {
                 )}
 
                 <div className="absolute left-0 top-0 flex">
-                  {isOnSale && (
-                    <span className="bg-[#882c30] px-4 py-2 text-[0.6rem] font-black uppercase tracking-[0.22em]">
-                      {t("common:sale")}
-                    </span>
-                  )}
                   {displayBadges.map((badge) => (
                     <span
                       key={badge}
-                      className="bg-[#c7a852] px-4 py-2 text-[0.6rem] font-black uppercase tracking-[0.22em] text-[#1c1917]"
+                      className={`px-4 py-2 text-[0.6rem] font-black uppercase tracking-[0.22em] ${
+                        isOnSale
+                          ? "bg-[#882c30] text-[#f5f0e8]"
+                          : "bg-[#c7a852] text-[#1c1917]"
+                      }`}
                     >
                       {badge}
                     </span>
@@ -465,11 +471,13 @@ const ProductDetails = () => {
 
                 <div className="mt-7 flex flex-wrap items-center gap-4 border-y border-[#f5f0e8]/12 py-5">
                   <p className="font-serif text-3xl font-semibold">
-                    {formatMoney(product.price)}
+                    {formatMoney(displayPrice)}
                   </p>
                   {isOnSale && (
                     <p className="text-sm text-[#8b8075] line-through">
-                      {formatMoney(product.compareAtPrice)}
+                      {formatMoney(
+                        hasOfferPrice ? product.price : product.compareAtPrice
+                      )}
                     </p>
                   )}
                 </div>

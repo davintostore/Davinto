@@ -84,6 +84,10 @@ const getDiscountLabel = (offer) => {
     return `${offer.discountValue}% off`;
   }
 
+  if (offer.discountType === "fixedPerItem") {
+    return `${formatMoney(offer.discountValue)} off per item`;
+  }
+
   return `${formatMoney(offer.discountValue)} off`;
 };
 
@@ -536,6 +540,7 @@ const AdminOffers = () => {
               >
                 <option value="percentage">Percentage</option>
                 <option value="fixed">Fixed Amount</option>
+                <option value="fixedPerItem">Fixed Amount Per Item</option>
                 <option value="freeDelivery">Free Delivery</option>
               </Select>
 
@@ -543,7 +548,9 @@ const AdminOffers = () => {
                 label={
                   formData.discountType === "percentage"
                     ? "Discount %"
-                    : formData.discountType === "fixed"
+                    : ["fixed", "fixedPerItem"].includes(
+                          formData.discountType
+                        )
                       ? "Discount EGP"
                       : "Discount Value"
                 }

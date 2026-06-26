@@ -11,6 +11,8 @@ import Textarea from "../../components/ui/Textarea";
 import useSeo from "../../hooks/useSeo";
 
 import {
+  cancelAdminOrderRequest,
+  deleteAdminOrderRequest,
   getAdminOrdersRequest,
   retryAdminPaymobPaymentRequest,
   updateAdminOrderStatusRequest,
@@ -129,6 +131,11 @@ const canRetryPaymob = (order) => {
     order.orderStatus !== "cancelled"
   );
 };
+
+const canCancelOrder = (order) =>
+  !["cancelled", "delivered"].includes(order.orderStatus);
+
+const canDeleteOrder = (order) => order.orderStatus === "cancelled";
 
 const AdminOrders = () => {
   const queryClient = useQueryClient();
@@ -266,6 +273,38 @@ const AdminOrders = () => {
     },
   });
 
+  const cancelOrderMutation = useMutation({
+    mutationFn: ({ orderId, reason }) =>
+      cancelAdminOrderRequest(orderId, { reason }),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+      showFeedback("success", response?.message || "Order cancelled.");
+    },
+    onError: (err) => {
+      showFeedback(
+        "error",
+        err?.friendlyMessage || err?.message || "Failed to cancel order."
+      );
+    },
+  });
+
+  const deleteOrderMutation = useMutation({
+    mutationFn: deleteAdminOrderRequest,
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+      showFeedback(
+        "success",
+        response?.message || "Order deleted from active lists."
+      );
+    },
+    onError: (err) => {
+      showFeedback(
+        "error",
+        err?.friendlyMessage || err?.message || "Failed to delete order."
+      );
+    },
+  });
+
   const handleOrderStatusChange = (order, nextStatus) => {
     if (!nextStatus || nextStatus === order.orderStatus) return;
 
@@ -300,6 +339,26 @@ const AdminOrders = () => {
     });
   };
 
+  const handleCancelOrder = (order) => {
+    setConfirmationModal({
+      type: "cancelOrder",
+      order,
+      nextStatus: "cancelled",
+      targetLabel: "Cancel Order",
+      note: "",
+    });
+  };
+
+  const handleDeleteOrder = (order) => {
+    setConfirmationModal({
+      type: "deleteOrder",
+      order,
+      nextStatus: "",
+      targetLabel: "Delete Order",
+      note: "",
+    });
+  };
+
   const updateModalNote = (event) => {
     setConfirmationModal((current) =>
       current
@@ -315,7 +374,9 @@ const AdminOrders = () => {
     if (
       updateOrderStatusMutation.isPending ||
       updatePaymentStatusMutation.isPending ||
-      retryPaymobMutation.isPending
+      retryPaymobMutation.isPending ||
+      cancelOrderMutation.isPending ||
+      deleteOrderMutation.isPending
     ) {
       return;
     }
@@ -352,6 +413,21 @@ const AdminOrders = () => {
     if (type === "paymobRetry") {
       retryPaymobMutation.mutate(order._id);
       setConfirmationModal(null);
+      return;
+    }
+
+    if (type === "cancelOrder") {
+      cancelOrderMutation.mutate({
+        orderId: order._id,
+        reason: note,
+      });
+      setConfirmationModal(null);
+      return;
+    }
+
+    if (type === "deleteOrder") {
+      deleteOrderMutation.mutate(order._id);
+      setConfirmationModal(null);
     }
   };
 
@@ -380,28 +456,49 @@ const AdminOrders = () => {
         <div className="fixed inset-0 z-[90] grid place-items-center bg-black/72 px-4">
           <div className="w-full max-w-lg rounded-3xl border border-[#c7a852]/30 bg-[#110f0e] p-6 shadow-2xl">
             <p className="text-xs font-black uppercase tracking-[0.3em] text-[#c7a852]">
-              Confirm Change
+              {confirmationModal.type === "deleteOrder"
+                ? "Confirm Delete"
+                : confirmationModal.type === "cancelOrder"
+                  ? "Confirm Cancellation"
+                  : "Confirm Change"}
             </p>
             <h2 className="mt-3 text-2xl font-black uppercase text-white">
               {confirmationModal.order.orderNumber}
             </h2>
             <p className="mt-3 text-sm leading-7 text-white/55">
-              {confirmationModal.type === "paymobRetry"
-                ? "Generate a new card payment link for this order."
-                : `Change ${
-                    confirmationModal.type === "paymentStatus"
-                      ? "payment status"
-                      : "order status"
-                  } to "${confirmationModal.targetLabel}".`}
+              {confirmationModal.type === "paymobRetry" &&
+                "Generate a new card payment link for this order."}
+              {confirmationModal.type === "cancelOrder" &&
+                "Cancel this order and restore ordered stock exactly once."}
+              {confirmationModal.type === "deleteOrder" &&
+                "Delete this cancelled order from active admin and customer order lists. Stock will not be changed again."}
+              {["orderStatus", "paymentStatus"].includes(
+                confirmationModal.type
+              ) &&
+                `Change ${
+                  confirmationModal.type === "paymentStatus"
+                    ? "payment status"
+                    : "order status"
+                } to "${confirmationModal.targetLabel}".`}
             </p>
 
-            {confirmationModal.type !== "paymobRetry" && (
+            {!["paymobRetry", "deleteOrder"].includes(
+              confirmationModal.type
+            ) && (
               <div className="mt-5">
                 <Textarea
-                  label="Optional Note"
+                  label={
+                    confirmationModal.type === "cancelOrder"
+                      ? "Cancellation Reason"
+                      : "Optional Note"
+                  }
                   value={confirmationModal.note}
                   onChange={updateModalNote}
-                  placeholder="Add context for this change..."
+                  placeholder={
+                    confirmationModal.type === "cancelOrder"
+                      ? "Reason shown in the admin timeline..."
+                      : "Add context for this change..."
+                  }
                 />
               </div>
             )}
@@ -414,8 +511,20 @@ const AdminOrders = () => {
               >
                 Cancel
               </Button>
-              <Button type="button" onClick={confirmPendingAction}>
-                Confirm
+              <Button
+                type="button"
+                variant={
+                  confirmationModal.type === "deleteOrder"
+                    ? "danger"
+                    : "primary"
+                }
+                onClick={confirmPendingAction}
+              >
+                {confirmationModal.type === "deleteOrder"
+                  ? "Delete"
+                  : confirmationModal.type === "cancelOrder"
+                    ? "Cancel Order"
+                    : "Confirm"}
               </Button>
             </div>
           </div>
@@ -617,7 +726,14 @@ const AdminOrders = () => {
                           disabled={updateOrderStatusMutation.isPending}
                         >
                           {orderStatusOptions.map((status) => (
-                            <option key={status.value} value={status.value}>
+                            <option
+                              key={status.value}
+                              value={status.value}
+                              disabled={
+                                status.value === "cancelled" &&
+                                order.orderStatus !== "cancelled"
+                              }
+                            >
                               {status.label}
                             </option>
                           ))}
@@ -652,6 +768,30 @@ const AdminOrders = () => {
                       >
                         {isExpanded ? "Hide Details" : "View Details"}
                       </Button>
+
+                      {canCancelOrder(order) && (
+                        <Button
+                          variant="secondary"
+                          onClick={() => handleCancelOrder(order)}
+                          disabled={cancelOrderMutation.isPending}
+                        >
+                          {cancelOrderMutation.isPending
+                            ? "Cancelling..."
+                            : "Cancel Order"}
+                        </Button>
+                      )}
+
+                      {canDeleteOrder(order) && (
+                        <Button
+                          variant="secondary"
+                          onClick={() => handleDeleteOrder(order)}
+                          disabled={deleteOrderMutation.isPending}
+                        >
+                          {deleteOrderMutation.isPending
+                            ? "Deleting..."
+                            : "Delete Order"}
+                        </Button>
+                      )}
 
                       {order.paymentMethod === "paymobCard" && paymobLink && (
                         <Button

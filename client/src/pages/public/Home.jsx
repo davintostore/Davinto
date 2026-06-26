@@ -29,8 +29,16 @@ const HERO_VIDEO_SOURCES = {
 };
 
 const HeroBackgroundVideo = () => {
-  const [videoVariant, setVideoVariant] = useState(null);
-  const [shouldRenderVideo, setShouldRenderVideo] = useState(false);
+  const [videoVariant, setVideoVariant] = useState(() => {
+    if (typeof window === "undefined") return "desktop";
+    return window.matchMedia("(max-width: 767px)").matches
+      ? "mobile"
+      : "desktop";
+  });
+  const [shouldRenderVideo, setShouldRenderVideo] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  });
   const [isVideoAvailable, setIsVideoAvailable] = useState(true);
 
   useEffect(() => {
@@ -53,11 +61,7 @@ const HeroBackgroundVideo = () => {
     };
   }, []);
 
-  if (!videoVariant || !shouldRenderVideo || !isVideoAvailable) {
-    if (!videoVariant) {
-      return null;
-    }
-
+  if (!shouldRenderVideo || !isVideoAvailable) {
     const posterOnlySource = HERO_VIDEO_SOURCES[videoVariant];
 
     return (
@@ -166,9 +170,8 @@ const Home = () => {
   return (
     <>
       <section className="relative overflow-hidden border-b border-[#c7a852]/25 bg-[#110f0e]">
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,#110f0e_0%,#110f0e_50%,#882c30_50%,#4a181b_100%)]" />
         <HeroBackgroundVideo />
-        <div className="absolute inset-0 bg-[linear-gradient(105deg,rgba(17,15,14,.74)_0%,rgba(17,15,14,.54)_48%,rgba(17,15,14,.3)_100%)]" />
+        <div className="absolute inset-0 bg-black/45" />
 
         <Container className="relative flex min-h-[clamp(36rem,74svh,46rem)] items-end pb-14 pt-32 sm:pb-16 sm:pt-36 lg:items-center lg:py-24">
           <div className="max-w-6xl">

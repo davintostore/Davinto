@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 import { Minus, Plus, Trash2 } from "lucide-react";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
 import Button from "../../components/ui/Button";
@@ -10,7 +12,36 @@ import SectionLabel from "../../components/ui/SectionLabel";
 import useSeo from "../../hooks/useSeo";
 
 import { useCart } from "../../context/cartContext";
+import { createQuoteRequest } from "../../services/quoteService";
+import {
+  getLocalizedBundle,
+  getLocalizedOffer,
+} from "../../utils/localizedContent";
 import { formatCurrency } from "../../utils/translatedLabels";
+
+const buildQuoteItems = (items) => {
+  return items.map((item) => ({
+    productId: item.productId,
+    color: {
+      id: item.color?.id || "",
+      key: item.color?.key || "",
+      name: item.color?.name || "",
+      slug: item.color?.slug || "",
+    },
+    size: {
+      id: item.size?.id || "",
+      label: item.size?.label || "",
+      sku: item.size?.sku || "",
+    },
+    quantity: Number(item.quantity || 1),
+  }));
+};
+
+const buildQuoteItemKey = (item) => {
+  return `${item.product}__${item.color?.key || item.color?.name}__${
+    item.size?.label
+  }`;
+};
 
 const Cart = () => {
   const { t, i18n } = useTranslation(["cart", "common"]);
@@ -27,6 +58,11 @@ const Cart = () => {
     robots: "noindex,nofollow",
   });
   const formatMoney = (value) => formatCurrency(value, language);
+  const eachLabel =
+    t("common:each", {
+      price: "",
+      defaultValue: "each",
+    }).trim() || "each";
   const {
     items,
     cartCount,
@@ -39,8 +75,52 @@ const Cart = () => {
     getCartItemKey,
   } = useCart();
 
+  const quoteItems = useMemo(() => buildQuoteItems(items), [items]);
+
+  const {
+    data: quoteData,
+    isLoading: isLoadingQuote,
+    isError: isQuoteError,
+    error: quoteError,
+  } = useQuery({
+    queryKey: ["cart-quote", quoteItems],
+    queryFn: () =>
+      createQuoteRequest({
+        items: quoteItems,
+      }),
+    enabled: items.length > 0,
+    retry: 1,
+  });
+
+  const quote = quoteData?.quote;
+  const summary = {
+    subtotal: quote?.subtotal ?? subtotal,
+    productSavings: quote?.productSavings ?? savings,
+    bundleDiscountTotal: quote?.bundleDiscountTotal ?? 0,
+    offerDiscountTotal: quote?.offerDiscountTotal ?? 0,
+    totalDiscount: quote?.totalDiscount ?? 0,
+    totalBeforeDelivery:
+      quote?.subtotal !== undefined
+        ? Math.max(
+            Number(quote.subtotal || 0) - Number(quote.totalDiscount || 0),
+            0
+          )
+        : subtotal,
+    appliedBundles: (quote?.appliedBundles || []).map((bundle) =>
+      getLocalizedBundle(bundle, language)
+    ),
+    appliedOffers: (quote?.appliedOffers || []).map((offer) =>
+      getLocalizedOffer(offer, language)
+    ),
+  };
+  const quoteItemsByKey = useMemo(() => {
+    const entries = quote?.items || [];
+
+    return new Map(entries.map((item) => [buildQuoteItemKey(item), item]));
+  }, [quote?.items]);
+
   const deliveryPreview = subtotal > 0 ? 0 : 0;
-  const totalPreview = subtotal + deliveryPreview;
+  const totalPreview = summary.totalBeforeDelivery + deliveryPreview;
 
   return (
     <>
@@ -90,8 +170,29 @@ const Cart = () => {
                 <div className="divide-y divide-[#f5f0e8]/12 border-t border-[#f5f0e8]/12">
                   {items.map((item, index) => {
                     const itemKey = getCartItemKey(item);
+                    const quoteItem =
+                      quoteItemsByKey.get(itemKey) || quote?.items?.[index];
                     const lineTotal =
                       Number(item.price || 0) * Number(item.quantity || 0);
+                    const itemOfferDiscountTotal = Number(
+                      quoteItem?.itemOfferDiscountTotal || 0
+                    );
+                    const itemOfferDiscount = Number(
+                      quoteItem?.itemOfferDiscount || 0
+                    );
+                    const hasItemOffer = itemOfferDiscountTotal > 0;
+                    const originalUnitPrice = Number(
+                      quoteItem?.originalUnitPrice || item.price || 0
+                    );
+                    const finalUnitPrice = Number(
+                      quoteItem?.finalUnitPrice || item.price || 0
+                    );
+                    const finalLineTotal = hasItemOffer
+                      ? Math.max(lineTotal - itemOfferDiscountTotal, 0)
+                      : lineTotal;
+                    const appliedOfferTitle =
+                      quoteItem?.appliedOfferTitle ||
+                      t("common:offer", { defaultValue: "Offer" });
                     const maxStock = Number(item.maxStock || 1);
                     const canIncrease = Number(item.quantity || 1) < maxStock;
 
@@ -135,16 +236,47 @@ const Cart = () => {
                               </div>
 
                               <div className="sm:text-right">
-                                <p className="font-serif text-xl font-semibold">
-                                  {formatMoney(lineTotal)}
-                                </p>
-                                {item.compareAtPrice > item.price && (
-                                  <p className="mt-1 text-xs text-[#8b8075] line-through">
-                                    {formatMoney(item.compareAtPrice)}
-                                  </p>
+                                {hasItemOffer ? (
+                                  <div>
+                                    <p className="text-xs font-black uppercase tracking-[0.16em] text-[#c7a852]">
+                                      {formatMoney(finalUnitPrice)}{" "}
+                                      {eachLabel}
+                                    </p>
+                                    <p className="mt-1 text-xs text-[#8b8075] line-through">
+                                      {formatMoney(originalUnitPrice)}{" "}
+                                      {eachLabel}
+                                    </p>
+                                    <p className="mt-2 font-serif text-xl font-semibold text-[#f5f0e8]">
+                                      {formatMoney(finalLineTotal)}
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <p className="font-serif text-xl font-semibold">
+                                      {formatMoney(lineTotal)}
+                                    </p>
+                                    {item.compareAtPrice > item.price && (
+                                      <p className="mt-1 text-xs text-[#8b8075] line-through">
+                                        {formatMoney(item.compareAtPrice)}
+                                      </p>
+                                    )}
+                                  </>
                                 )}
                               </div>
                             </div>
+
+                            {hasItemOffer && (
+                              <div className="mt-4 w-fit border border-[#c7a852]/30 bg-[#c7a852]/10 px-3 py-2 text-xs font-bold text-[#f5f0e8]/80">
+                                <span className="font-black uppercase tracking-[0.14em] text-[#c7a852]">
+                                  {appliedOfferTitle}
+                                </span>
+                                <span className="mx-2 text-[#8b8075]">/</span>
+                                <span>
+                                  -{formatMoney(itemOfferDiscount)}{" "}
+                                  {eachLabel}
+                                </span>
+                              </div>
+                            )}
 
                             <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 border-y border-[#f5f0e8]/10 py-3 text-[0.62rem] font-black uppercase tracking-[0.16em] text-[#f5f0e8]/48">
                               <span>
@@ -219,13 +351,87 @@ const Cart = () => {
                 <Card className="border-[#c7a852]/30 bg-[#110f0e] p-7">
                   <SectionLabel>{t("cart:summary")}</SectionLabel>
 
+                  {isLoadingQuote && (
+                    <div className="mb-4 border border-[#f5f0e8]/12 bg-[#f5f0e8]/4 px-4 py-3 text-xs text-[#f5f0e8]/45">
+                      {t("common:calculating", {
+                        defaultValue: "Calculating offers...",
+                      })}
+                    </div>
+                  )}
+
+                  {isQuoteError && (
+                    <div className="mb-4 border border-[#b8585d]/45 bg-[#882c30]/18 px-4 py-3 text-xs text-[#f5d7d8]">
+                      {quoteError?.friendlyMessage ||
+                        quoteError?.message ||
+                        "Could not refresh cart pricing."}
+                    </div>
+                  )}
+
+                  {summary.appliedBundles.length > 0 && (
+                    <div className="mb-4 border-l-2 border-[#c7a852] bg-[#c7a852]/7 p-3">
+                      <p className="text-xs font-black uppercase tracking-[0.2em] text-[#c7a852]">
+                        {t("common:bundleDiscount")}
+                      </p>
+
+                      <div className="mt-2 space-y-1">
+                        {summary.appliedBundles.map((bundle) => (
+                          <p
+                            key={`${bundle.slug}-${bundle.discountAmount}`}
+                            className="text-xs text-[#f5f0e8]/68"
+                          >
+                            {bundle.title}: -
+                            {formatMoney(bundle.discountAmount)}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {summary.appliedOffers.length > 0 && (
+                    <div className="mb-4 border-l-2 border-[#c7a852] bg-[#c7a852]/7 p-3">
+                      <p className="text-xs font-black uppercase tracking-[0.2em] text-[#c7a852]">
+                        {t("common:offerDiscount")}
+                      </p>
+
+                      <div className="mt-2 space-y-1">
+                        {summary.appliedOffers.map((offer) => (
+                          <p
+                            key={`${offer.slug}-${offer.discountAmount}`}
+                            className="text-xs text-[#f5f0e8]/68"
+                          >
+                            {offer.title}
+                            {offer.discountAmount > 0
+                              ? `: -${formatMoney(offer.discountAmount)}`
+                              : offer.freeDeliveryApplied
+                                ? `: ${t("common:free")}`
+                                : ""}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="divide-y divide-[#f5f0e8]/10 border-y border-[#f5f0e8]/10 text-sm">
                     {[
                       [t("common:items"), cartCount],
-                      [t("common:subtotal"), formatMoney(subtotal)],
+                      [t("common:subtotal"), formatMoney(summary.subtotal)],
                       [
                         t("common:productSavings"),
-                        savings > 0 ? `-${formatMoney(savings)}` : formatMoney(0),
+                        summary.productSavings > 0
+                          ? `-${formatMoney(summary.productSavings)}`
+                          : formatMoney(0),
+                      ],
+                      [
+                        t("common:bundleDiscount"),
+                        summary.bundleDiscountTotal > 0
+                          ? `-${formatMoney(summary.bundleDiscountTotal)}`
+                          : formatMoney(0),
+                      ],
+                      [
+                        t("common:offerDiscount"),
+                        summary.offerDiscountTotal > 0
+                          ? `-${formatMoney(summary.offerDiscountTotal)}`
+                          : formatMoney(0),
                       ],
                       [
                         t("common:delivery"),
