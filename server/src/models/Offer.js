@@ -182,7 +182,6 @@ offerSchema.virtual("remainingUses").get(function getRemainingUses() {
 offerSchema.set("toJSON", { virtuals: true });
 offerSchema.set("toObject", { virtuals: true });
 
-offerSchema.index({ slug: 1 }, { unique: true });
 offerSchema.index({ status: 1, startsAt: 1, endsAt: 1 });
 offerSchema.index({ scope: 1, priority: -1 });
 

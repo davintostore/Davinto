@@ -22,9 +22,13 @@ import {
   getPaymentMethodLabel,
   getPaymentStatusLabel,
 } from "../../utils/translatedLabels";
+import { getGovernorateLabel } from "../../utils/governorates";
 import {
-  getLocalizedBundle,
-  getLocalizedOffer,
+  getLocalizedAppliedBundle,
+  getLocalizedAppliedOffer,
+  getLocalizedDeliverySnapshot,
+  getLocalizedOrderItem,
+  getLocalizedPaymentSnapshot,
 } from "../../utils/localizedContent";
 
 const orderStatusOptions = [
@@ -127,9 +131,14 @@ const OrderDetail = ({ orderId }) => {
   }
 
   const order = data.order;
-  // TODO(Phase 4B3): Historical product names, offer/bundle titles, payment
-  // instructions, delivery notes, and system timeline notes need localized
-  // order snapshots captured safely at checkout time.
+  const localizedPaymentSnapshot = getLocalizedPaymentSnapshot(
+    order.paymentSnapshot,
+    language
+  );
+  const localizedDeliverySnapshot = getLocalizedDeliverySnapshot(
+    order.deliverySnapshot,
+    language
+  );
 
   return (
     <div className="border-t border-[#c7a852]/22 bg-[#110f0e] px-5 py-7 sm:px-7">
@@ -139,50 +148,54 @@ const OrderDetail = ({ orderId }) => {
             <SectionLabel>{t("orders:my.pieces")}</SectionLabel>
 
             <div className="divide-y divide-[#f5f0e8]/10 border-y border-[#f5f0e8]/10">
-              {order.items?.map((item) => (
-                <div
-                  key={
-                    item.id ||
-                    `${item.product}-${item.color?.name}-${item.size?.label}`
-                  }
-                  className="flex gap-4 py-5"
-                >
-                  <div className="h-28 w-20 shrink-0 overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f]">
-                    {item.image ? (
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-[0.52rem] font-black uppercase tracking-[0.18em] text-[#8b8075]">
-                        {t("common:noImage")}
-                      </div>
-                    )}
-                  </div>
+              {order.items?.map((rawItem) => {
+                const item = getLocalizedOrderItem(rawItem, language);
 
-                  <div className="min-w-0 flex-1">
-                    <p className="font-serif text-xl font-semibold">
-                      {item.name}
-                    </p>
-                    <p className="mt-2 text-xs text-[#f5f0e8]/45">
-                      {item.color?.name || t("common:color")} /{" "}
-                      {item.size?.label || t("common:size")} /{" "}
-                      {t("common:qty", { count: item.quantity })}
-                    </p>
-                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-                      <span className="text-xs text-[#8b8075]">
-                        {t("common:each", {
-                          price: formatMoney(item.unitPrice),
-                        })}
-                      </span>
-                      <span className="font-bold text-[#c7a852]">
-                        {formatMoney(item.lineSubtotal)}
-                      </span>
+                return (
+                  <div
+                    key={
+                      item.id ||
+                      `${item.product}-${item.color?.name}-${item.size?.label}`
+                    }
+                    className="flex gap-4 py-5"
+                  >
+                    <div className="h-28 w-20 shrink-0 overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f]">
+                      {item.image ? (
+                        <img
+                          src={item.image}
+                          alt={item.imageAlt || item.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-[0.52rem] font-black uppercase tracking-[0.18em] text-[#8b8075]">
+                          {t("common:noImage")}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <p className="font-serif text-xl font-semibold">
+                        {item.name}
+                      </p>
+                      <p className="mt-2 text-xs text-[#f5f0e8]/45">
+                        {item.color?.name || t("common:color")} /{" "}
+                        {item.size?.label || t("common:size")} /{" "}
+                        {t("common:qty", { count: item.quantity })}
+                      </p>
+                      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                        <span className="text-xs text-[#8b8075]">
+                          {t("common:each", {
+                            price: formatMoney(item.unitPrice),
+                          })}
+                        </span>
+                        <span className="font-bold text-[#c7a852]">
+                          {formatMoney(item.lineSubtotal)}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -200,7 +213,7 @@ const OrderDetail = ({ orderId }) => {
                 {order.customerInfo?.email && (
                   <p>{order.customerInfo.email}</p>
                 )}
-                <p>{order.customerInfo?.city}</p>
+                <p>{getGovernorateLabel(t, order.customerInfo?.city)}</p>
                 <p>{order.customerInfo?.address}</p>
                 {order.customerInfo?.notes && (
                   <p className="text-[#8b8075]">{order.customerInfo.notes}</p>
@@ -213,11 +226,12 @@ const OrderDetail = ({ orderId }) => {
                 {t("orders:my.payment")}
               </p>
               <p className="mt-4 font-serif text-2xl font-semibold">
-                {getPaymentMethodLabel(t, order.paymentMethod)}
+                {localizedPaymentSnapshot?.label ||
+                  getPaymentMethodLabel(t, order.paymentMethod)}
               </p>
-              {order.paymentSnapshot?.instructions && (
+              {localizedPaymentSnapshot?.instructions && (
                 <p className="mt-3 text-sm leading-7 text-[#f5f0e8]/55">
-                  {order.paymentSnapshot.instructions}
+                  {localizedPaymentSnapshot.instructions}
                 </p>
               )}
             </div>
@@ -229,31 +243,59 @@ const OrderDetail = ({ orderId }) => {
             <div>
               <SectionLabel>{t("orders:my.appliedSavings")}</SectionLabel>
               <div className="grid gap-3">
-                {order.appliedBundles?.map((bundle, index) => (
-                  <div
-                    key={`${bundle.slug}-${index}`}
-                    className="flex justify-between gap-4 border-l-2 border-[#c7a852] bg-[#c7a852]/7 p-4 text-sm"
-                  >
-                    <span>{getLocalizedBundle(bundle, language).title}</span>
-                    <span className="font-bold text-[#c7a852]">
-                      -{formatMoney(bundle.discountAmount)}
-                    </span>
-                  </div>
-                ))}
+                {order.appliedBundles?.map((bundle, index) => {
+                  const localizedBundle = getLocalizedAppliedBundle(
+                    bundle,
+                    language
+                  );
 
-                {order.appliedOffers?.map((offer, index) => (
-                  <div
-                    key={`${offer.slug}-${index}`}
-                    className="flex justify-between gap-4 border-l-2 border-[#c7a852] bg-[#c7a852]/7 p-4 text-sm"
-                  >
-                    <span>{getLocalizedOffer(offer, language).title}</span>
-                    <span className="font-bold text-[#c7a852]">
-                      {offer.discountAmount > 0
-                        ? `-${formatMoney(offer.discountAmount)}`
-                        : t("checkout:freeDelivery")}
-                    </span>
-                  </div>
-                ))}
+                  return (
+                    <div
+                      key={`${bundle.slug}-${index}`}
+                      className="flex justify-between gap-4 border-l-2 border-[#c7a852] bg-[#c7a852]/7 p-4 text-sm"
+                    >
+                      <span>
+                        {localizedBundle.title}
+                        {localizedBundle.description && (
+                          <span className="mt-1 block text-xs leading-6 text-[#f5f0e8]/52">
+                            {localizedBundle.description}
+                          </span>
+                        )}
+                      </span>
+                      <span className="font-bold text-[#c7a852]">
+                        -{formatMoney(bundle.discountAmount)}
+                      </span>
+                    </div>
+                  );
+                })}
+
+                {order.appliedOffers?.map((offer, index) => {
+                  const localizedOffer = getLocalizedAppliedOffer(
+                    offer,
+                    language
+                  );
+
+                  return (
+                    <div
+                      key={`${offer.slug}-${index}`}
+                      className="flex justify-between gap-4 border-l-2 border-[#c7a852] bg-[#c7a852]/7 p-4 text-sm"
+                    >
+                      <span>
+                        {localizedOffer.title}
+                        {localizedOffer.description && (
+                          <span className="mt-1 block text-xs leading-6 text-[#f5f0e8]/52">
+                            {localizedOffer.description}
+                          </span>
+                        )}
+                      </span>
+                      <span className="font-bold text-[#c7a852]">
+                        {offer.discountAmount > 0
+                          ? `-${formatMoney(offer.discountAmount)}`
+                          : t("checkout:freeDelivery")}
+                      </span>
+                    </div>
+                  );
+                })}
 
                 {order.discountCode?.code && (
                   <div className="flex justify-between gap-4 border-l-2 border-[#c7a852] bg-[#c7a852]/7 p-4 text-sm">
@@ -352,9 +394,9 @@ const OrderDetail = ({ orderId }) => {
               </span>
             </div>
 
-            {order.deliverySnapshot?.notes && (
+            {localizedDeliverySnapshot?.notes && (
               <p className="mt-5 border-t border-[#f5f0e8]/10 pt-5 text-xs leading-6 text-[#f5f0e8]/45">
-                {order.deliverySnapshot.notes}
+                {localizedDeliverySnapshot.notes}
               </p>
             )}
           </Card>
@@ -497,11 +539,6 @@ const MyOrders = () => {
                 <Link to="/shop">
                   <Button>{t("orders:my.shop")}</Button>
                 </Link>
-                <Link to="/track-order">
-                  <Button variant="secondary">
-                    {t("orders:my.trackGuest")}
-                  </Button>
-                </Link>
               </div>
             </Card>
           )}
@@ -552,35 +589,42 @@ const MyOrders = () => {
                           </div>
 
                           <div className="mt-6 flex flex-wrap gap-3">
-                            {order.previewItems?.map((item, index) => (
-                              <div
-                                key={`${item.name}-${item.color?.name}-${item.size?.label}-${index}`}
-                                className="flex w-full gap-3 border border-[#f5f0e8]/10 bg-[#1c1917]/45 p-3 sm:w-auto sm:min-w-64"
-                              >
-                                <div className="h-16 w-12 shrink-0 overflow-hidden bg-[#1c1917]">
-                                  {item.image ? (
-                                    <img
-                                      src={item.image}
-                                      alt={item.name}
-                                      className="h-full w-full object-cover"
-                                    />
-                                  ) : (
-                                    <div className="h-full w-full bg-[#f5f0e8]/5" />
-                                  )}
+                            {order.previewItems?.map((rawItem, index) => {
+                              const item = getLocalizedOrderItem(
+                                rawItem,
+                                language
+                              );
+
+                              return (
+                                <div
+                                  key={`${item.name}-${item.color?.name}-${item.size?.label}-${index}`}
+                                  className="flex w-full gap-3 border border-[#f5f0e8]/10 bg-[#1c1917]/45 p-3 sm:w-auto sm:min-w-64"
+                                >
+                                  <div className="h-16 w-12 shrink-0 overflow-hidden bg-[#1c1917]">
+                                    {item.image ? (
+                                      <img
+                                        src={item.image}
+                                        alt={item.imageAlt || item.name}
+                                        className="h-full w-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="h-full w-full bg-[#f5f0e8]/5" />
+                                    )}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="truncate text-sm font-bold">
+                                      {item.name}
+                                    </p>
+                                    <p className="mt-1 text-xs text-[#8b8075]">
+                                      {item.color?.name} / {item.size?.label} /{" "}
+                                      {t("common:qty", {
+                                        count: item.quantity,
+                                      })}
+                                    </p>
+                                  </div>
                                 </div>
-                                <div className="min-w-0">
-                                  <p className="truncate text-sm font-bold">
-                                    {item.name}
-                                  </p>
-                                  <p className="mt-1 text-xs text-[#8b8075]">
-                                    {item.color?.name} / {item.size?.label} /{" "}
-                                    {t("common:qty", {
-                                      count: item.quantity,
-                                    })}
-                                  </p>
-                                </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
 

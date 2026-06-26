@@ -101,7 +101,7 @@ const AdminLogin = () => {
             type="email"
             value={formData.email}
             onChange={updateField}
-            placeholder="admin@davinto.com"
+            placeholder="enter your email"
             autoComplete="email"
           />
 
@@ -119,10 +119,6 @@ const AdminLogin = () => {
             {isSubmitting ? "Logging In..." : "Login"}
           </Button>
         </form>
-
-        <p className="mt-6 text-center text-xs leading-6 text-white/35">
-          Admin accounts are created from the backend seed script only.
-        </p>
       </Card>
     </div>
   );

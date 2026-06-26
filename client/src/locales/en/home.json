@@ -1,39 +1,30 @@
 {
   "hero": {
-    "label": "Drop 01 / The current uniform",
-    "title": "Made For The Street.",
-    "description": "Davinto builds everyday pieces with a sharper silhouette: deliberate colors, clean proportions, and the confidence of a limited fashion drop.",
-    "shop": "Shop The Drop",
-    "track": "Track Order",
-    "scroll": "Scroll to explore"
+    "label": "Davinto essentials",
+    "title": "Clean essentials for everyday wear.",
+    "description": "Davinto pieces made for everyday rotation.",
+    "shop": "Shop Now",
+    "track": "Track Order"
   },
   "features": {
-    "daily": "Built for daily rotation",
-    "variants": "Color and size variants",
-    "delivery": "Delivered across Egypt"
+    "line": "Everyday fit · Four essential colors · Delivered across Egypt"
   },
   "latest": {
-    "label": "Latest arrival",
-    "title": "The New Edit",
-    "viewAll": "View all products",
-    "emptyTitle": "The first collection is being prepared",
-    "emptyDescription": "Active products will appear here automatically when they are published from the Davinto dashboard."
+    "label": "Latest pieces",
+    "title": "Latest Pieces",
+    "viewAll": "View all",
+    "shopAll": "Shop All",
+    "emptyTitle": "Products coming soon",
+    "emptyDescription": "Active products will appear here when they are published."
   },
   "categories": {
-    "label": "Shop by chapter",
-    "description": "Move through Davinto by category—each one a different part of the same wardrobe.",
-    "fallbackTops": "Tops",
-    "fallbackBottoms": "Bottoms",
-    "fallbackOuterwear": "Outerwear"
-  },
-  "manifesto": {
-    "label": "Davinto manifesto",
-    "title": "Clothes Should Carry A Point Of View.",
-    "description": "Not corporate uniform. Not costume. Davinto is a wardrobe for movement, long days, late nights, and the version of you that shows up without asking permission."
+    "label": "Collection",
+    "heading": "Shop by Category",
+    "description": "Explore Davinto edits by category."
   },
   "cta": {
-    "label": "Your next rotation",
-    "title": "Find The Piece That Changes The Fit.",
-    "button": "Shop Davinto"
+    "label": "Davinto",
+    "title": "Built for daily rotation.",
+    "button": "Shop"
   }
 }

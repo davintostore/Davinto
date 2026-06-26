@@ -7,6 +7,7 @@ import Input from "../../components/ui/Input";
 import PageHeader from "../../components/ui/PageHeader";
 import Select from "../../components/ui/Select";
 import SectionLabel from "../../components/ui/SectionLabel";
+import Textarea from "../../components/ui/Textarea";
 
 import {
   getAdminOrdersRequest,
@@ -70,6 +71,18 @@ const formatDate = (value) => {
   });
 };
 
+const formatGovernorate = (value = "") => {
+  const rawValue = String(value || "").trim();
+  if (!rawValue) return "";
+
+  if (!rawValue.includes("_")) return rawValue;
+
+  return rawValue
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+};
+
 const getOrderStatusStyle = (status) => {
   if (status === "delivered") {
     return "border-emerald-300/25 bg-emerald-400/10 text-emerald-100";
@@ -131,6 +144,7 @@ const AdminOrders = () => {
     type: "",
     message: "",
   });
+  const [confirmationModal, setConfirmationModal] = useState(null);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["admin-orders", filters],
@@ -247,51 +261,90 @@ const AdminOrders = () => {
   const handleOrderStatusChange = (order, nextStatus) => {
     if (!nextStatus || nextStatus === order.orderStatus) return;
 
-    const note = window.prompt(
-      `Add an optional note for changing ${order.orderNumber} to "${statusLabel(
-        nextStatus,
-        orderStatusOptions
-      )}".`,
-      ""
-    );
-
-    if (note === null) return;
-
-    updateOrderStatusMutation.mutate({
-      orderId: order._id,
-      payload: {
-        orderStatus: nextStatus,
-        note,
-      },
+    setConfirmationModal({
+      type: "orderStatus",
+      order,
+      nextStatus,
+      targetLabel: statusLabel(nextStatus, orderStatusOptions),
+      note: "",
     });
   };
 
   const handlePaymentStatusChange = (order, nextStatus) => {
     if (!nextStatus || nextStatus === order.paymentStatus) return;
 
-    const confirmed = window.confirm(
-      `Change payment status for ${order.orderNumber} to "${statusLabel(
-        nextStatus,
-        paymentStatusOptions
-      )}"?`
-    );
-
-    if (!confirmed) return;
-
-    updatePaymentStatusMutation.mutate({
-      orderId: order._id,
-      paymentStatus: nextStatus,
+    setConfirmationModal({
+      type: "paymentStatus",
+      order,
+      nextStatus,
+      targetLabel: statusLabel(nextStatus, paymentStatusOptions),
+      note: "",
     });
   };
 
   const handleRetryPaymob = (order) => {
-    const confirmed = window.confirm(
-      `Generate a new Paymob card payment link for ${order.orderNumber}?`
+    setConfirmationModal({
+      type: "paymobRetry",
+      order,
+      nextStatus: "",
+      targetLabel: "Regenerate Paymob Link",
+      note: "",
+    });
+  };
+
+  const updateModalNote = (event) => {
+    setConfirmationModal((current) =>
+      current
+        ? {
+            ...current,
+            note: event.target.value,
+          }
+        : current
     );
+  };
 
-    if (!confirmed) return;
+  const closeConfirmationModal = () => {
+    if (
+      updateOrderStatusMutation.isPending ||
+      updatePaymentStatusMutation.isPending ||
+      retryPaymobMutation.isPending
+    ) {
+      return;
+    }
 
-    retryPaymobMutation.mutate(order._id);
+    setConfirmationModal(null);
+  };
+
+  const confirmPendingAction = () => {
+    if (!confirmationModal?.order) return;
+
+    const { order, nextStatus, note, type } = confirmationModal;
+
+    if (type === "orderStatus") {
+      updateOrderStatusMutation.mutate({
+        orderId: order._id,
+        payload: {
+          orderStatus: nextStatus,
+          note,
+        },
+      });
+      setConfirmationModal(null);
+      return;
+    }
+
+    if (type === "paymentStatus") {
+      updatePaymentStatusMutation.mutate({
+        orderId: order._id,
+        paymentStatus: nextStatus,
+      });
+      setConfirmationModal(null);
+      return;
+    }
+
+    if (type === "paymobRetry") {
+      retryPaymobMutation.mutate(order._id);
+      setConfirmationModal(null);
+    }
   };
 
   return (
@@ -312,6 +365,52 @@ const AdminOrders = () => {
           }`}
         >
           {feedback.message}
+        </div>
+      )}
+
+      {confirmationModal && (
+        <div className="fixed inset-0 z-[90] grid place-items-center bg-black/72 px-4">
+          <div className="w-full max-w-lg rounded-3xl border border-[#c7a852]/30 bg-[#110f0e] p-6 shadow-2xl">
+            <p className="text-xs font-black uppercase tracking-[0.3em] text-[#c7a852]">
+              Confirm Change
+            </p>
+            <h2 className="mt-3 text-2xl font-black uppercase text-white">
+              {confirmationModal.order.orderNumber}
+            </h2>
+            <p className="mt-3 text-sm leading-7 text-white/55">
+              {confirmationModal.type === "paymobRetry"
+                ? "Generate a new card payment link for this order."
+                : `Change ${
+                    confirmationModal.type === "paymentStatus"
+                      ? "payment status"
+                      : "order status"
+                  } to "${confirmationModal.targetLabel}".`}
+            </p>
+
+            {confirmationModal.type !== "paymobRetry" && (
+              <div className="mt-5">
+                <Textarea
+                  label="Optional Note"
+                  value={confirmationModal.note}
+                  onChange={updateModalNote}
+                  placeholder="Add context for this change..."
+                />
+              </div>
+            )}
+
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={closeConfirmationModal}
+              >
+                Cancel
+              </Button>
+              <Button type="button" onClick={confirmPendingAction}>
+                Confirm
+              </Button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -633,7 +732,7 @@ const AdminOrders = () => {
 
                             <p>
                               <span className="text-white/35">City:</span>{" "}
-                              {order.customerInfo?.city}
+                              {formatGovernorate(order.customerInfo?.city)}
                             </p>
 
                             <p className="leading-7">

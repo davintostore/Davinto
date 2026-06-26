@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAdminAuth } from "../../context/adminAuthContext";
 import Button from "../ui/Button";
 
@@ -70,7 +70,14 @@ const AdminLayout = () => {
           ))}
         </nav>
 
-        <div className="border-t border-[#f5f0e8]/10 pt-5">
+        <div className="space-y-3 border-t border-[#f5f0e8]/10 pt-5">
+          <Link
+            to="/"
+            className="block rounded-2xl border border-[#f5f0e8]/12 px-4 py-3 text-center text-sm font-bold text-[#f5f0e8]/65 transition hover:border-[#c7a852]/50 hover:text-[#f5f0e8]"
+          >
+            Go Home
+          </Link>
+
           <Button variant="secondary" className="w-full" onClick={handleLogout}>
             Logout
           </Button>
@@ -89,13 +96,22 @@ const AdminLayout = () => {
               )}
             </div>
 
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="rounded-full border border-white/15 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-white/65"
-            >
-              Logout
-            </button>
+            <div className="flex shrink-0 items-center gap-2">
+              <Link
+                to="/"
+                className="rounded-full border border-white/15 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-white/65"
+              >
+                Home
+              </Link>
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="rounded-full border border-white/15 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-white/65"
+              >
+                Logout
+              </button>
+            </div>
           </div>
 
           <nav className="mt-4 flex gap-2 overflow-x-auto pb-1">

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -10,10 +10,7 @@ import Input from "../../components/ui/Input";
 import PageHeader from "../../components/ui/PageHeader";
 import SectionLabel from "../../components/ui/SectionLabel";
 
-import {
-  retryCustomerPaymobPaymentRequest,
-  trackOrderRequest,
-} from "../../services/orderService";
+import { trackOrderRequest } from "../../services/orderService";
 import {
   formatCurrency,
   formatCustomerDate,
@@ -22,17 +19,12 @@ import {
   getPaymentStatusLabel,
 } from "../../utils/translatedLabels";
 import {
-  getLocalizedBundle,
-  getLocalizedOffer,
+  getLocalizedAppliedBundle,
+  getLocalizedAppliedOffer,
+  getLocalizedDeliverySnapshot,
+  getLocalizedOrderItem,
+  getLocalizedPaymentSnapshot,
 } from "../../utils/localizedContent";
-
-const canRetryCardPayment = (order) => {
-  return (
-    order?.paymentMethod === "paymobCard" &&
-    order.paymentStatus !== "paid" &&
-    order.orderStatus !== "cancelled"
-  );
-};
 
 const TrackOrder = () => {
   const { t, i18n } = useTranslation(["orders", "common", "checkout"]);
@@ -45,14 +37,16 @@ const TrackOrder = () => {
   const [initialTrackingCredentials] = useState(() => ({
     orderNumber:
       location.state?.orderNumber || searchParams.get("orderNumber") || "",
-    lookupToken:
-      location.state?.lookupToken || searchParams.get("lookupToken") || "",
+    email:
+      location.state?.email ||
+      searchParams.get("email") ||
+      location.state?.order?.customerInfo?.email ||
+      "",
   }));
-  const lookupTokenRef = useRef(initialTrackingCredentials.lookupToken);
 
   const [formData, setFormData] = useState({
     orderNumber: initialTrackingCredentials.orderNumber,
-    lookupToken: initialTrackingCredentials.lookupToken,
+    email: initialTrackingCredentials.email,
   });
 
   const [error, setError] = useState("");
@@ -62,13 +56,12 @@ const TrackOrder = () => {
 
   const trackMutation = useMutation({
     mutationFn: trackOrderRequest,
-    onSuccess: (response, variables) => {
+    onSuccess: (response) => {
       setTrackedOrder(response.order);
-      lookupTokenRef.current = variables.lookupToken;
       setFormData((current) => ({
         ...current,
         orderNumber: response.order?.orderNumber || current.orderNumber,
-        lookupToken: "",
+        email: response.order?.customerInfo?.email || current.email,
       }));
       setError("");
     },
@@ -80,40 +73,11 @@ const TrackOrder = () => {
     },
   });
 
-  const retryPaymentMutation = useMutation({
-    mutationFn: retryCustomerPaymobPaymentRequest,
-    onSuccess: (response) => {
-      const nextOrder = response?.order;
-      const paymentLink = response?.payment?.redirectUrl || "";
-
-      if (nextOrder) {
-        setTrackedOrder(nextOrder);
-      }
-
-      if (paymentLink) {
-        window.location.href = paymentLink;
-        return;
-      }
-
-      setError(
-        response?.payment?.error ||
-          t("orders:track.paymentLinkError")
-      );
-    },
-    onError: (err) => {
-      setError(
-        err?.friendlyMessage ||
-          err?.message ||
-          t("orders:track.paymentRetryError")
-      );
-    },
-  });
-
   useEffect(() => {
-    const { orderNumber, lookupToken } = initialTrackingCredentials;
+    const { orderNumber, email } = initialTrackingCredentials;
 
-    if (orderNumber && lookupToken) {
-      trackMutation.mutate({ orderNumber, lookupToken });
+    if (orderNumber && email) {
+      trackMutation.mutate({ orderNumber, email });
     }
 
     if (searchParams.has("lookupToken")) {
@@ -138,29 +102,14 @@ const TrackOrder = () => {
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    if (!formData.orderNumber.trim() || !formData.lookupToken.trim()) {
+    if (!formData.orderNumber.trim() || !formData.email.trim()) {
       setError(t("orders:track.required"));
       return;
     }
 
     trackMutation.mutate({
       orderNumber: formData.orderNumber.trim(),
-      lookupToken: formData.lookupToken.trim(),
-    });
-  };
-
-  const handleRetryCardPayment = () => {
-    const lookupToken =
-      formData.lookupToken.trim() || lookupTokenRef.current.trim();
-
-    if (!trackedOrder?.orderNumber || !lookupToken) {
-      setError(t("orders:track.required"));
-      return;
-    }
-
-    retryPaymentMutation.mutate({
-      orderNumber: trackedOrder.orderNumber,
-      lookupToken,
+      email: formData.email.trim(),
     });
   };
 
@@ -170,6 +119,14 @@ const TrackOrder = () => {
   const showPaymentFailed =
     ["failed", "invalid", "missing"].includes(paymentResult) ||
     (paymentResult && paymentResult !== "success");
+  const localizedPaymentSnapshot = getLocalizedPaymentSnapshot(
+    trackedOrder?.paymentSnapshot,
+    language
+  );
+  const localizedDeliverySnapshot = getLocalizedDeliverySnapshot(
+    trackedOrder?.deliverySnapshot,
+    language
+  );
 
   return (
     <>
@@ -217,11 +174,12 @@ const TrackOrder = () => {
                 />
 
                 <Input
-                  label={t("orders:track.token")}
-                  name="lookupToken"
-                  value={formData.lookupToken}
+                  label={t("orders:track.email")}
+                  name="email"
+                  type="email"
+                  value={formData.email}
                   onChange={updateField}
-                  placeholder={t("orders:track.tokenPlaceholder")}
+                  placeholder="you@example.com"
                 />
 
                 <Button
@@ -235,29 +193,6 @@ const TrackOrder = () => {
                 </Button>
               </form>
 
-              {canRetryCardPayment(trackedOrder) && (
-                <div className="mt-5 border border-[#c7a852]/30 bg-[#c7a852]/9 p-5">
-                  <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
-                    {t("orders:track.retryPending")}
-                  </p>
-
-                  <p className="mt-3 text-sm leading-7 text-[#f5f0e8]/65">
-                    {t("orders:track.retryDescription")}
-                  </p>
-
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="mt-4 w-full"
-                    onClick={handleRetryCardPayment}
-                    disabled={retryPaymentMutation.isPending}
-                  >
-                    {retryPaymentMutation.isPending
-                      ? t("orders:track.openingPayment")
-                      : t("orders:track.retryPayment")}
-                  </Button>
-                </div>
-              )}
             </Card>
 
             {!trackedOrder ? (
@@ -336,55 +271,79 @@ const TrackOrder = () => {
                     </SectionLabel>
 
                     <div className="space-y-3">
-                      {trackedOrder.appliedBundles?.map((bundle, index) => (
-                        <div
-                          key={`${bundle.slug}-${index}`}
-                          className="border-l-2 border-[#c7a852] bg-[#c7a852]/7 p-4"
-                        >
-                          <div className="flex justify-between gap-4">
-                            <div>
-                              <p className="text-sm font-black uppercase text-white">
-                                {getLocalizedBundle(bundle, language).title}
-                              </p>
-                              <p className="mt-1 text-xs text-[#f5f0e8]/62">
-                                {t("orders:track.bundleApplication", {
-                                  count: bundle.applications,
-                                })}
+                      {trackedOrder.appliedBundles?.map((bundle, index) => {
+                        const localizedBundle = getLocalizedAppliedBundle(
+                          bundle,
+                          language
+                        );
+
+                        return (
+                          <div
+                            key={`${bundle.slug}-${index}`}
+                            className="border-l-2 border-[#c7a852] bg-[#c7a852]/7 p-4"
+                          >
+                            <div className="flex justify-between gap-4">
+                              <div>
+                                <p className="text-sm font-black uppercase text-white">
+                                  {localizedBundle.title}
+                                </p>
+                                <p className="mt-1 text-xs text-[#f5f0e8]/62">
+                                  {t("orders:track.bundleApplication", {
+                                    count: bundle.applications,
+                                  })}
+                                </p>
+                                {localizedBundle.description && (
+                                  <p className="mt-2 text-xs leading-6 text-[#f5f0e8]/52">
+                                    {localizedBundle.description}
+                                  </p>
+                                )}
+                              </div>
+
+                              <p className="text-sm font-black text-emerald-100">
+                                -{formatMoney(bundle.discountAmount)}
                               </p>
                             </div>
-
-                            <p className="text-sm font-black text-emerald-100">
-                              -{formatMoney(bundle.discountAmount)}
-                            </p>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
 
-                      {trackedOrder.appliedOffers?.map((offer, index) => (
-                        <div
-                          key={`${offer.slug}-${index}`}
-                          className="border-l-2 border-[#c7a852] bg-[#c7a852]/7 p-4"
-                        >
-                          <div className="flex justify-between gap-4">
-                            <div>
-                              <p className="text-sm font-black uppercase text-white">
-                                {getLocalizedOffer(offer, language).title}
-                              </p>
-                              <p className="mt-1 text-xs text-[#f5f0e8]/62">
-                                {offer.freeDeliveryApplied
-                                  ? t("orders:track.offerFree")
-                                  : t("orders:track.offer")}
+                      {trackedOrder.appliedOffers?.map((offer, index) => {
+                        const localizedOffer = getLocalizedAppliedOffer(
+                          offer,
+                          language
+                        );
+
+                        return (
+                          <div
+                            key={`${offer.slug}-${index}`}
+                            className="border-l-2 border-[#c7a852] bg-[#c7a852]/7 p-4"
+                          >
+                            <div className="flex justify-between gap-4">
+                              <div>
+                                <p className="text-sm font-black uppercase text-white">
+                                  {localizedOffer.title}
+                                </p>
+                                <p className="mt-1 text-xs text-[#f5f0e8]/62">
+                                  {offer.freeDeliveryApplied
+                                    ? t("orders:track.offerFree")
+                                    : t("orders:track.offer")}
+                                </p>
+                                {localizedOffer.description && (
+                                  <p className="mt-2 text-xs leading-6 text-[#f5f0e8]/52">
+                                    {localizedOffer.description}
+                                  </p>
+                                )}
+                              </div>
+
+                              <p className="text-sm font-black text-emerald-100">
+                                {offer.discountAmount > 0
+                                  ? `-${formatMoney(offer.discountAmount)}`
+                                  : t("checkout:freeDelivery")}
                               </p>
                             </div>
-
-                            <p className="text-sm font-black text-emerald-100">
-                              {offer.discountAmount > 0
-                                ? `-${formatMoney(offer.discountAmount)}`
-                                : t("checkout:freeDelivery")}
-                            </p>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
 
                       {trackedOrder.discountCode?.code && (
                         <div className="border-l-2 border-[#c7a852] bg-[#c7a852]/7 p-4">
@@ -482,6 +441,28 @@ const TrackOrder = () => {
                       </span>
                     </div>
 
+                    {localizedDeliverySnapshot?.notes && (
+                      <p className="border border-[#f5f0e8]/10 bg-[#f5f0e8]/3 p-3 text-xs leading-6 text-[#f5f0e8]/45">
+                        {localizedDeliverySnapshot.notes}
+                      </p>
+                    )}
+
+                    {(localizedPaymentSnapshot?.label ||
+                      localizedPaymentSnapshot?.instructions) && (
+                      <div className="border border-[#f5f0e8]/10 bg-[#f5f0e8]/3 p-3 text-xs leading-6 text-[#f5f0e8]/45">
+                        {localizedPaymentSnapshot?.label && (
+                          <p className="font-bold text-[#f5f0e8]/70">
+                            {localizedPaymentSnapshot.label}
+                          </p>
+                        )}
+                        {localizedPaymentSnapshot?.instructions && (
+                          <p className="mt-1">
+                            {localizedPaymentSnapshot.instructions}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                     <div className="flex justify-between border-t border-[#c7a852]/25 pt-4 font-serif text-xl font-semibold">
                       <span>{t("common:total")}</span>
                       <span>{formatMoney(trackedOrder.total)}</span>
@@ -493,42 +474,46 @@ const TrackOrder = () => {
                   <SectionLabel>{t("common:items")}</SectionLabel>
 
                   <div className="space-y-4">
-                    {trackedOrder.items?.map((item) => (
-                      <div
-                        key={
-                          item._id ||
-                          `${item.name}-${item.color?.name}-${item.size?.label}`
-                        }
-                        className="flex gap-3 border-b border-[#f5f0e8]/10 pb-4 last:border-b-0 last:pb-0"
-                      >
-                        <div className="h-20 w-16 shrink-0 overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f]">
-                          {item.image ? (
-                            <img
-                              src={item.image}
-                              alt={item.name}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <div className="h-full w-full bg-white/5" />
-                          )}
+                    {trackedOrder.items?.map((rawItem) => {
+                      const item = getLocalizedOrderItem(rawItem, language);
+
+                      return (
+                        <div
+                          key={
+                            item._id ||
+                            `${item.name}-${item.color?.name}-${item.size?.label}`
+                          }
+                          className="flex gap-3 border-b border-[#f5f0e8]/10 pb-4 last:border-b-0 last:pb-0"
+                        >
+                          <div className="h-20 w-16 shrink-0 overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f]">
+                            {item.image ? (
+                              <img
+                                src={item.image}
+                                alt={item.imageAlt || item.name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="h-full w-full bg-white/5" />
+                            )}
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-serif text-base font-semibold text-[#f5f0e8]">
+                              {item.name}
+                            </p>
+
+                            <p className="mt-1 text-xs text-white/40">
+                              {item.color?.name} / {item.size?.label} ×{" "}
+                              {item.quantity}
+                            </p>
+
+                            <p className="mt-2 text-sm font-bold text-[#c7a852]">
+                              {formatMoney(item.lineSubtotal)}
+                            </p>
+                          </div>
                         </div>
-
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate font-serif text-base font-semibold text-[#f5f0e8]">
-                            {item.name}
-                          </p>
-
-                          <p className="mt-1 text-xs text-white/40">
-                            {item.color?.name} / {item.size?.label} ×{" "}
-                            {item.quantity}
-                          </p>
-
-                          <p className="mt-2 text-sm font-bold text-[#c7a852]">
-                            {formatMoney(item.lineSubtotal)}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </Card>
 

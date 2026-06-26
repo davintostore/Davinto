@@ -82,12 +82,10 @@ const discountCodeSchema = new mongoose.Schema(
   }
 );
 
-discountCodeSchema.pre("validate", function normalizeCode(next) {
+discountCodeSchema.pre("validate", function normalizeCode() {
   if (this.code) {
     this.code = String(this.code).trim().toUpperCase().replace(/\s+/g, "");
   }
-
-  next();
 });
 
 discountCodeSchema.virtual("remainingUses").get(function getRemainingUses() {
@@ -98,7 +96,6 @@ discountCodeSchema.virtual("remainingUses").get(function getRemainingUses() {
 discountCodeSchema.set("toJSON", { virtuals: true });
 discountCodeSchema.set("toObject", { virtuals: true });
 
-discountCodeSchema.index({ code: 1 }, { unique: true });
 discountCodeSchema.index({ status: 1, startsAt: 1, endsAt: 1 });
 
 module.exports = mongoose.model("DiscountCode", discountCodeSchema);

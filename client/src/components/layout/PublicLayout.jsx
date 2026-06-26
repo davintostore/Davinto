@@ -55,7 +55,7 @@ const PublicLayout = () => {
       <header className="fixed inset-x-0 top-0 z-50 border-b border-[#c7a852]/25 bg-[#1c1917]/96">
         <div className="border-b border-[#f5f0e8]/8 bg-[#882c30]">
           <Container className="flex min-h-7 items-center justify-center py-1.5 text-center">
-            <p className="text-[0.58rem] font-black uppercase tracking-[0.28em] text-[#f5f0e8]/85">
+            <p className="text-[0.62rem] font-black uppercase tracking-[0.12em] text-[#f5f0e8]/85 sm:tracking-[0.22em]">
               {t("announcement")}
             </p>
           </Container>
@@ -272,10 +272,16 @@ const PublicLayout = () => {
         <Container className="py-16 sm:py-20">
           <div className="grid gap-12 lg:grid-cols-[1.2fr_0.8fr_0.8fr]">
             <div>
+              <img
+                src="/images/logo/logo-1.webp"
+                alt={t("footer.logoAlt")}
+                className="mb-6 h-auto w-24 sm:w-28"
+                loading="lazy"
+              />
               <p className="brand-wordmark text-6xl text-[#f5f0e8] sm:text-7xl">
                 {storeName}
               </p>
-              <p className="mt-6 max-w-lg font-serif text-2xl leading-snug text-[#f5f0e8]/72">
+              <p className="mt-5 max-w-md text-sm leading-7 text-[#f5f0e8]/58">
                 {t("footer.statement")}
               </p>
             </div>

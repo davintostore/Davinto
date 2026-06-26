@@ -1,5 +1,18 @@
 const mongoose = require("mongoose");
 
+const { getDefaultDeliveryZones } = require("../utils/egyptGovernorates");
+
+const deliveryZoneFields = Object.fromEntries(
+  Object.entries(getDefaultDeliveryZones()).map(([slug, fee]) => [
+    slug,
+    {
+      type: Number,
+      default: fee,
+      min: 0,
+    },
+  ])
+);
+
 const paymentMethodSchema = new mongoose.Schema(
   {
     enabled: {
@@ -110,7 +123,7 @@ const siteSettingsSchema = new mongoose.Schema(
     delivery: {
       baseFee: {
         type: Number,
-        default: 0,
+        default: 120,
         min: 0,
       },
 
@@ -124,6 +137,10 @@ const siteSettingsSchema = new mongoose.Schema(
         type: String,
         trim: true,
         default: "",
+      },
+
+      zones: {
+        ...deliveryZoneFields,
       },
     },
 
@@ -142,7 +159,8 @@ const siteSettingsSchema = new mongoose.Schema(
         default: () => ({
           enabled: true,
           label: "Instapay",
-          instructions: "",
+          instructions:
+            "Send the payment to 01271530992 then paste the transaction reference.",
         }),
       },
 
@@ -151,7 +169,8 @@ const siteSettingsSchema = new mongoose.Schema(
         default: () => ({
           enabled: true,
           label: "Vodafone Cash",
-          instructions: "",
+          instructions:
+            "Send the payment to 01097187348 then paste the transaction reference.",
         }),
       },
 
@@ -169,7 +188,7 @@ const siteSettingsSchema = new mongoose.Schema(
       instapayHandle: {
         type: String,
         trim: true,
-        default: "",
+        default: "01271530992",
       },
 
       instapayQrImage: {
@@ -181,7 +200,7 @@ const siteSettingsSchema = new mongoose.Schema(
       vodafoneCashNumber: {
         type: String,
         trim: true,
-        default: "",
+        default: "01097187348",
       },
 
       vodafoneCashQrImage: {

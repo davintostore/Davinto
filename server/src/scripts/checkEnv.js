@@ -57,6 +57,7 @@ const groups = [
       "SMTP_USER",
       "SMTP_PASS",
       "SMTP_SECURE",
+      "SMTP_TLS_REJECT_UNAUTHORIZED",
       "EMAIL_FROM",
       "ADMIN_ORDER_EMAIL",
     ],
@@ -139,6 +140,27 @@ if (
   console.log(
     "Customer auth development note: missing dedicated customer secrets will fall back to JWT_SECRET in development only."
   );
+  console.log("");
+}
+
+if (
+  String(process.env.SMTP_TLS_REJECT_UNAUTHORIZED || "")
+    .trim()
+    .toLowerCase() === "false"
+) {
+  console.log("SMTP TLS Note");
+  console.log("-------------");
+
+  if (String(process.env.NODE_ENV || "").trim() === "production") {
+    console.log(
+      "SMTP_TLS_REJECT_UNAUTHORIZED=false is not allowed by the email service in production; TLS certificate verification remains enabled."
+    );
+  } else {
+    console.log(
+      "SMTP_TLS_REJECT_UNAUTHORIZED=false is set for local development. This can work around local certificate interception, but should not be used in production."
+    );
+  }
+
   console.log("");
 }
 

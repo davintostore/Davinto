@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import ProtectedAdminRoute from "../components/auth/ProtectedAdminRoute";
 import ProtectedCustomerRoute from "../components/auth/ProtectedCustomerRoute";
+import ScrollToTop from "../components/common/ScrollToTop";
 import MetaPixelRouteTracker from "../components/meta/MetaPixelRouteTracker";
 
 import AdminLayout from "../components/layout/AdminLayout";
@@ -33,6 +34,7 @@ import AdminSettings from "../pages/admin/AdminSettings";
 const AppRoutes = () => {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <MetaPixelRouteTracker />
 
       <Routes>

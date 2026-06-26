@@ -9,6 +9,7 @@ const DiscountCode = require("../models/DiscountCode");
 const Offer = require("../models/Offer");
 const Product = require("../models/Product");
 const SiteSettings = require("../models/SiteSettings");
+const { getDefaultDeliveryZones } = require("../utils/egyptGovernorates");
 
 const normalizeText = (value = "") => {
   return String(value || "").trim();
@@ -82,7 +83,7 @@ const upsertCategory = async ({ name, slug, description, sortOrder }) => {
       },
     },
     {
-      new: true,
+      returnDocument: "after",
       upsert: true,
       setDefaultsOnInsert: true,
     }
@@ -113,9 +114,24 @@ const seedCategories = async () => {
   };
 };
 
-const createColor = ({ name, slug, hex, imageSeed, sizes }) => {
+const createColor = ({
+  name,
+  nameAr = "",
+  slug,
+  hex,
+  imageSeed,
+  primaryAltAr = "",
+  hoverAltAr = "",
+  detailAltAr = "",
+  sizes,
+}) => {
   return {
     name,
+    translations: {
+      ar: {
+        name: nameAr,
+      },
+    },
     slug,
     hex,
     isActive: true,
@@ -126,6 +142,11 @@ const createColor = ({ name, slug, hex, imageSeed, sizes }) => {
         )}+Front`,
         publicId: "",
         alt: `${imageSeed} front`,
+        translations: {
+          ar: {
+            alt: primaryAltAr,
+          },
+        },
         role: "primary",
         position: 1,
       },
@@ -135,6 +156,11 @@ const createColor = ({ name, slug, hex, imageSeed, sizes }) => {
         )}+Hover`,
         publicId: "",
         alt: `${imageSeed} hover`,
+        translations: {
+          ar: {
+            alt: hoverAltAr,
+          },
+        },
         role: "hover",
         position: 2,
       },
@@ -144,6 +170,11 @@ const createColor = ({ name, slug, hex, imageSeed, sizes }) => {
         )}+Detail`,
         publicId: "",
         alt: `${imageSeed} detail`,
+        translations: {
+          ar: {
+            alt: detailAltAr,
+          },
+        },
         role: "gallery",
         position: 3,
       },
@@ -186,7 +217,7 @@ const upsertProduct = async (payload) => {
     { slug: payload.slug },
     payload,
     {
-      new: true,
+      returnDocument: "after",
       upsert: true,
       setDefaultsOnInsert: true,
       runValidators: true,
@@ -218,19 +249,41 @@ const seedProducts = async ({ tShirts, pants }) => {
       title: "Davinto Essential Tee",
       description: "Premium Davinto essential t-shirt.",
     },
+    translations: {
+      ar: {
+        name: "\u062a\u064a\u0634\u064a\u0631\u062a \u062f\u0627\u0641\u064a\u0646\u062a\u0648 \u0627\u0644\u0623\u0633\u0627\u0633\u064a",
+        shortDescription:
+          "\u062a\u064a\u0634\u064a\u0631\u062a \u064a\u0648\u0645\u064a \u0646\u0638\u064a\u0641 \u0628\u062e\u0627\u0645\u0629 \u0645\u0645\u064a\u0632\u0629.",
+        badges: ["\u062c\u062f\u064a\u062f", "\u0623\u0633\u0627\u0633\u064a"],
+      },
+    },
     colors: [
       createColor({
         name: "Black",
+        nameAr: "\u0623\u0633\u0648\u062f",
         slug: "black",
         hex: "#111111",
         imageSeed: "Essential Tee Black",
+        primaryAltAr:
+          "\u062a\u064a\u0634\u064a\u0631\u062a \u062f\u0627\u0641\u064a\u0646\u062a\u0648 \u0623\u0633\u0627\u0633\u064a \u0623\u0633\u0648\u062f",
+        hoverAltAr:
+          "\u062a\u064a\u0634\u064a\u0631\u062a \u0623\u0633\u0627\u0633\u064a \u0623\u0633\u0648\u062f \u0645\u0646 \u0632\u0627\u0648\u064a\u0629 \u0623\u062e\u0631\u0649",
+        detailAltAr:
+          "\u062a\u0641\u0627\u0635\u064a\u0644 \u062e\u0627\u0645\u0629 \u0627\u0644\u062a\u064a\u0634\u064a\u0631\u062a \u0627\u0644\u0623\u0633\u0648\u062f",
         sizes: createSizes("DV-TEE-BLK"),
       }),
       createColor({
         name: "Off White",
+        nameAr: "\u0623\u0648\u0641 \u0648\u0627\u064a\u062a",
         slug: "off-white",
         hex: "#f7f3ea",
         imageSeed: "Essential Tee Off White",
+        primaryAltAr:
+          "\u062a\u064a\u0634\u064a\u0631\u062a \u062f\u0627\u0641\u064a\u0646\u062a\u0648 \u0623\u0633\u0627\u0633\u064a \u0623\u0648\u0641 \u0648\u0627\u064a\u062a",
+        hoverAltAr:
+          "\u062a\u064a\u0634\u064a\u0631\u062a \u0623\u0633\u0627\u0633\u064a \u0623\u0648\u0641 \u0648\u0627\u064a\u062a \u0645\u0646 \u0632\u0627\u0648\u064a\u0629 \u0623\u062e\u0631\u0649",
+        detailAltAr:
+          "\u062a\u0641\u0627\u0635\u064a\u0644 \u062e\u0627\u0645\u0629 \u0627\u0644\u062a\u064a\u0634\u064a\u0631\u062a \u0627\u0644\u0623\u0648\u0641 \u0648\u0627\u064a\u062a",
         sizes: createSizes("DV-TEE-OW"),
       }),
     ],
@@ -256,19 +309,41 @@ const seedProducts = async ({ tShirts, pants }) => {
       title: "Davinto Washed Tee",
       description: "Premium washed t-shirt from Davinto.",
     },
+    translations: {
+      ar: {
+        name: "\u062a\u064a\u0634\u064a\u0631\u062a \u062f\u0627\u0641\u064a\u0646\u062a\u0648 \u0648\u0627\u0634\u062f",
+        shortDescription:
+          "\u0645\u0644\u0645\u0633 \u0648\u0627\u0634\u062f \u0648\u0642\u0635\u0629 \u0648\u0627\u0633\u0639\u0629 \u0644\u0644\u0627\u0633\u062a\u062e\u062f\u0627\u0645 \u0627\u0644\u064a\u0648\u0645\u064a.",
+        badges: ["\u0648\u0627\u0634\u062f"],
+      },
+    },
     colors: [
       createColor({
         name: "Charcoal",
+        nameAr: "\u0641\u062d\u0645\u064a",
         slug: "charcoal",
         hex: "#2b2b2b",
         imageSeed: "Washed Tee Charcoal",
+        primaryAltAr:
+          "\u062a\u064a\u0634\u064a\u0631\u062a \u0648\u0627\u0634\u062f \u0641\u062d\u0645\u064a",
+        hoverAltAr:
+          "\u062a\u064a\u0634\u064a\u0631\u062a \u0648\u0627\u0634\u062f \u0641\u062d\u0645\u064a \u0645\u0646 \u0632\u0627\u0648\u064a\u0629 \u0623\u062e\u0631\u0649",
+        detailAltAr:
+          "\u062a\u0641\u0627\u0635\u064a\u0644 \u062e\u0627\u0645\u0629 \u0627\u0644\u062a\u064a\u0634\u064a\u0631\u062a \u0627\u0644\u0641\u062d\u0645\u064a",
         sizes: createSizes("DV-WTEE-CHR"),
       }),
       createColor({
         name: "Stone",
+        nameAr: "\u0633\u062a\u0648\u0646",
         slug: "stone",
         hex: "#b7aa97",
         imageSeed: "Washed Tee Stone",
+        primaryAltAr:
+          "\u062a\u064a\u0634\u064a\u0631\u062a \u0648\u0627\u0634\u062f \u0633\u062a\u0648\u0646",
+        hoverAltAr:
+          "\u062a\u064a\u0634\u064a\u0631\u062a \u0648\u0627\u0634\u062f \u0633\u062a\u0648\u0646 \u0645\u0646 \u0632\u0627\u0648\u064a\u0629 \u0623\u062e\u0631\u0649",
+        detailAltAr:
+          "\u062a\u0641\u0627\u0635\u064a\u0644 \u062e\u0627\u0645\u0629 \u0627\u0644\u062a\u064a\u0634\u064a\u0631\u062a \u0627\u0644\u0633\u062a\u0648\u0646",
         sizes: createSizes("DV-WTEE-STN"),
       }),
     ],
@@ -294,19 +369,41 @@ const seedProducts = async ({ tShirts, pants }) => {
       title: "Davinto Straight Pants",
       description: "Premium straight pants from Davinto.",
     },
+    translations: {
+      ar: {
+        name: "\u0628\u0646\u0637\u0644\u0648\u0646 \u062f\u0627\u0641\u064a\u0646\u062a\u0648 \u0633\u062a\u0631\u064a\u062a",
+        shortDescription:
+          "\u0628\u0646\u0637\u0644\u0648\u0646 \u0628\u0642\u0635\u0629 \u0633\u062a\u0631\u064a\u062a \u0646\u0638\u064a\u0641\u0629 \u0644\u0644\u0625\u0637\u0644\u0627\u0644\u0627\u062a \u0627\u0644\u064a\u0648\u0645\u064a\u0629.",
+        badges: ["\u0627\u0644\u0623\u0643\u062b\u0631 \u0645\u0628\u064a\u0639\u0627"],
+      },
+    },
     colors: [
       createColor({
         name: "Black",
+        nameAr: "\u0623\u0633\u0648\u062f",
         slug: "black",
         hex: "#111111",
         imageSeed: "Straight Pants Black",
+        primaryAltAr:
+          "\u0628\u0646\u0637\u0644\u0648\u0646 \u062f\u0627\u0641\u064a\u0646\u062a\u0648 \u0633\u062a\u0631\u064a\u062a \u0623\u0633\u0648\u062f",
+        hoverAltAr:
+          "\u0628\u0646\u0637\u0644\u0648\u0646 \u0633\u062a\u0631\u064a\u062a \u0623\u0633\u0648\u062f \u0645\u0646 \u0632\u0627\u0648\u064a\u0629 \u0623\u062e\u0631\u0649",
+        detailAltAr:
+          "\u062a\u0641\u0627\u0635\u064a\u0644 \u062e\u0627\u0645\u0629 \u0627\u0644\u0628\u0646\u0637\u0644\u0648\u0646 \u0627\u0644\u0623\u0633\u0648\u062f",
         sizes: createSizes("DV-PANTS-BLK"),
       }),
       createColor({
         name: "Sand",
+        nameAr: "\u0631\u0645\u0644\u064a",
         slug: "sand",
         hex: "#c8b99e",
         imageSeed: "Straight Pants Sand",
+        primaryAltAr:
+          "\u0628\u0646\u0637\u0644\u0648\u0646 \u062f\u0627\u0641\u064a\u0646\u062a\u0648 \u0633\u062a\u0631\u064a\u062a \u0631\u0645\u0644\u064a",
+        hoverAltAr:
+          "\u0628\u0646\u0637\u0644\u0648\u0646 \u0633\u062a\u0631\u064a\u062a \u0631\u0645\u0644\u064a \u0645\u0646 \u0632\u0627\u0648\u064a\u0629 \u0623\u062e\u0631\u0649",
+        detailAltAr:
+          "\u062a\u0641\u0627\u0635\u064a\u0644 \u062e\u0627\u0645\u0629 \u0627\u0644\u0628\u0646\u0637\u0644\u0648\u0646 \u0627\u0644\u0631\u0645\u0644\u064a",
         sizes: createSizes("DV-PANTS-SND"),
       }),
     ],
@@ -335,11 +432,17 @@ const seedSettings = async () => {
 
   settings.delivery = {
     ...(settings.delivery || {}),
-    baseFee: settings.delivery?.baseFee ?? 85,
+    baseFee: settings.delivery?.baseFee ?? 120,
     freeDeliveryThreshold: settings.delivery?.freeDeliveryThreshold ?? 2000,
     notes:
       settings.delivery?.notes ||
       "Delivery fees and timing may vary depending on location.",
+    zones: {
+      ...getDefaultDeliveryZones(),
+      ...(settings.delivery?.zones || {}),
+      cairo: 70,
+      giza: 70,
+    },
   };
 
   settings.payments = {
@@ -367,9 +470,11 @@ const seedSettings = async () => {
 
   settings.manualPayment = {
     ...(settings.manualPayment || {}),
-    instapayHandle: settings.manualPayment?.instapayHandle || "",
+    instapayHandle:
+      settings.manualPayment?.instapayHandle || "01271530992",
     instapayQrImage: settings.manualPayment?.instapayQrImage || "",
-    vodafoneCashNumber: settings.manualPayment?.vodafoneCashNumber || "",
+    vodafoneCashNumber:
+      settings.manualPayment?.vodafoneCashNumber || "01097187348",
     vodafoneCashQrImage: settings.manualPayment?.vodafoneCashQrImage || "",
     requireTransactionReference: true,
     requireProofImage: Boolean(settings.manualPayment?.requireProofImage),
@@ -443,7 +548,7 @@ const seedDiscountCode = async () => {
       status: "active",
     },
     {
-      new: true,
+      returnDocument: "after",
       upsert: true,
       setDefaultsOnInsert: true,
       runValidators: true,
@@ -484,7 +589,7 @@ const seedOffer = async ({ tShirts }) => {
       status: "active",
     },
     {
-      new: true,
+      returnDocument: "after",
       upsert: true,
       setDefaultsOnInsert: true,
       runValidators: true,
@@ -526,7 +631,7 @@ const seedBundle = async ({ blackTee, washedTee }) => {
       status: "active",
     },
     {
-      new: true,
+      returnDocument: "after",
       upsert: true,
       setDefaultsOnInsert: true,
       runValidators: true,

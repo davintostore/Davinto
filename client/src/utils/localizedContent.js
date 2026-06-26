@@ -260,3 +260,80 @@ export const getLocalizedBundle = (bundle, language = "en") => {
         : bundle.description,
   };
 };
+
+export const getLocalizedOrderItem = (item, language = "en") => {
+  if (!item) return item;
+
+  const arabic = item.translations?.ar;
+  const localizedName =
+    isArabic(language) && hasText(arabic?.name) ? arabic.name : item.name;
+  const localizedColorName =
+    isArabic(language) && hasText(arabic?.colorName)
+      ? arabic.colorName
+      : item.color?.name || "";
+  const localizedImageAlt =
+    isArabic(language) && hasText(arabic?.imageAlt)
+      ? arabic.imageAlt
+      : item.imageAlt || localizedName || item.name || "";
+  const localizedBadges =
+    isArabic(language) &&
+    Array.isArray(arabic?.badges) &&
+    arabic.badges.some(hasText)
+      ? arabic.badges.map((badge) => String(badge).trim()).filter(Boolean)
+      : Array.isArray(item.badges)
+        ? [...item.badges]
+        : [];
+
+  return {
+    ...item,
+    name: localizedName,
+    imageAlt: localizedImageAlt,
+    shortDescription:
+      isArabic(language) && hasText(arabic?.shortDescription)
+        ? arabic.shortDescription
+        : item.shortDescription || "",
+    badges: localizedBadges,
+    color: {
+      ...(item.color || {}),
+      name: localizedColorName,
+    },
+  };
+};
+
+export const getLocalizedAppliedOffer = (offer, language = "en") =>
+  getLocalizedOffer(offer, language);
+
+export const getLocalizedAppliedBundle = (bundle, language = "en") =>
+  getLocalizedBundle(bundle, language);
+
+export const getLocalizedPaymentSnapshot = (snapshot, language = "en") => {
+  if (!snapshot) return snapshot;
+
+  const arabic = snapshot.translations?.ar;
+
+  return {
+    ...snapshot,
+    label:
+      isArabic(language) && hasText(arabic?.label)
+        ? arabic.label
+        : snapshot.label || "",
+    instructions:
+      isArabic(language) && hasText(arabic?.instructions)
+        ? arabic.instructions
+        : snapshot.instructions || "",
+  };
+};
+
+export const getLocalizedDeliverySnapshot = (snapshot, language = "en") => {
+  if (!snapshot) return snapshot;
+
+  const arabic = snapshot.translations?.ar;
+
+  return {
+    ...snapshot,
+    notes:
+      isArabic(language) && hasText(arabic?.notes)
+        ? arabic.notes
+        : snapshot.notes || "",
+  };
+};

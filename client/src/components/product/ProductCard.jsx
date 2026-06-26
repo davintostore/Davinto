@@ -4,6 +4,16 @@ import { useTranslation } from "react-i18next";
 import { formatCurrency } from "../../utils/translatedLabels";
 import { getLocalizedProduct } from "../../utils/localizedContent";
 
+const getSimpleBadge = (badge = "", t) => {
+  const normalizedBadge = String(badge || "").toLowerCase();
+
+  if (normalizedBadge.includes("launch") || normalizedBadge.includes("offer")) {
+    return t("common:offer");
+  }
+
+  return badge;
+};
+
 const ProductCard = ({ product }) => {
   const { t, i18n } = useTranslation(["common", "catalog"]);
   const language = i18n.resolvedLanguage === "ar" ? "ar" : "en";
@@ -24,6 +34,12 @@ const ProductCard = ({ product }) => {
     });
   const hasHoverImage = hoverImage && hoverImage !== primaryImage;
   const isOnSale = product.compareAtPrice > product.price;
+  const displayBadges = isOnSale
+    ? []
+    : (localizedProduct.badges || [])
+        .map((badge) => getSimpleBadge(badge, t))
+        .filter(Boolean)
+        .slice(0, 1);
 
   return (
     <Link
@@ -67,22 +83,19 @@ const ProductCard = ({ product }) => {
 
           <div className="absolute left-0 top-0 flex flex-wrap">
             {isOnSale && (
-              <span className="bg-[#882c30] px-3 py-2 text-[0.56rem] font-black uppercase tracking-[0.22em] text-[#f5f0e8]">
+              <span className="bg-[#882c30] px-2 py-1.5 text-[0.52rem] font-black uppercase tracking-[0.14em] text-[#f5f0e8] sm:px-3 sm:py-2 sm:text-[0.56rem] sm:tracking-[0.22em]">
                 {t("common:sale")}
               </span>
             )}
 
-            {Array.isArray(localizedProduct.badges) &&
-              localizedProduct.badges
-                .slice(0, isOnSale ? 1 : 2)
-                .map((badge) => (
+            {displayBadges.map((badge) => (
                 <span
                   key={badge}
-                  className="border-l border-[#1c1917]/20 bg-[#c7a852] px-3 py-2 text-[0.56rem] font-black uppercase tracking-[0.2em] text-[#1c1917]"
+                  className="border-l border-[#1c1917]/20 bg-[#c7a852] px-2 py-1.5 text-[0.52rem] font-black uppercase tracking-[0.14em] text-[#1c1917] sm:px-3 sm:py-2 sm:text-[0.56rem] sm:tracking-[0.2em]"
                 >
                   {badge}
                 </span>
-                ))}
+              ))}
           </div>
 
           <div className="absolute bottom-0 right-0 flex h-12 w-12 translate-y-full items-center justify-center bg-[#f5f0e8] text-[#1c1917] transition-transform duration-300 group-hover:translate-y-0">
@@ -90,21 +103,16 @@ const ProductCard = ({ product }) => {
           </div>
         </div>
 
-        <div className="border-b border-[#f5f0e8]/12 py-4">
-          <div className="flex items-start justify-between gap-5">
+        <div className="border-b border-[#f5f0e8]/12 py-3 sm:py-4">
+          <div className="flex items-start justify-between gap-2 sm:gap-5">
             <div className="min-w-0">
-              <p className="truncate text-[0.58rem] font-black uppercase tracking-[0.24em] text-[#c7a852]">
-                {localizedProduct.category?.name ||
-                  t("common:davintoEdition")}
-              </p>
-
-              <h3 className="mt-2 truncate font-serif text-xl font-semibold text-[#f5f0e8] transition group-hover:text-[#c7a852]">
+              <h3 className="truncate font-serif text-base font-semibold text-[#f5f0e8] transition group-hover:text-[#c7a852] sm:text-xl">
                 {localizedProduct.name}
               </h3>
             </div>
 
             <div className="shrink-0 text-right">
-              <p className="text-sm font-black text-[#f5f0e8]">
+              <p className="text-xs font-black text-[#f5f0e8] sm:text-sm">
                 {formatMoney(product.price)}
               </p>
               {isOnSale && (
@@ -117,13 +125,13 @@ const ProductCard = ({ product }) => {
 
           {Array.isArray(localizedProduct.colors) &&
             localizedProduct.colors.length > 0 && (
-            <div className="mt-4 flex items-center justify-between gap-4">
+            <div className="mt-3 flex items-center justify-between gap-3 sm:mt-4 sm:gap-4">
               <div className="flex items-center gap-2">
                 {localizedProduct.colors.slice(0, 5).map((color) => (
                   <span
                     key={color._id || color.slug || color.name}
                     title={color.name}
-                    className="h-3.5 w-3.5 rounded-full border border-[#f5f0e8]/35 ring-1 ring-[#1c1917]"
+                    className="h-3 w-3 rounded-full border border-[#f5f0e8]/35 ring-1 ring-[#1c1917] sm:h-3.5 sm:w-3.5"
                     style={{ backgroundColor: color.hex || "#777" }}
                   />
                 ))}
@@ -134,9 +142,6 @@ const ProductCard = ({ product }) => {
                 )}
               </div>
 
-              <span className="text-[0.56rem] font-black uppercase tracking-[0.2em] text-[#8b8075]">
-                {t("common:viewPiece")}
-              </span>
             </div>
           )}
         </div>

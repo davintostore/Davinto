@@ -73,8 +73,10 @@ const SignIn = () => {
       await signin({ email, password });
       navigate(destination, { replace: true });
     } catch (err) {
+      const isServerError = Number(err?.response?.status || 0) >= 500;
       setError(
-        err?.friendlyMessage ||
+        (isServerError && t("signin.serverError")) ||
+          err?.friendlyMessage ||
           err?.message ||
           t("signin.error")
       );

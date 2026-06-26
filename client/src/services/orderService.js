@@ -25,10 +25,10 @@ export const createOrderRequest = async (payload) => {
   return data;
 };
 
-export const trackOrderRequest = async ({ orderNumber, lookupToken }) => {
+export const trackOrderRequest = async ({ orderNumber, email }) => {
   const { data } = await api.post(
     "/orders/track",
-    { orderNumber, lookupToken },
+    { orderNumber, email },
     { skipAdminAuth: true }
   );
   return data;

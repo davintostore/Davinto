@@ -248,22 +248,180 @@ const ensureCategoryExists = async (categoryId) => {
   return category;
 };
 
+const parseColorFilter = (color = "") => {
+  return String(color || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .slice(0, 20);
+};
+
+const escapeRegex = (value = "") => {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};
+
+const buildColorQuery = (color) => {
+  const colorValues = parseColorFilter(color);
+
+  if (!colorValues.length) return null;
+
+  const slugValues = colorValues.map((value) => generateSlug(value));
+  const nameMatchers = colorValues.map(
+    (value) => new RegExp(`^${escapeRegex(value)}$`, "i")
+  );
+
+  return {
+    colors: {
+      $elemMatch: {
+        isActive: true,
+        $or: [
+          {
+            slug: {
+              $in: slugValues,
+            },
+          },
+          {
+            name: {
+              $in: nameMatchers,
+            },
+          },
+        ],
+      },
+    },
+  };
+};
+
+const buildStockQuery = () => ({
+  colors: {
+    $elemMatch: {
+      isActive: true,
+      sizes: {
+        $elemMatch: {
+          isActive: true,
+          stock: {
+            $gt: 0,
+          },
+        },
+      },
+    },
+  },
+});
+
+const parsePrice = (value) => {
+  if (value === undefined || value === null || value === "") return null;
+
+  const number = Number(value);
+
+  if (!Number.isFinite(number) || number < 0) return null;
+
+  return number;
+};
+
+const buildPublicFilterMetadata = async (baseQuery) => {
+  const [colors, priceRange] = await Promise.all([
+    Product.aggregate([
+      {
+        $match: baseQuery,
+      },
+      {
+        $unwind: "$colors",
+      },
+      {
+        $match: {
+          "colors.isActive": true,
+        },
+      },
+      {
+        $project: {
+          slug: {
+            $ifNull: ["$colors.slug", ""],
+          },
+          name: "$colors.name",
+          translations: "$colors.translations",
+          hex: "$colors.hex",
+        },
+      },
+      {
+        $group: {
+          _id: {
+            slug: "$slug",
+            name: "$name",
+          },
+          name: {
+            $first: "$name",
+          },
+          translations: {
+            $first: "$translations",
+          },
+          hex: {
+            $first: "$hex",
+          },
+          count: {
+            $sum: 1,
+          },
+        },
+      },
+      {
+        $sort: {
+          name: 1,
+        },
+      },
+    ]),
+    Product.aggregate([
+      {
+        $match: baseQuery,
+      },
+      {
+        $group: {
+          _id: null,
+          min: {
+            $min: "$price",
+          },
+          max: {
+            $max: "$price",
+          },
+        },
+      },
+    ]),
+  ]);
+
+  return {
+    colors: colors
+      .map((color) => ({
+        slug: color._id.slug || generateSlug(color.name),
+        name: color.name,
+        translations: color.translations || {},
+        hex: color.hex || "",
+        count: color.count,
+      }))
+      .filter((color) => color.slug && color.name),
+    price: {
+      min: priceRange[0]?.min || 0,
+      max: priceRange[0]?.max || 0,
+    },
+  };
+};
+
 const getPublicProducts = asyncHandler(async (req, res) => {
   const {
     category,
     search,
     featured,
+    color,
+    minPrice,
+    maxPrice,
+    availability = "all",
     limit = 24,
     page = 1,
     sort = "newest",
   } = req.query;
 
-  const query = {
+  const baseQuery = {
     status: "active",
   };
 
   if (featured === "true") {
-    query.isFeatured = true;
+    baseQuery.isFeatured = true;
   }
 
   if (category) {
@@ -279,16 +437,62 @@ const getPublicProducts = asyncHandler(async (req, res) => {
         page: Number(page),
         pages: 0,
         products: [],
+        filters: {
+          colors: [],
+          price: {
+            min: 0,
+            max: 0,
+          },
+        },
       });
     }
 
-    query.category = categoryDoc._id;
+    baseQuery.category = categoryDoc._id;
   }
 
   if (search) {
-    query.$text = {
+    baseQuery.$text = {
       $search: search,
     };
+  }
+
+  const query = {
+    ...baseQuery,
+  };
+  const andFilters = [];
+  const colorQuery = buildColorQuery(color);
+
+  if (colorQuery) {
+    andFilters.push(colorQuery);
+  }
+
+  const numericMinPrice = parsePrice(minPrice);
+  const numericMaxPrice = parsePrice(maxPrice);
+
+  if (numericMinPrice !== null || numericMaxPrice !== null) {
+    query.price = {};
+
+    if (numericMinPrice !== null) {
+      query.price.$gte = numericMinPrice;
+    }
+
+    if (numericMaxPrice !== null) {
+      query.price.$lte = numericMaxPrice;
+    }
+  }
+
+  const stockQuery = buildStockQuery();
+
+  if (availability === "inStock") {
+    andFilters.push(stockQuery);
+  }
+
+  if (availability === "outOfStock") {
+    query.$nor = [stockQuery];
+  }
+
+  if (andFilters.length > 0) {
+    query.$and = andFilters;
   }
 
   const numericLimit = Math.min(Math.max(Number(limit) || 24, 1), 60);
@@ -297,20 +501,22 @@ const getPublicProducts = asyncHandler(async (req, res) => {
 
   const sortMap = {
     newest: { createdAt: -1 },
-    oldest: { createdAt: 1 },
     price_asc: { price: 1 },
     price_desc: { price: -1 },
+    name_asc: { name: 1 },
+    name_desc: { name: -1 },
   };
 
   const sortOption = sortMap[sort] || sortMap.newest;
 
-  const [products, total] = await Promise.all([
+  const [products, total, filters] = await Promise.all([
     Product.find(query)
       .populate("category", "name slug translations")
       .sort(sortOption)
       .skip(skip)
       .limit(numericLimit),
     Product.countDocuments(query),
+    buildPublicFilterMetadata(baseQuery),
   ]);
 
   res.status(200).json({
@@ -319,6 +525,7 @@ const getPublicProducts = asyncHandler(async (req, res) => {
     total,
     page: numericPage,
     pages: Math.ceil(total / numericLimit),
+    filters,
     products,
   });
 });

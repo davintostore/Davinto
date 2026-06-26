@@ -9,33 +9,109 @@ const pendingOrderStatuses = [
   "pending_payment",
   "pending_payment_verification",
 ];
+const DASHBOARD_TIME_ZONE = process.env.DASHBOARD_TIME_ZONE || "Africa/Cairo";
 
 const revenueMatch = {
   orderStatus: { $ne: "cancelled" },
   $or: [{ paymentStatus: "paid" }, { orderStatus: "delivered" }],
 };
 
+const getZonedDateParts = (date, timeZone = DASHBOARD_TIME_ZONE) => {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+
+  return Object.fromEntries(
+    parts
+      .filter((part) => part.type !== "literal")
+      .map((part) => [part.type, Number(part.value)])
+  );
+};
+
+const getTimeZoneOffsetMs = (date, timeZone = DASHBOARD_TIME_ZONE) => {
+  const parts = getZonedDateParts(date, timeZone);
+  const zonedAsUtc = Date.UTC(
+    parts.year,
+    parts.month - 1,
+    parts.day,
+    parts.hour,
+    parts.minute,
+    parts.second
+  );
+
+  return zonedAsUtc - date.getTime();
+};
+
+const getUtcDateForZonedTime = ({
+  year,
+  month,
+  day,
+  hour = 0,
+  minute = 0,
+  second = 0,
+  millisecond = 0,
+  timeZone = DASHBOARD_TIME_ZONE,
+}) => {
+  const utcTimestamp = Date.UTC(
+    year,
+    month - 1,
+    day,
+    hour,
+    minute,
+    second,
+    millisecond
+  );
+  const offset = getTimeZoneOffsetMs(new Date(utcTimestamp), timeZone);
+
+  return new Date(utcTimestamp - offset);
+};
+
 const startOfToday = () => {
-  const date = new Date();
-  date.setHours(0, 0, 0, 0);
-  return date;
+  const today = getZonedDateParts(new Date());
+
+  return getUtcDateForZonedTime({
+    year: today.year,
+    month: today.month,
+    day: today.day,
+  });
 };
 
 const endOfToday = () => {
-  const date = new Date();
-  date.setHours(23, 59, 59, 999);
-  return date;
+  const today = getZonedDateParts(new Date());
+
+  return getUtcDateForZonedTime({
+    year: today.year,
+    month: today.month,
+    day: today.day,
+    hour: 23,
+    minute: 59,
+    second: 59,
+    millisecond: 999,
+  });
 };
 
 const startOfLast7Days = () => {
-  const date = new Date();
-  date.setDate(date.getDate() - 6);
-  date.setHours(0, 0, 0, 0);
-  return date;
+  const todayStart = startOfToday();
+  const startDate = new Date(todayStart);
+  startDate.setUTCDate(startDate.getUTCDate() - 6);
+
+  return startDate;
 };
 
 const formatDateKey = (date) => {
-  return date.toISOString().slice(0, 10);
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: DASHBOARD_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
 };
 
 const getColorPrimaryImage = (color) => {
@@ -83,6 +159,7 @@ const getLast7DaysStats = async () => {
           $dateToString: {
             format: "%Y-%m-%d",
             date: "$createdAt",
+            timezone: DASHBOARD_TIME_ZONE,
           },
         },
         orders: { $sum: 1 },
@@ -128,6 +205,7 @@ const getLast7DaysStats = async () => {
       label: date.toLocaleDateString("en-EG", {
         weekday: "short",
         day: "numeric",
+        timeZone: DASHBOARD_TIME_ZONE,
       }),
       orders: found?.orders || 0,
       revenue: found?.revenue || 0,

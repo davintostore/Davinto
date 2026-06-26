@@ -3,6 +3,10 @@ const Bundle = require("../models/Bundle");
 const Offer = require("../models/Offer");
 const Product = require("../models/Product");
 const SiteSettings = require("../models/SiteSettings");
+const {
+  normalizeGovernorateSlug,
+  getDefaultDeliveryFeeForSlug,
+} = require("../utils/egyptGovernorates");
 
 const {
   calculateDiscountAmount,
@@ -17,8 +21,18 @@ const normalizeText = (value = "") => {
   return String(value || "").trim();
 };
 
+const normalizeStringArray = (values = []) => {
+  if (!Array.isArray(values)) return [];
+
+  return values.map((value) => normalizeText(value)).filter(Boolean);
+};
+
 const normalizeLower = (value = "") => {
   return normalizeText(value).toLowerCase();
+};
+
+const normalizeDeliveryZone = (value = "") => {
+  return normalizeGovernorateSlug(value);
 };
 
 const toIdString = (value) => {
@@ -91,14 +105,51 @@ const findSelectedSize = (color, cartItem) => {
   });
 };
 
-const getColorPrimaryImage = (color) => {
+const getColorPrimaryImageSnapshot = (color) => {
   const images = Array.isArray(color.images) ? color.images : [];
 
   const primaryImage =
     images.find((image) => image.role === "primary" && image.url) ||
     images.find((image) => image.url);
 
-  return primaryImage?.url || "";
+  return {
+    url: primaryImage?.url || "",
+    alt: primaryImage?.alt || "",
+    translations: {
+      ar: {
+        alt: primaryImage?.translations?.ar?.alt || "",
+      },
+    },
+  };
+};
+
+const buildOrderItemTranslations = ({ product, selectedColor, image }) => {
+  return {
+    ar: {
+      name: product.translations?.ar?.name || "",
+      colorName: selectedColor.translations?.ar?.name || "",
+      imageAlt: image.translations?.ar?.alt || "",
+      shortDescription: product.translations?.ar?.shortDescription || "",
+      badges: normalizeStringArray(product.translations?.ar?.badges),
+    },
+  };
+};
+
+const buildTitleDescriptionTranslations = (source) => {
+  return {
+    ar: {
+      title: source.translations?.ar?.title || "",
+      description: source.translations?.ar?.description || "",
+    },
+  };
+};
+
+const buildDeliveryTranslations = (settings) => {
+  return {
+    ar: {
+      notes: settings.translations?.ar?.delivery?.notes || "",
+    },
+  };
 };
 
 const buildValidatedOrderItems = async ({
@@ -175,6 +226,8 @@ const buildValidatedOrderItems = async ({
     productSavings += lineSavings;
     cartQuantity += quantity;
 
+    const image = getColorPrimaryImageSnapshot(selectedColor);
+
     orderItems.push({
       product: product._id,
       name: product.name,
@@ -199,7 +252,15 @@ const buildValidatedOrderItems = async ({
         label: selectedSize.label,
         sku: selectedSize.sku || "",
       },
-      image: getColorPrimaryImage(selectedColor),
+      image: image.url,
+      imageAlt: image.alt,
+      shortDescription: product.shortDescription || "",
+      badges: normalizeStringArray(product.badges),
+      translations: buildOrderItemTranslations({
+        product,
+        selectedColor,
+        image,
+      }),
       quantity,
       unitPrice,
       compareAtPrice,
@@ -311,10 +372,9 @@ const calculateAutomaticOffers = async ({
     appliedOffers.push({
       offer: offer._id,
       title: offer.title,
+      description: offer.description || "",
       slug: offer.slug,
-      // Live quote responses may localize this metadata. The strict Order
-      // snapshot schema intentionally omits it until Phase 4B3.
-      translations: offer.translations,
+      translations: buildTitleDescriptionTranslations(offer),
       discountType: offer.discountType,
       discountValue: offer.discountValue,
       discountAmount,
@@ -470,10 +530,9 @@ const calculateBundles = async ({ orderItems, subtotal, session = null }) => {
     appliedBundles.push({
       bundle: bundle._id,
       title: bundle.title,
+      description: bundle.description || "",
       slug: bundle.slug,
-      // Live quote responses may localize this metadata. The strict Order
-      // snapshot schema intentionally omits it until Phase 4B3.
-      translations: bundle.translations,
+      translations: buildTitleDescriptionTranslations(bundle),
       bundleMode: bundle.bundleMode,
       pricingType: bundle.pricingType,
       requiredQuantity: bundle.requiredQuantity,
@@ -501,6 +560,7 @@ const buildDiscountSnapshot = (discountCode, discountAmount) => {
     return {
       code: "",
       name: "",
+      description: "",
       type: "",
       value: 0,
       discountAmount: 0,
@@ -510,6 +570,7 @@ const buildDiscountSnapshot = (discountCode, discountAmount) => {
   return {
     code: discountCode.code,
     name: discountCode.name || "",
+    description: discountCode.description || "",
     type: discountCode.type,
     value: discountCode.value,
     discountAmount,
@@ -553,8 +614,17 @@ const calculateDelivery = ({
   settings,
   subtotal,
   freeDeliveryByOffer = false,
+  deliveryZone = "",
 }) => {
-  const baseFee = Number(settings.delivery?.baseFee || 0);
+  const normalizedZone = normalizeDeliveryZone(deliveryZone);
+  const zoneFees = settings.delivery?.zones || {};
+  const zoneFee = normalizedZone ? zoneFees[normalizedZone] : undefined;
+  const baseFee = Number(
+    zoneFee ??
+      (normalizedZone
+        ? getDefaultDeliveryFeeForSlug(normalizedZone)
+        : settings.delivery?.baseFee ?? 0)
+  );
   const freeDeliveryThreshold = Number(
     settings.delivery?.freeDeliveryThreshold || 0
   );
@@ -608,6 +678,7 @@ const incrementAppliedUsage = async ({
 const calculateQuote = async ({
   cartItems,
   discountCode = "",
+  deliveryZone = "",
   session = null,
   deductStock = false,
   incrementUsage = false,
@@ -654,6 +725,7 @@ const calculateQuote = async ({
       settings,
       subtotal,
       freeDeliveryByOffer,
+      deliveryZone,
     });
 
   const totalDiscount =
@@ -691,6 +763,7 @@ const calculateQuote = async ({
       freeDeliveryApplied,
       freeDeliveryByOffer,
       freeDeliveryByThreshold,
+      translations: buildDeliveryTranslations(settings),
     },
   };
 };

@@ -206,7 +206,6 @@ bundleSchema.virtual("remainingUses").get(function getRemainingUses() {
 bundleSchema.set("toJSON", { virtuals: true });
 bundleSchema.set("toObject", { virtuals: true });
 
-bundleSchema.index({ slug: 1 }, { unique: true });
 bundleSchema.index({ status: 1, startsAt: 1, endsAt: 1 });
 bundleSchema.index({ bundleMode: 1, eligibleScope: 1, priority: -1 });
 

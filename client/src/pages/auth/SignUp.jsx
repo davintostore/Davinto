@@ -101,8 +101,10 @@ const SignUp = () => {
       await signup(payload);
       navigate(destination, { replace: true });
     } catch (err) {
+      const isServerError = Number(err?.response?.status || 0) >= 500;
       setError(
-        err?.friendlyMessage ||
+        (isServerError && t("signup.serverError")) ||
+          err?.friendlyMessage ||
           err?.message ||
           t("signup.error")
       );

@@ -27,6 +27,6 @@
   "memberSince": "Member since",
   "ordersLabel": "Order archive",
   "ordersTitle": "Review your linked orders.",
-  "ordersDescription": "Orders placed while signed in are available without a guest tracking token. Guest purchases still use Track Order.",
+  "ordersDescription": "Orders placed while signed in are available in your account. Guest purchases still use Track Order with order number and email.",
   "openOrders": "Open My Orders"
 }

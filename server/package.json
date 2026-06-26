@@ -7,9 +7,14 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
+    "seed": "npm run seed:admin && npm run seed:launch",
     "seed:admin": "node src/scripts/seedAdmin.js",
+    "env": "npm run env:check",
     "env:check": "node src/scripts/checkEnv.js",
-    "seed:data": "node src/scripts/seedDevData.js"
+    "smtp": "npm run smtp:test",
+    "smtp:test": "node --use-system-ca src/scripts/testSmtp.js",
+    "seed:data": "node src/scripts/seedDevData.js",
+    "seed:launch": "node src/scripts/seedLaunchData.js"
   },
   "keywords": [],
   "author": "",

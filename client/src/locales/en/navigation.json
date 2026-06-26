@@ -1,5 +1,5 @@
 {
-  "announcement": "New season / Davinto essentials / Egypt delivery",
+  "announcement": "Davinto essentials — delivered across Egypt",
   "clothingHouse": "Clothing house",
   "home": "Home",
   "shop": "Shop",
@@ -14,14 +14,15 @@
   "checkout": "Checkout",
   "openNavigation": "Open navigation",
   "closeNavigation": "Close navigation",
-  "seasonalCatalogue": "Davinto seasonal catalogue",
+  "seasonalCatalogue": "Davinto essentials",
   "footer": {
-    "statement": "Everyday clothing, framed with the energy of a seasonal drop.",
+    "statement": "Clean everyday T-shirts in essential colors.",
     "navigate": "Navigate",
-    "nextPiece": "The next piece",
-    "description": "Explore the latest silhouettes, select your color and size, and complete your order in a few deliberate steps.",
-    "enterShop": "Enter The Shop",
+    "nextPiece": "Shop",
+    "description": "Choose your color and size, then complete your order in a few simple steps.",
+    "enterShop": "Shop",
+    "logoAlt": "Davinto logo",
     "location": "Davinto / Cairo, Egypt",
-    "moment": "Clothing for the current moment"
+    "moment": "Delivered across Egypt"
   }
 }

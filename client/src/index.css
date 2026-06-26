@@ -1,5 +1,45 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Swantime";
+  src: url("/fonts/swantime/swantime-regular.ttf") format("truetype");
+  font-display: swap;
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Avian";
+  src: url("/fonts/avian/avian-regular.ttf") format("truetype");
+  font-display: swap;
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Avian";
+  src: url("/fonts/avian/avian-bold.ttf") format("truetype");
+  font-display: swap;
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Avian";
+  src: url("/fonts/avian/avian-italic.ttf") format("truetype");
+  font-display: swap;
+  font-weight: 400;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Avian";
+  src: url("/fonts/avian/avian-bold-italic.ttf") format("truetype");
+  font-display: swap;
+  font-weight: 700;
+  font-style: italic;
+}
+
 :root {
   --davinto-ink: #1c1917;
   --davinto-ink-deep: #110f0e;
@@ -14,9 +54,9 @@
   --davinto-border-strong: rgba(199, 168, 82, 0.48);
   --davinto-surface: rgba(40, 35, 31, 0.92);
   --davinto-surface-soft: rgba(245, 240, 232, 0.055);
-  --davinto-display: "Iowan Old Style", "Palatino Linotype", Palatino,
-    "Book Antiqua", Baskerville, "Times New Roman", serif;
-  --davinto-sans: Inter, ui-sans-serif, system-ui, -apple-system,
+  --davinto-display: "Swantime", "Iowan Old Style", "Palatino Linotype",
+    Palatino, "Book Antiqua", Baskerville, "Times New Roman", serif;
+  --davinto-sans: "Avian", Inter, ui-sans-serif, system-ui, -apple-system,
     BlinkMacSystemFont, "Segoe UI", sans-serif;
   --davinto-arabic: "Noto Sans Arabic", "Noto Kufi Arabic", Tahoma, Arial,
     sans-serif;
@@ -59,7 +99,7 @@ html[dir="rtl"] body {
 html[dir="rtl"] .page-shell .editorial-heading,
 html[dir="rtl"] .page-shell .brand-wordmark {
   font-family: var(--davinto-arabic);
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 html[dir="rtl"] .page-shell .editorial-heading {
@@ -185,15 +225,36 @@ img {
 
 .editorial-heading {
   font-family: var(--davinto-display);
-  font-weight: 600;
-  letter-spacing: -0.058em;
-  line-height: 0.88;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  line-height: 0.98;
   text-wrap: balance;
+}
+
+.display-heading {
+  font-size: clamp(3.75rem, 11vw, 8.25rem);
+  line-height: 0.95;
+  max-width: 12ch;
+}
+
+.hero-display-heading {
+  max-width: 14ch;
+}
+
+.page-display-title {
+  font-size: clamp(3rem, 8vw, 6.25rem);
+  line-height: 0.98;
+  max-width: 13ch;
+}
+
+.section-display-title {
+  font-size: clamp(3rem, 7vw, 6.5rem);
+  line-height: 1;
 }
 
 .brand-wordmark {
   font-family: var(--davinto-display);
-  font-weight: 700;
+  font-weight: 400;
   letter-spacing: -0.055em;
 }
 
@@ -212,6 +273,17 @@ img {
 
 .fashion-section {
   padding-block: clamp(4rem, 8vw, 8rem);
+}
+
+.catalog-section {
+  padding-block: clamp(2.5rem, 5vw, 4.75rem);
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: clamp(0.75rem, 3vw, 1.25rem);
+  row-gap: clamp(2rem, 5vw, 3rem);
 }
 
 .fashion-panel {
@@ -262,6 +334,45 @@ img {
 @keyframes catalog-shimmer {
   to {
     background-position-x: -200%;
+  }
+}
+
+@media (min-width: 40rem) {
+  .product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 64rem) {
+  .product-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 22rem) {
+  .product-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 64rem) {
+  html[dir="rtl"] .page-shell h1.editorial-heading {
+    font-size: clamp(3.25rem, 6vw, 5.75rem);
+    line-height: 1.16;
+  }
+
+  html[dir="rtl"] .page-shell .display-heading {
+    font-size: clamp(3.75rem, 7vw, 6.5rem);
+    line-height: 1.16;
+  }
+
+  html[dir="rtl"] .page-shell .hero-display-heading {
+    max-width: 18ch;
+  }
+
+  html[dir="rtl"] .page-shell .page-display-title {
+    font-size: clamp(3rem, 5.6vw, 5.25rem);
+    line-height: 1.18;
   }
 }
 

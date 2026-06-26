@@ -2,6 +2,7 @@ const {
   sendEmail,
   getAdminOrderEmail,
   isEmailConfigured,
+  getSafeSmtpErrorMessage,
 } = require("./email.service");
 
 const normalizeText = (value = "") => {
@@ -45,13 +46,12 @@ const getPaymentMethodLabel = (method = "") => {
 const getTrackingUrl = (order) => {
   const clientUrl = normalizeText(process.env.CLIENT_URL || "http://localhost:5173");
 
-  if (!order?.orderNumber || !order?.lookupToken) {
+  if (!order?.orderNumber) {
     return clientUrl;
   }
 
   const params = new URLSearchParams({
     orderNumber: order.orderNumber,
-    lookupToken: order.lookupToken,
   });
 
   return `${clientUrl}/track-order?${params.toString()}`;
@@ -243,6 +243,35 @@ const buildTotalsHtml = (order) => {
   `;
 };
 
+const buildDeliveryHtml = (order) => {
+  return `
+    <div style="margin-top:18px;padding:18px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.035);border-radius:20px;">
+      <p style="margin:0 0 12px;color:rgba(247,243,234,0.45);font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:800;">
+        Delivery
+      </p>
+
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        ${buildDetailRow("Name", order.customerInfo?.fullName || "")}
+        ${buildDetailRow("Phone", order.customerInfo?.phone || "")}
+        ${buildDetailRow("Email", order.customerInfo?.email || "")}
+        ${buildDetailRow("Governorate", order.customerInfo?.city || "")}
+        ${buildDetailRow("Address", order.customerInfo?.address || "")}
+        ${buildDetailRow("Notes", order.customerInfo?.notes || "")}
+      </table>
+    </div>
+  `;
+};
+
+const buildItemsText = (order) =>
+  (order.items || [])
+    .map(
+      (item) =>
+        `- ${item.name} / ${item.color?.name || ""} / ${
+          item.size?.label || ""
+        } x ${item.quantity} = ${formatMoney(item.lineSubtotal)}`
+    )
+    .join("\n");
+
 const buildAdminOrderText = (order) => {
   const lines = [
     `New Davinto Order`,
@@ -284,14 +313,20 @@ const buildCustomerOrderText = (order) => {
     `Your Davinto order has been received.`,
     ``,
     `Order Number: ${order.orderNumber}`,
-    `Tracking Token: ${order.lookupToken}`,
     `Track Order: ${getTrackingUrl(order)}`,
+    `Use your order number and checkout email to track your order.`,
     ``,
     `Order Status: ${formatStatus(order.orderStatus)}`,
     `Payment Status: ${formatStatus(order.paymentStatus)}`,
     `Payment Method: ${getPaymentMethodLabel(order.paymentMethod)}`,
+    `Delivery: ${formatMoney(order.deliveryFee)}`,
+    `Governorate: ${order.customerInfo?.city || ""}`,
+    `Address: ${order.customerInfo?.address || ""}`,
     ``,
     `Total: ${formatMoney(order.total)}`,
+    ``,
+    `Items:`,
+    buildItemsText(order),
     ``,
     `Thank you for shopping with Davinto.`,
   ].join("\n");
@@ -337,6 +372,8 @@ const buildAdminOrderHtml = (order) => {
         </table>
       </div>
 
+      ${buildDeliveryHtml(order)}
+
       <div style="margin-top:18px;padding:18px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.035);border-radius:20px;">
         <p style="margin:0 0 12px;color:rgba(247,243,234,0.45);font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:800;">
           Items
@@ -374,19 +411,20 @@ const buildCustomerOrderHtml = (order) => {
     preview: `Your Davinto order has been received.`,
     children: `
       <p style="margin:0 0 22px;color:rgba(247,243,234,0.65);font-size:15px;line-height:1.8;">
-        Hi ${escapeHtml(order.customerInfo?.fullName || "there")}, your order has been received successfully. Save your order number and tracking token below.
+        Hi ${escapeHtml(order.customerInfo?.fullName || "there")}, your order has been received successfully. You can track it anytime using your order number and checkout email.
       </p>
 
       <div style="padding:18px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.035);border-radius:20px;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
           ${buildDetailRow("Order Number", order.orderNumber, true)}
-          ${buildDetailRow("Tracking Token", order.lookupToken, true)}
           ${buildDetailRow("Order Status", formatStatus(order.orderStatus))}
           ${buildDetailRow("Payment Status", formatStatus(order.paymentStatus))}
           ${buildDetailRow("Payment Method", getPaymentMethodLabel(order.paymentMethod))}
           ${buildDetailRow("Total", formatMoney(order.total), true)}
         </table>
       </div>
+
+      ${buildDeliveryHtml(order)}
 
       <div style="margin-top:18px;padding:18px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.035);border-radius:20px;">
         <p style="margin:0 0 12px;color:rgba(247,243,234,0.45);font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:800;">
@@ -461,6 +499,10 @@ const sendOrderNotifications = async (order) => {
   }
 
   if (!isEmailConfigured()) {
+    console.warn(
+      `Order ${order.orderNumber} email notifications skipped: SMTP is not configured.`
+    );
+
     return {
       success: false,
       skipped: true,
@@ -469,6 +511,15 @@ const sendOrderNotifications = async (order) => {
       results: [],
     };
   }
+
+  const adminEmail = getAdminOrderEmail();
+  const customerEmail = normalizeText(order.customerInfo?.email);
+
+  console.log(
+    `Order ${order.orderNumber} email notification attempt: admin=${
+      adminEmail ? "yes" : "no"
+    }, customer=${customerEmail ? "yes" : "no"}`
+  );
 
   const results = await Promise.allSettled([
     sendAdminOrderNotification(order),
@@ -489,8 +540,34 @@ const sendOrderNotifications = async (order) => {
       type,
       success: false,
       skipped: false,
-      reason: result.reason?.message || "Email failed.",
+      reason: getSafeSmtpErrorMessage(result.reason),
     };
+  });
+
+  normalizedResults.forEach((result) => {
+    const label = result.type === "admin" ? "admin" : "customer";
+
+    if (result.success) {
+      console.log(
+        `Order ${order.orderNumber} ${label} email sent successfully.`
+      );
+      return;
+    }
+
+    if (result.skipped) {
+      console.warn(
+        `Order ${order.orderNumber} ${label} email skipped: ${
+          result.reason || "No reason provided."
+        }`
+      );
+      return;
+    }
+
+    console.warn(
+      `Order ${order.orderNumber} ${label} email failed: ${
+        result.reason || "Email failed."
+      }`
+    );
   });
 
   return {

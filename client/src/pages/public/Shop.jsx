@@ -1,28 +1,50 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
+import CatalogFilters from "../../components/product/CatalogFilters";
 import ProductCard from "../../components/product/ProductCard";
 import Button from "../../components/ui/Button";
 import Container from "../../components/ui/Container";
-import Input from "../../components/ui/Input";
 import PageHeader from "../../components/ui/PageHeader";
-import Select from "../../components/ui/Select";
 
 import { getPublicCategoriesRequest } from "../../services/categoryService";
 import { getPublicProductsRequest } from "../../services/productService";
 import { trackSearch } from "../../utils/metaPixel";
-import { getLocalizedCategory } from "../../utils/localizedContent";
+
+const PRODUCTS_PER_PAGE = 10;
 
 const Shop = () => {
-  const { t, i18n } = useTranslation("catalog");
+  const { t, i18n } = useTranslation(["catalog", "common"]);
   const language = i18n.resolvedLanguage === "ar" ? "ar" : "en";
   const lastTrackedSearchRef = useRef("");
+  const resultsRef = useRef(null);
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [filters, setFilters] = useState({
-    search: "",
-    sort: "newest",
+  const filters = useMemo(() => {
+    const availability = searchParams.get("availability") || "all";
+    const parsedPage = Number.parseInt(searchParams.get("page") || "1", 10);
+
+    return {
+      search: searchParams.get("search") || "",
+      sort: searchParams.get("sort") || "newest",
+      category: searchParams.get("category") || "",
+      color: searchParams.get("color") || "",
+      minPrice: searchParams.get("minPrice") || "",
+      maxPrice: searchParams.get("maxPrice") || "",
+      availability: ["all", "inStock", "outOfStock"].includes(availability)
+        ? availability
+        : "all",
+      page: Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1,
+    };
+  }, [searchParams]);
+
+  const {
+    data: categoriesData,
+  } = useQuery({
+    queryKey: ["catalog-categories"],
+    queryFn: getPublicCategoriesRequest,
   });
 
   const {
@@ -35,27 +57,27 @@ const Shop = () => {
     queryFn: () =>
       getPublicProductsRequest({
         search: filters.search || undefined,
+        category: filters.category || undefined,
+        page: filters.page,
+        limit: PRODUCTS_PER_PAGE,
         sort: filters.sort,
+        color: filters.color || undefined,
+        minPrice: filters.minPrice || undefined,
+        maxPrice: filters.maxPrice || undefined,
+        availability:
+          filters.availability === "all" ? undefined : filters.availability,
       }),
-  });
-
-  const { data: categoriesData, isLoading: isLoadingCategories } = useQuery({
-    queryKey: ["public-categories"],
-    queryFn: getPublicCategoriesRequest,
   });
 
   const products = useMemo(
     () => productsData?.products || [],
     [productsData]
   );
-
-  const categories = useMemo(
-    () =>
-      (categoriesData?.categories || []).map((category) =>
-        getLocalizedCategory(category, language)
-      ),
-    [categoriesData, language]
-  );
+  const filterMetadata = productsData?.filters;
+  const categories = categoriesData?.categories || [];
+  const totalProducts = productsData?.total ?? products.length;
+  const totalPages = Math.max(Number(productsData?.pages || 0), 0);
+  const currentPage = Number(productsData?.page || filters.page);
 
   useEffect(() => {
     const searchString = filters.search.trim();
@@ -74,77 +96,129 @@ const Shop = () => {
     });
   }, [filters.search, products.length, isLoadingProducts, isProductsError]);
 
-  const updateFilter = (event) => {
-    const { name, value } = event.target;
+  const updateQueryParams = (updates, options = {}) => {
+    const { resetPage = true, scrollToResults = false } = options;
+    const nextParams = new URLSearchParams(searchParams);
 
-    setFilters((current) => ({
-      ...current,
-      [name]: value,
-    }));
+    Object.entries(updates).forEach(([key, value]) => {
+      if (
+        value === undefined ||
+        value === null ||
+        value === "" ||
+        (key === "sort" && value === "newest") ||
+        (key === "availability" && value === "all")
+      ) {
+        nextParams.delete(key);
+        return;
+      }
+
+      nextParams.set(key, value);
+    });
+
+    if (resetPage && !Object.prototype.hasOwnProperty.call(updates, "page")) {
+      nextParams.delete("page");
+    }
+
+    setSearchParams(nextParams);
+
+    if (scrollToResults) {
+      window.setTimeout(() => {
+        resultsRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 0);
+    }
   };
+
+  const goToPage = (page) => {
+    updateQueryParams(
+      {
+        page: page <= 1 ? "" : String(page),
+      },
+      {
+        resetPage: false,
+        scrollToResults: true,
+      }
+    );
+  };
+
+  const toggleColorFilter = (slug) => {
+    const selectedColors = filters.color
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean);
+    const nextColors = selectedColors.includes(slug)
+      ? selectedColors.filter((value) => value !== slug)
+      : [...selectedColors, slug];
+
+    updateQueryParams({
+      color: nextColors.join(","),
+    });
+  };
+
+  const applyPriceFilters = (nextPriceDraft) => {
+    updateQueryParams({
+      minPrice: nextPriceDraft.minPrice,
+      maxPrice: nextPriceDraft.maxPrice,
+    });
+  };
+
+  const clearFilters = () => {
+    updateQueryParams({
+      search: "",
+      sort: "newest",
+      category: "",
+      color: "",
+      minPrice: "",
+      maxPrice: "",
+      availability: "all",
+    });
+  };
+
+  const hasActiveFilters = Boolean(
+      filters.search ||
+      filters.category ||
+      filters.color ||
+      filters.minPrice ||
+      filters.maxPrice ||
+      filters.availability !== "all" ||
+      filters.sort !== "newest"
+  );
 
   return (
     <>
       <PageHeader
-        label={t("shop.label")}
-        title={t("shop.title")}
-        description={t("shop.description")}
+        title={t("catalog:shop.title")}
+        description={t("catalog:shop.description")}
+        className="pt-12 pb-10 sm:pt-16 sm:pb-14"
+        showMeta={false}
       />
 
-      <section className="fashion-section">
+      <section className="fashion-section catalog-section" ref={resultsRef}>
         <Container>
-          <div className="mb-14 grid gap-8 border-y border-[#f5f0e8]/12 py-7 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
-            <div>
-              <p className="text-[0.64rem] font-black uppercase tracking-[0.3em] text-[#c7a852]">
-                {t("shop.browse")}
-              </p>
-
-              <div className="mt-5 flex flex-wrap gap-2">
-                {isLoadingCategories && (
-                  <span className="text-sm text-[#f5f0e8]/45">
-                    {t("shop.loadingCategories")}
-                  </span>
-                )}
-
-                {!isLoadingCategories && categories.length === 0 && (
-                  <span className="text-sm text-[#f5f0e8]/45">
-                    {t("shop.emptyCategories")}
-                  </span>
-                )}
-
-                {categories.map((category) => (
-                  <Link key={category._id} to={`/category/${category.slug}`}>
-                    <Button variant="secondary">{category.name}</Button>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-[1fr_200px]">
-              <Input
-                label={t("shop.search")}
-                name="search"
-                value={filters.search}
-                onChange={updateFilter}
-                placeholder={t("shop.searchPlaceholder")}
-              />
-
-              <Select
-                label={t("shop.sort")}
-                name="sort"
-                value={filters.sort}
-                onChange={updateFilter}
-              >
-                <option value="newest">{t("shop.sortNewest")}</option>
-                <option value="oldest">{t("shop.sortOldest")}</option>
-                <option value="price_asc">{t("shop.sortPriceLow")}</option>
-                <option value="price_desc">{t("shop.sortPriceHigh")}</option>
-              </Select>
-            </div>
-          </div>
+          <CatalogFilters
+            key={`${filters.minPrice}:${filters.maxPrice}:${language}`}
+            filters={filters}
+            metadata={filterMetadata}
+            categories={categories}
+            productCount={totalProducts}
+            language={language}
+            t={t}
+            onSearchChange={(value) => updateQueryParams({ search: value })}
+            onSortChange={(value) => updateQueryParams({ sort: value })}
+            onCategoryChange={(value) => updateQueryParams({ category: value })}
+            onToggleColor={toggleColorFilter}
+            onAvailabilityChange={(value) =>
+              updateQueryParams({ availability: value })
+            }
+            onApplyPrice={applyPriceFilters}
+            onClearFilters={clearFilters}
+            hasActiveFilters={hasActiveFilters}
+          />
 
           {isLoadingProducts && (
-            <div className="grid gap-x-5 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="product-grid">
               {Array.from({ length: 8 }).map((_, index) => (
                 <div key={index} className="catalog-skeleton h-[460px]" />
               ))}
@@ -166,21 +240,72 @@ const Shop = () => {
               </p>
 
               <h2 className="editorial-heading mt-5 text-6xl">
-                {t("shop.emptyTitle")}
+                {hasActiveFilters
+                  ? t("filters.noMatchesTitle")
+                  : t("shop.emptyTitle")}
               </h2>
 
               <p className="mx-auto mt-6 max-w-xl text-sm leading-7 text-[#f5f0e8]/52">
-                {t("shop.emptyDescription")}
+                {hasActiveFilters
+                  ? t("filters.noMatchesDescription")
+                  : t("shop.emptyDescription")}
               </p>
             </div>
           )}
 
           {!isLoadingProducts && !isProductsError && products.length > 0 && (
-            <div className="grid gap-x-5 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {products.map((product) => (
-                <ProductCard key={product._id} product={product} />
-              ))}
-            </div>
+            <>
+              <div className="product-grid">
+                {products.map((product) => (
+                  <ProductCard key={product._id} product={product} />
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-[#f5f0e8]/12 pt-6 sm:flex-row">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={currentPage <= 1}
+                    onClick={() => goToPage(currentPage - 1)}
+                  >
+                    {t("common:previous")}
+                  </Button>
+
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {Array.from({ length: totalPages }).map((_, index) => {
+                      const page = index + 1;
+                      const isActive = page === currentPage;
+
+                      return (
+                        <button
+                          key={page}
+                          type="button"
+                          className={`flex h-10 min-w-10 items-center justify-center border px-3 text-xs font-black transition ${
+                            isActive
+                              ? "border-[#c7a852] bg-[#c7a852] text-[#1c1917]"
+                              : "border-[#f5f0e8]/16 text-[#f5f0e8]/68 hover:border-[#c7a852] hover:text-[#f5f0e8]"
+                          }`}
+                          aria-current={isActive ? "page" : undefined}
+                          onClick={() => goToPage(page)}
+                        >
+                          {page}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={currentPage >= totalPages}
+                    onClick={() => goToPage(currentPage + 1)}
+                  >
+                    {t("common:next")}
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </Container>
       </section>

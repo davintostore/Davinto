@@ -56,6 +56,112 @@ const customerInfoSchema = new mongoose.Schema(
   }
 );
 
+const orderItemArabicTranslationSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    colorName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    imageAlt: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    shortDescription: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    badges: {
+      type: [String],
+      default: [],
+    },
+  },
+  {
+    _id: false,
+  }
+);
+
+const titleDescriptionArabicTranslationSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    description: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+  },
+  {
+    _id: false,
+  }
+);
+
+const discountCodeArabicTranslationSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    description: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+  },
+  {
+    _id: false,
+  }
+);
+
+const paymentArabicTranslationSchema = new mongoose.Schema(
+  {
+    label: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    instructions: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+  },
+  {
+    _id: false,
+  }
+);
+
+const deliveryArabicTranslationSchema = new mongoose.Schema(
+  {
+    notes: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+  },
+  {
+    _id: false,
+  }
+);
+
 const orderItemSchema = new mongoose.Schema(
   {
     product: {
@@ -153,6 +259,30 @@ const orderItemSchema = new mongoose.Schema(
       default: "",
     },
 
+    imageAlt: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    shortDescription: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    badges: {
+      type: [String],
+      default: [],
+    },
+
+    translations: {
+      ar: {
+        type: orderItemArabicTranslationSchema,
+        default: () => ({}),
+      },
+    },
+
     quantity: {
       type: Number,
       required: true,
@@ -201,10 +331,23 @@ const appliedOfferSchema = new mongoose.Schema(
       default: "",
     },
 
+    description: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
     slug: {
       type: String,
       trim: true,
       default: "",
+    },
+
+    translations: {
+      ar: {
+        type: titleDescriptionArabicTranslationSchema,
+        default: () => ({}),
+      },
     },
 
     discountType: {
@@ -248,10 +391,23 @@ const appliedBundleSchema = new mongoose.Schema(
       default: "",
     },
 
+    description: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
     slug: {
       type: String,
       trim: true,
       default: "",
+    },
+
+    translations: {
+      ar: {
+        type: discountCodeArabicTranslationSchema,
+        default: () => ({}),
+      },
     },
 
     bundleMode: {
@@ -301,6 +457,19 @@ const discountCodeSnapshotSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: "",
+    },
+
+    description: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    translations: {
+      ar: {
+        type: titleDescriptionArabicTranslationSchema,
+        default: () => ({}),
+      },
     },
 
     type: {
@@ -445,6 +614,12 @@ const orderSchema = new mongoose.Schema(
       default: "guest",
     },
 
+    locale: {
+      type: String,
+      enum: ["en", "ar"],
+      default: "en",
+    },
+
     customerInfo: {
       type: customerInfoSchema,
       required: true,
@@ -580,6 +755,13 @@ const orderSchema = new mongoose.Schema(
         trim: true,
         default: "",
       },
+
+      translations: {
+        ar: {
+          type: paymentArabicTranslationSchema,
+          default: () => ({}),
+        },
+      },
     },
 
     paymentGateway: {
@@ -607,6 +789,13 @@ const orderSchema = new mongoose.Schema(
       freeDeliveryByThreshold: {
         type: Boolean,
         default: false,
+      },
+
+      translations: {
+        ar: {
+          type: deliveryArabicTranslationSchema,
+          default: () => ({}),
+        },
       },
     },
 

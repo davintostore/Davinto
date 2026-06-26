@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Minus, Plus, ShoppingBag } from "lucide-react";
+import { ChevronLeft, ChevronRight, Minus, Plus, ShoppingBag } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import Button from "../../components/ui/Button";
@@ -35,6 +35,16 @@ const getFirstAvailableSize = (color) => {
   return sizes.find((size) => Number(size.stock || 0) > 0) || sizes[0] || null;
 };
 
+const getSimpleBadge = (badge = "", t) => {
+  const normalizedBadge = String(badge || "").toLowerCase();
+
+  if (normalizedBadge.includes("launch") || normalizedBadge.includes("offer")) {
+    return t("common:offer");
+  }
+
+  return badge;
+};
+
 const ProductDetails = () => {
   const { t, i18n } = useTranslation(["catalog", "common"]);
   const language = i18n.resolvedLanguage === "ar" ? "ar" : "en";
@@ -65,6 +75,8 @@ const ProductDetails = () => {
   const [selectedColorId, setSelectedColorId] = useState("");
   const [selectedSizeLabel, setSelectedSizeLabel] = useState("");
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [touchStartX, setTouchStartX] = useState(null);
+  const [touchStartY, setTouchStartY] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [cartMessage, setCartMessage] = useState("");
 
@@ -103,6 +115,7 @@ const ProductDetails = () => {
   }, [selectedColor]);
 
   const selectedImage = images[selectedImageIndex] || images[0] || null;
+  const hasMultipleImages = images.length > 1;
   const localizedSelectedColor = useMemo(
     () => getLocalizedColor(selectedColor, language),
     [selectedColor, language]
@@ -110,6 +123,12 @@ const ProductDetails = () => {
   const selectedStock = Number(selectedSize?.stock || 0);
   const isInStock = selectedStock > 0;
   const isOnSale = product?.compareAtPrice > product?.price;
+  const displayBadges = isOnSale
+    ? []
+    : localizedBadges
+        .map((badge) => getSimpleBadge(badge, t))
+        .filter(Boolean)
+        .slice(0, 1);
 
   useEffect(() => {
     if (!product?._id || viewedProductRef.current === product._id) return;
@@ -133,6 +152,66 @@ const ProductDetails = () => {
     setSelectedImageIndex(0);
     setQuantity(1);
     setCartMessage("");
+  };
+
+  const showPreviousImage = () => {
+    if (!hasMultipleImages) return;
+
+    setSelectedImageIndex((current) =>
+      current <= 0 ? images.length - 1 : current - 1
+    );
+  };
+
+  const showNextImage = () => {
+    if (!hasMultipleImages) return;
+
+    setSelectedImageIndex((current) =>
+      current >= images.length - 1 ? 0 : current + 1
+    );
+  };
+
+  const handleGalleryKeyDown = (event) => {
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      showPreviousImage();
+    }
+
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      showNextImage();
+    }
+  };
+
+  const handleTouchStart = (event) => {
+    if (!hasMultipleImages) return;
+
+    const touch = event.touches[0];
+    setTouchStartX(touch.clientX);
+    setTouchStartY(touch.clientY);
+  };
+
+  const handleTouchEnd = (event) => {
+    if (!hasMultipleImages || touchStartX === null || touchStartY === null) {
+      return;
+    }
+
+    const touch = event.changedTouches[0];
+    const deltaX = touch.clientX - touchStartX;
+    const deltaY = touch.clientY - touchStartY;
+
+    setTouchStartX(null);
+    setTouchStartY(null);
+
+    if (Math.abs(deltaX) < 42 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) {
+      return;
+    }
+
+    if (deltaX > 0) {
+      showPreviousImage();
+      return;
+    }
+
+    showNextImage();
   };
 
   const decreaseQuantity = () => {
@@ -234,21 +313,19 @@ const ProductDetails = () => {
               to="/shop"
               className="text-[0.6rem] font-black uppercase tracking-[0.24em] text-[#8b8075] transition hover:text-[#c7a852]"
             >
-              {t("catalog:product.breadcrumbShop", {
-                category:
-                  localizedProduct.category?.name || t("common:collection"),
-              })}
+              {t("catalog:product.breadcrumbShop")}
             </Link>
-            <span className="text-[0.6rem] font-black uppercase tracking-[0.24em] text-[#8b8075]">
-              {t("catalog:product.breadcrumbProduct", {
-                slug: product.slug,
-              })}
-            </span>
           </div>
 
           <div className="grid gap-8 lg:grid-cols-[1.12fr_0.88fr] lg:items-start">
-            <div className="grid gap-4 sm:grid-cols-[88px_1fr]">
-              {images.length > 1 && (
+            <div
+              className={`grid gap-4 ${
+                hasMultipleImages ? "sm:grid-cols-[88px_1fr]" : ""
+              }`}
+              tabIndex={hasMultipleImages ? 0 : undefined}
+              onKeyDown={handleGalleryKeyDown}
+            >
+              {hasMultipleImages && (
                 <div className="order-2 grid grid-cols-4 gap-2 sm:order-1 sm:grid-cols-1 sm:self-start">
                   {images.map((image, index) => (
                     <button
@@ -278,7 +355,11 @@ const ProductDetails = () => {
                 </div>
               )}
 
-              <div className="order-1 relative overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f] sm:order-2">
+              <div
+                className="order-1 relative overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f] touch-pan-y sm:order-2"
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+              >
                 {selectedImage?.url ? (
                   <img
                     src={selectedImage.url}
@@ -287,10 +368,10 @@ const ProductDetails = () => {
                       localizedProduct.name,
                       language
                     )}
-                    className="aspect-[3/4] w-full object-cover"
+                    className="aspect-[4/5] w-full object-contain bg-[#1c1917]"
                   />
                 ) : (
-                  <div className="flex aspect-[3/4] flex-col items-center justify-center bg-[linear-gradient(145deg,#332c27,#1c1917)]">
+                  <div className="flex aspect-[4/5] flex-col items-center justify-center bg-[linear-gradient(145deg,#332c27,#1c1917)]">
                     <span className="brand-wordmark text-8xl text-[#f5f0e8]/10">
                       D
                     </span>
@@ -306,7 +387,7 @@ const ProductDetails = () => {
                       {t("common:sale")}
                     </span>
                   )}
-                  {localizedBadges.slice(0, 1).map((badge) => (
+                  {displayBadges.map((badge) => (
                     <span
                       key={badge}
                       className="bg-[#c7a852] px-4 py-2 text-[0.6rem] font-black uppercase tracking-[0.22em] text-[#1c1917]"
@@ -315,6 +396,27 @@ const ProductDetails = () => {
                     </span>
                   ))}
                 </div>
+
+                {hasMultipleImages && (
+                  <>
+                    <button
+                      type="button"
+                      className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-[#f5f0e8]/18 bg-[#110f0e]/78 text-[#f5f0e8] transition hover:border-[#c7a852]"
+                      onClick={showPreviousImage}
+                      aria-label={t("common:previous")}
+                    >
+                      <ChevronLeft size={20} />
+                    </button>
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-[#f5f0e8]/18 bg-[#110f0e]/78 text-[#f5f0e8] transition hover:border-[#c7a852]"
+                      onClick={showNextImage}
+                      aria-label={t("common:next")}
+                    >
+                      <ChevronRight size={20} />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
@@ -344,19 +446,6 @@ const ProductDetails = () => {
                   <p className="mt-6 text-base leading-8 text-[#f5f0e8]/62">
                     {localizedProduct.shortDescription}
                   </p>
-                )}
-
-                {localizedBadges.length > 0 && (
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    {localizedBadges.map((badge) => (
-                      <span
-                        key={badge}
-                        className="border border-[#c7a852]/35 px-3 py-1.5 text-[0.56rem] font-black uppercase tracking-[0.2em] text-[#c7a852]"
-                      >
-                        {badge}
-                      </span>
-                    ))}
-                  </div>
                 )}
 
                 <div className="mt-9 space-y-8">

@@ -1,7 +1,31 @@
 import api from "../api/axios";
 
+const buildProductParams = (params = {}) => {
+  const allowedParams = [
+    "category",
+    "search",
+    "featured",
+    "limit",
+    "page",
+    "sort",
+    "color",
+    "minPrice",
+    "maxPrice",
+    "availability",
+  ];
+
+  return Object.fromEntries(
+    allowedParams
+      .map((key) => [key, params[key]])
+      .filter(([, value]) => value !== undefined && value !== null && value !== "")
+  );
+};
+
 export const getPublicProductsRequest = async (params = {}) => {
-  const { data } = await api.get("/products", { params });
+  const { data } = await api.get("/products", {
+    params: buildProductParams(params),
+  });
+
   return data;
 };
 

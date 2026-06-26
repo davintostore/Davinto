@@ -9,6 +9,7 @@ import Container from "../../components/ui/Container";
 import Input from "../../components/ui/Input";
 import PageHeader from "../../components/ui/PageHeader";
 import SectionLabel from "../../components/ui/SectionLabel";
+import Select from "../../components/ui/Select";
 import Textarea from "../../components/ui/Textarea";
 
 import { useCart } from "../../context/cartContext";
@@ -27,6 +28,7 @@ import {
   getLocalizedOffer,
   getLocalizedSettings,
 } from "../../utils/localizedContent";
+import { egyptGovernorates } from "../../utils/governorates";
 
 const ORDER_HANDOFF_KEY = "davinto_order_handoff";
 const LEGACY_LAST_ORDER_KEY = "davinto_last_order";
@@ -92,6 +94,7 @@ const Checkout = () => {
   const [discountError, setDiscountError] = useState("");
 
   const quoteItems = useMemo(() => buildQuoteItems(items), [items]);
+  const deliveryZone = customerInfo.city;
 
   const {
     data: settingsData,
@@ -119,11 +122,17 @@ const Checkout = () => {
     error: quoteError,
     refetch: refetchQuote,
   } = useQuery({
-    queryKey: ["checkout-quote", quoteItems, appliedDiscountCode],
+    queryKey: [
+      "checkout-quote",
+      quoteItems,
+      appliedDiscountCode,
+      deliveryZone,
+    ],
     queryFn: () =>
       createQuoteRequest({
         items: quoteItems,
         discountCode: appliedDiscountCode,
+        deliveryZone,
       }),
     enabled: items.length > 0,
     retry: 1,
@@ -214,7 +223,7 @@ const Checkout = () => {
     onSuccess: (response) => {
       const order = response?.order;
 
-      if (!order?.orderNumber || !order?.lookupToken) {
+      if (!order?.orderNumber) {
         setFormError(t("checkout:errors.trackingMissing"));
         return;
       }
@@ -367,6 +376,7 @@ const Checkout = () => {
       paymentMethod: effectivePaymentMethod,
       paymentReference: paymentReference.trim(),
       discountCode: appliedDiscountCode || "",
+      locale: language === "ar" ? "ar" : "en",
       items: quoteItems,
     };
   };
@@ -387,6 +397,7 @@ const Checkout = () => {
     validateDiscountMutation.mutate({
       items: quoteItems,
       discountCode: discountCode.trim(),
+      deliveryZone,
     });
   };
 
@@ -528,13 +539,21 @@ const Checkout = () => {
                       placeholder="you@example.com"
                     />
 
-                    <Input
+                    <Select
                       label={t("checkout:city")}
                       name="city"
                       value={customerInfo.city}
                       onChange={updateCustomerField}
-                      placeholder={t("checkout:cityPlaceholder")}
-                    />
+                    >
+                      <option value="">
+                        {t("checkout:cityPlaceholder")}
+                      </option>
+                      {egyptGovernorates.map((zone) => (
+                        <option key={zone.slug} value={zone.slug}>
+                          {t(`checkout:deliveryZones.${zone.slug}`)}
+                        </option>
+                      ))}
+                    </Select>
 
                     <div className="md:col-span-2">
                       <Textarea

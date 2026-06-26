@@ -1,0 +1,496 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { SlidersHorizontal, X } from "lucide-react";
+
+import Button from "../ui/Button";
+import Input from "../ui/Input";
+import { getLocalizedCategory } from "../../utils/localizedContent";
+
+const fallbackColors = [
+  {
+    slug: "black",
+    name: "Black",
+    hex: "#111111",
+    translations: { ar: { name: "أسود" } },
+  },
+  {
+    slug: "white",
+    name: "White",
+    hex: "#f7f3ea",
+    translations: { ar: { name: "أبيض" } },
+  },
+  {
+    slug: "beige",
+    name: "Beige",
+    hex: "#d7c7ad",
+    translations: { ar: { name: "بيج" } },
+  },
+  {
+    slug: "pink",
+    name: "Pink",
+    hex: "#f4a7b9",
+    translations: { ar: { name: "وردي" } },
+  },
+];
+
+const launchColorOrder = ["white", "black", "beige", "pink"];
+const launchColorRank = new Map(
+  launchColorOrder.map((slug, index) => [slug, index])
+);
+
+const sortOptions = [
+  { value: "newest", key: "sortNewest" },
+  { value: "price_asc", key: "sortPriceLow" },
+  { value: "price_desc", key: "sortPriceHigh" },
+  { value: "name_asc", key: "sortNameAsc" },
+  { value: "name_desc", key: "sortNameDesc" },
+];
+
+const hasArabicText = (value) => /[\u0600-\u06ff]/.test(String(value || ""));
+
+const getColorLabel = (color, language, t) => {
+  if (language === "ar" && hasArabicText(color.translations?.ar?.name)) {
+    return color.translations.ar.name;
+  }
+
+  return color.name || t(`filters.colors.${color.slug}`, { defaultValue: color.slug });
+};
+
+const getActiveFilterCount = (filters = {}) => {
+  return [
+    filters.search,
+    filters.category,
+    filters.color,
+    filters.minPrice,
+    filters.maxPrice,
+    filters.availability && filters.availability !== "all",
+  ].filter(Boolean).length;
+};
+
+const sortColors = (colors) => {
+  return [...colors].sort((a, b) => {
+    const aSlug = String(a.slug || "").toLowerCase();
+    const bSlug = String(b.slug || "").toLowerCase();
+    const aRank = launchColorRank.has(aSlug)
+      ? launchColorRank.get(aSlug)
+      : Number.POSITIVE_INFINITY;
+    const bRank = launchColorRank.has(bSlug)
+      ? launchColorRank.get(bSlug)
+      : Number.POSITIVE_INFINITY;
+
+    if (aRank !== bRank) return aRank - bRank;
+    return aSlug.localeCompare(bSlug, "en");
+  });
+};
+
+const AccordionSection = ({ title, children, isOpen, onToggle }) => {
+  return (
+    <section className="border-b border-[#f5f0e8]/12 py-4">
+      <button
+        type="button"
+        className="flex w-full items-center justify-between gap-4 text-left text-[0.7rem] font-black uppercase tracking-[0.18em] text-[#c7a852]"
+        aria-expanded={isOpen}
+        onClick={onToggle}
+      >
+        <span>{title}</span>
+        <span className="text-lg leading-none text-[#f5f0e8]/60" aria-hidden="true">
+          {isOpen ? "-" : "+"}
+        </span>
+      </button>
+
+      <div
+        className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out ${
+          isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        }`}
+      >
+        <div className="overflow-hidden">
+          <div className="pt-4">{children}</div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const CatalogFilters = ({
+  filters,
+  metadata,
+  categories = [],
+  currentCategory = null,
+  productCount = 0,
+  language,
+  t,
+  onSearchChange,
+  onSortChange,
+  onCategoryChange,
+  onToggleColor,
+  onAvailabilityChange,
+  onApplyPrice,
+  onClearFilters,
+  hasActiveFilters,
+}) => {
+  const location = useLocation();
+  const currentRouteKey = `${location.pathname}?${location.search}`;
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const [sortRouteKey, setSortRouteKey] = useState("");
+  const [openFilterSection, setOpenFilterSection] = useState(null);
+  const sortRef = useRef(null);
+  const [priceDraft, setPriceDraft] = useState({
+    minPrice: filters.minPrice || "",
+    maxPrice: filters.maxPrice || "",
+  });
+  const activeFilterCount = getActiveFilterCount(filters);
+  const selectedColors = useMemo(
+    () =>
+      String(filters.color || "")
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean),
+    [filters.color]
+  );
+  const colors = useMemo(() => {
+    const metadataColors = Array.isArray(metadata?.colors) ? metadata.colors : [];
+    const sourceColors = metadataColors.length > 0 ? metadataColors : fallbackColors;
+    const colorsBySlug = new Map();
+
+    sourceColors.forEach((color) => {
+      const slug = String(color?.slug || "").trim();
+      if (slug) colorsBySlug.set(slug, { ...color, slug });
+    });
+
+    selectedColors.forEach((slug) => {
+      if (colorsBySlug.has(slug)) return;
+
+      const fallbackColor = fallbackColors.find((color) => color.slug === slug);
+      colorsBySlug.set(slug, fallbackColor || { slug, name: slug, hex: "#777" });
+    });
+
+    return sortColors(Array.from(colorsBySlug.values()));
+  }, [metadata, selectedColors]);
+  const localizedCategories = useMemo(
+    () => categories.map((category) => getLocalizedCategory(category, language)),
+    [categories, language]
+  );
+  const selectedSort =
+    sortOptions.find((option) => option.value === filters.sort) ||
+    sortOptions[0];
+  const isSortMenuOpen = isSortOpen && sortRouteKey === currentRouteKey;
+
+  useEffect(() => {
+    if (!isSortMenuOpen) return undefined;
+
+    const handlePointerDown = (event) => {
+      if (!sortRef.current?.contains(event.target)) {
+        setIsSortOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setIsSortOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isSortMenuOpen]);
+
+  const toggleSortMenu = () => {
+    if (isSortMenuOpen) {
+      setIsSortOpen(false);
+      return;
+    }
+
+    setSortRouteKey(currentRouteKey);
+    setIsSortOpen(true);
+  };
+
+  const openFilterDrawer = () => {
+    setOpenFilterSection(null);
+    setIsFilterOpen(true);
+  };
+
+  const closeFilterDrawer = () => {
+    setIsFilterOpen(false);
+    setOpenFilterSection(null);
+  };
+
+  const toggleFilterSection = (section) => {
+    setOpenFilterSection((current) => (current === section ? null : section));
+  };
+
+  const applyDrawer = () => {
+    onApplyPrice(priceDraft);
+    closeFilterDrawer();
+  };
+
+  return (
+    <div className="mb-7">
+      <div className="flex flex-col gap-3 border-y border-[#f5f0e8]/12 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-[0.64rem] font-black uppercase tracking-[0.18em] text-[#c7a852]">
+          {t("common:pieceCount", { count: productCount })}
+        </p>
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          {onSearchChange && (
+            <div className="sm:w-64">
+              <Input
+                aria-label={t("shop.search")}
+                name="search"
+                value={filters.search || ""}
+                onChange={(event) => onSearchChange(event.target.value)}
+                placeholder={t("shop.searchPlaceholder")}
+                className="h-11 rounded-none border-[#f5f0e8]/18 py-0 text-[0.82rem]"
+              />
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className="inline-flex h-11 items-center gap-2 border border-[#f5f0e8]/18 px-4 text-[0.66rem] font-black uppercase tracking-[0.18em] text-[#f5f0e8] transition hover:border-[#c7a852]"
+              onClick={openFilterDrawer}
+            >
+              <SlidersHorizontal size={16} />
+              {t("filters.title")}
+              {activeFilterCount > 0 && (
+                <span className="text-[#c7a852]">({activeFilterCount})</span>
+              )}
+            </button>
+
+            <div className="relative" ref={sortRef}>
+              <button
+                type="button"
+                aria-expanded={isSortMenuOpen}
+                className="inline-flex h-11 items-center border border-[#f5f0e8]/18 px-4 text-[0.66rem] font-black uppercase tracking-[0.18em] text-[#f5f0e8] transition hover:border-[#c7a852]"
+                onClick={toggleSortMenu}
+              >
+                {t("shop.sort")}
+              </button>
+
+              {isSortMenuOpen && (
+                <div className="absolute right-0 z-30 mt-2 w-56 border border-[#c7a852]/30 bg-[#110f0e] p-2 shadow-2xl">
+                  {sortOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      className={`block w-full px-3 py-3 text-left text-xs font-bold uppercase tracking-[0.12em] transition ${
+                        selectedSort.value === option.value
+                          ? "bg-[#c7a852] text-[#1c1917]"
+                          : "text-[#f5f0e8]/70 hover:bg-[#f5f0e8]/8 hover:text-[#f5f0e8]"
+                      }`}
+                      onClick={() => {
+                        onSortChange(option.value);
+                        setIsSortOpen(false);
+                      }}
+                    >
+                      {t(`shop.${option.key}`)}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {isFilterOpen && (
+        <div className="fixed inset-0 z-[80]">
+          <button
+            type="button"
+            className="absolute inset-0 bg-[#110f0e]/72"
+            aria-label={t("filters.close")}
+            onClick={closeFilterDrawer}
+          />
+
+          <aside className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col border-l border-[#c7a852]/30 bg-[#1c1917] shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#f5f0e8]/12 p-5">
+              <div>
+                <p className="text-[0.64rem] font-black uppercase tracking-[0.22em] text-[#c7a852]">
+                  {t("filters.title")}
+                </p>
+                <p className="mt-1 text-xs text-[#f5f0e8]/45">
+                  {activeFilterCount > 0
+                    ? t("filters.activeCount", { count: activeFilterCount })
+                    : t("filters.description")}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="flex h-10 w-10 items-center justify-center border border-[#f5f0e8]/18 text-[#f5f0e8]"
+                aria-label={t("filters.close")}
+                onClick={closeFilterDrawer}
+              >
+                <X size={17} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-5">
+              <AccordionSection
+                title={t("filters.availability")}
+                isOpen={openFilterSection === "availability"}
+                onToggle={() => toggleFilterSection("availability")}
+              >
+                <div className="grid gap-2">
+                  {["all", "inStock", "outOfStock"].map((value) => (
+                    <label
+                      key={value}
+                      className="flex cursor-pointer items-center gap-3 text-sm text-[#f5f0e8]/72"
+                    >
+                      <input
+                        type="radio"
+                        name="availability"
+                        value={value}
+                        checked={filters.availability === value}
+                        onChange={() => onAvailabilityChange(value)}
+                      />
+                      <span>{t(`filters.${value}`)}</span>
+                    </label>
+                  ))}
+                </div>
+              </AccordionSection>
+
+              <AccordionSection
+                title={t("filters.priceRange")}
+                isOpen={openFilterSection === "price"}
+                onToggle={() => toggleFilterSection("price")}
+              >
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Input
+                    label={t("filters.minPrice")}
+                    type="number"
+                    min="0"
+                    inputMode="numeric"
+                    value={priceDraft.minPrice}
+                    onChange={(event) =>
+                      setPriceDraft((current) => ({
+                        ...current,
+                        minPrice: event.target.value,
+                      }))
+                    }
+                    placeholder={String(metadata?.price?.min || 0)}
+                  />
+                  <Input
+                    label={t("filters.maxPrice")}
+                    type="number"
+                    min="0"
+                    inputMode="numeric"
+                    value={priceDraft.maxPrice}
+                    onChange={(event) =>
+                      setPriceDraft((current) => ({
+                        ...current,
+                        maxPrice: event.target.value,
+                      }))
+                    }
+                    placeholder={String(metadata?.price?.max || 0)}
+                  />
+                </div>
+              </AccordionSection>
+
+              <AccordionSection
+                title={t("filters.productType")}
+                isOpen={openFilterSection === "productType"}
+                onToggle={() => toggleFilterSection("productType")}
+              >
+                {currentCategory ? (
+                  <p className="text-sm text-[#f5f0e8]/62">
+                    {currentCategory.name}
+                  </p>
+                ) : (
+                  <div className="grid gap-2">
+                    <label className="flex cursor-pointer items-center gap-3 text-sm text-[#f5f0e8]/72">
+                      <input
+                        type="radio"
+                        name="category"
+                        value=""
+                        checked={!filters.category}
+                        onChange={() => onCategoryChange?.("")}
+                      />
+                      <span>{t("filters.all")}</span>
+                    </label>
+
+                    {localizedCategories.map((category) => (
+                      <label
+                        key={category._id || category.slug}
+                        className="flex cursor-pointer items-center gap-3 text-sm text-[#f5f0e8]/72"
+                      >
+                        <input
+                          type="radio"
+                          name="category"
+                          value={category.slug}
+                          checked={filters.category === category.slug}
+                          onChange={() => onCategoryChange?.(category.slug)}
+                        />
+                        <span>{category.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </AccordionSection>
+
+              <AccordionSection
+                title={t("filters.color")}
+                isOpen={openFilterSection === "color"}
+                onToggle={() => toggleFilterSection("color")}
+              >
+                <div className="flex flex-wrap gap-2">
+                  {colors.map((color) => {
+                    const label = getColorLabel(color, language, t);
+                    const isSelected = selectedColors.includes(color.slug);
+
+                    return (
+                      <label
+                        key={color.slug}
+                        className={`inline-flex cursor-pointer items-center gap-2 border px-3 py-2 text-xs transition focus-within:border-[#c7a852] ${
+                          isSelected
+                            ? "border-[#c7a852] bg-[#c7a852]/14 text-[#f5f0e8]"
+                            : "border-[#f5f0e8]/14 bg-[#f5f0e8]/5 text-[#f5f0e8]/70 hover:border-[#f5f0e8]/28"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="sr-only"
+                          checked={isSelected}
+                          onChange={() => onToggleColor(color.slug)}
+                          aria-label={label}
+                        />
+                        <span
+                          className="h-3.5 w-3.5 rounded-full border border-[#f5f0e8]/40 ring-1 ring-[#1c1917]"
+                          style={{ backgroundColor: color.hex || "#777" }}
+                          aria-hidden="true"
+                        />
+                        <span>{label}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </AccordionSection>
+            </div>
+
+            <div className="grid gap-3 border-t border-[#f5f0e8]/12 p-5 sm:grid-cols-2">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={onClearFilters}
+                disabled={!hasActiveFilters}
+              >
+                {t("filters.clearAll")}
+              </Button>
+              <Button type="button" onClick={applyDrawer}>
+                {t("filters.viewResults")}
+              </Button>
+            </div>
+          </aside>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default CatalogFilters;

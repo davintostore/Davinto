@@ -164,9 +164,9 @@ const customerSchema = new mongoose.Schema(
 customerSchema.index({ createdAt: -1 });
 customerSchema.index({ status: 1, createdAt: -1 });
 
-customerSchema.pre("save", async function (next) {
+customerSchema.pre("save", async function () {
   if (!this.isModified("password")) {
-    return next();
+    return;
   }
 
   const salt = await bcrypt.genSalt(12);
@@ -176,8 +176,6 @@ customerSchema.pre("save", async function (next) {
     this.passwordChangedAt = new Date();
     this.sessionVersion = Number(this.sessionVersion || 0) + 1;
   }
-
-  next();
 });
 
 customerSchema.methods.matchPassword = async function (enteredPassword) {

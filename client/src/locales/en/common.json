@@ -36,6 +36,7 @@
   "davintoPiece": "Davinto piece",
   "collection": "Collection",
   "sale": "Sale",
+  "offer": "Offer",
   "viewPiece": "View piece",
   "created": "Created {{date}}",
   "qty": "Qty {{count}}",

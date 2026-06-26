@@ -47,6 +47,14 @@ const normalizeText = (value = "") => {
   return String(value || "").trim();
 };
 
+const normalizeEmail = (value = "") => normalizeText(value).toLowerCase();
+
+const normalizeLocale = (value = "") => {
+  return String(value || "").trim().toLowerCase().startsWith("ar")
+    ? "ar"
+    : "en";
+};
+
 const createPaymobMerchantOrderId = (orderNumber, mode = "PAY") => {
   return `${orderNumber}-${mode}-${Date.now()}`;
 };
@@ -56,7 +64,7 @@ const getNextOrderNumber = async (session) => {
     { name: ORDER_COUNTER_NAME },
     { $inc: { value: 1 } },
     {
-      new: true,
+      returnDocument: "after",
       upsert: true,
       setDefaultsOnInsert: true,
       session,
@@ -103,7 +111,7 @@ const validateCustomerInfo = (customerInfo = {}) => {
   const fullName = normalizeText(customerInfo.fullName);
   const phone = normalizeText(customerInfo.phone);
   const secondPhone = normalizeText(customerInfo.secondPhone);
-  const email = normalizeText(customerInfo.email).toLowerCase();
+  const email = normalizeEmail(customerInfo.email);
   const city = normalizeText(customerInfo.city);
   const address = normalizeText(customerInfo.address);
   const notes = normalizeText(customerInfo.notes);
@@ -174,6 +182,21 @@ const getInitialStatuses = (paymentMethod) => {
   throw createHttpError("Invalid payment method.");
 };
 
+const buildPaymentSnapshot = (settings, paymentMethod, paymentSetup) => {
+  const arabicPayment = settings.translations?.ar?.payments?.[paymentMethod];
+
+  return {
+    label: paymentSetup.label || "",
+    instructions: paymentSetup.instructions || "",
+    translations: {
+      ar: {
+        label: arabicPayment?.label || "",
+        instructions: arabicPayment?.instructions || "",
+      },
+    },
+  };
+};
+
 const setPrivateResponseHeaders = (res) => {
   res.set("Cache-Control", "no-store, private");
   res.set("Pragma", "no-cache");
@@ -184,6 +207,7 @@ const buildPublicOrderPayload = (order, options = {}) => {
     id: order._id,
     orderNumber: order.orderNumber,
     checkoutMode: order.checkoutMode || "guest",
+    locale: order.locale || "en",
     orderStatus: order.orderStatus,
     paymentStatus: order.paymentStatus,
     paymentMethod: order.paymentMethod,
@@ -208,14 +232,9 @@ const buildPublicOrderPayload = (order, options = {}) => {
       paymobTransactionId: order.paymentGateway?.paymobTransactionId || "",
       paymobMerchantOrderId:
         order.paymentGateway?.paymobMerchantOrderId || "",
-      paymobIframeUrl: order.paymentGateway?.paymobIframeUrl || "",
     },
     createdAt: order.createdAt,
   };
-
-  if (options.includeLookupToken) {
-    payload.lookupToken = order.lookupToken;
-  }
 
   return payload;
 };
@@ -223,6 +242,8 @@ const buildPublicOrderPayload = (order, options = {}) => {
 const buildCustomerOrderPreviewItem = (item) => ({
   name: item.name,
   image: item.image || "",
+  imageAlt: item.imageAlt || "",
+  translations: item.translations,
   color: {
     name: item.color?.name || "",
     hex: item.color?.hex || "",
@@ -237,6 +258,7 @@ const buildCustomerOrderListItem = (order) => ({
   id: order._id,
   orderNumber: order.orderNumber,
   checkoutMode: order.checkoutMode || "customer",
+  locale: order.locale || "en",
   orderStatus: order.orderStatus,
   paymentStatus: order.paymentStatus,
   paymentMethod: order.paymentMethod,
@@ -270,6 +292,7 @@ const buildCustomerSafeOrderDetail = (order) => ({
   id: order._id,
   orderNumber: order.orderNumber,
   checkoutMode: order.checkoutMode || "customer",
+  locale: order.locale || "en",
   orderStatus: order.orderStatus,
   paymentStatus: order.paymentStatus,
   paymentMethod: order.paymentMethod,
@@ -284,6 +307,10 @@ const buildCustomerSafeOrderDetail = (order) => ({
         color: item.color,
         size: item.size,
         image: item.image || "",
+        imageAlt: item.imageAlt || "",
+        shortDescription: item.shortDescription || "",
+        badges: Array.isArray(item.badges) ? item.badges : [],
+        translations: item.translations,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         compareAtPrice: item.compareAtPrice,
@@ -306,6 +333,7 @@ const buildCustomerSafeOrderDetail = (order) => ({
   paymentSnapshot: {
     label: order.paymentSnapshot?.label || "",
     instructions: order.paymentSnapshot?.instructions || "",
+    translations: order.paymentSnapshot?.translations,
   },
   statusHistory: buildCustomerSafeStatusHistory(order.statusHistory),
   createdAt: order.createdAt,
@@ -345,7 +373,9 @@ const createOrder = asyncHandler(async (req, res) => {
     paymentMethod,
     paymentReference,
     discountCode,
+    locale,
   } = req.body;
+  const orderLocale = normalizeLocale(locale);
 
   const verifiedCustomerId = req.customer?._id || null;
   const checkoutMode = verifiedCustomerId ? "customer" : "guest";
@@ -402,6 +432,7 @@ const createOrder = asyncHandler(async (req, res) => {
       const quote = await calculateQuote({
         cartItems: items,
         discountCode,
+        deliveryZone: validatedCustomer.city,
         session,
         deductStock: true,
         incrementUsage: true,
@@ -423,6 +454,7 @@ const createOrder = asyncHandler(async (req, res) => {
             lookupTokenLast4,
             customer: verifiedCustomerId,
             checkoutMode,
+            locale: orderLocale,
             customerInfo: validatedCustomer,
             items: quote.items,
             subtotal: quote.subtotal,
@@ -440,10 +472,11 @@ const createOrder = asyncHandler(async (req, res) => {
             paymentStatus,
             paymentReference: normalizeText(paymentReference),
             orderStatus,
-            paymentSnapshot: {
-              label: paymentSetup.label,
-              instructions: paymentSetup.instructions,
-            },
+            paymentSnapshot: buildPaymentSnapshot(
+              settings,
+              paymentMethod,
+              paymentSetup
+            ),
             deliverySnapshot: quote.deliverySnapshot,
             statusHistory: [
               {
@@ -501,9 +534,22 @@ const createOrder = asyncHandler(async (req, res) => {
   }
 
   try {
-    await sendOrderNotifications(order);
+    const notificationResult = await sendOrderNotifications(order);
+
+    if (notificationResult?.skipped) {
+      console.warn(
+        `Order notification skipped for ${order.orderNumber}: ${
+          notificationResult.reason || "No reason provided."
+        }`
+      );
+    }
+
   } catch (error) {
-    console.error("Order notification failed:", error);
+    console.error(
+      `Order notification failed for ${order.orderNumber}: ${
+        error?.message || "Unknown email error."
+      }`
+    );
   }
 
   order = await Order.findById(createdOrder._id).select("+lookupToken");
@@ -512,20 +558,37 @@ const createOrder = asyncHandler(async (req, res) => {
   res.status(201).json({
     success: true,
     message: "Order created successfully.",
-    order: buildPublicOrderPayload(order, { includeLookupToken: true }),
+    order: buildPublicOrderPayload(order),
     payment,
   });
 });
+
+const findOrderForEmailTracking = async ({ orderNumber, email }) => {
+  const normalizedOrderNumber = normalizeText(orderNumber).toUpperCase();
+  const normalizedEmail = normalizeEmail(email);
+
+  if (!normalizedOrderNumber || !normalizedEmail) {
+    throw createHttpError("Order number and email are required.", 400);
+  }
+
+  const order = await Order.findOne({
+    orderNumber: normalizedOrderNumber,
+    "customerInfo.email": normalizedEmail,
+  });
+
+  if (!order) {
+    throw createHttpError("Order not found.", 404);
+  }
+
+  return order;
+};
 
 const findOrderForGuestTracking = async ({ orderNumber, lookupToken }) => {
   const normalizedOrderNumber = normalizeText(orderNumber).toUpperCase();
   const normalizedLookupToken = normalizeText(lookupToken);
 
   if (!normalizedOrderNumber || !normalizedLookupToken) {
-    throw createHttpError(
-      "Order number and lookup token are required.",
-      400
-    );
+    throw createHttpError("Order number and lookup token are required.", 400);
   }
 
   const order = await Order.findOne({
@@ -548,9 +611,7 @@ const sendGuestTrackingResponse = (res, order) => {
 };
 
 const trackOrder = asyncHandler(async (req, res) => {
-  // TODO(Security): Add dedicated rate limiting for repeated guest tracking
-  // attempts before production traffic increases.
-  const order = await findOrderForGuestTracking(req.body || {});
+  const order = await findOrderForEmailTracking(req.body || {});
   sendGuestTrackingResponse(res, order);
 });
 
@@ -678,7 +739,7 @@ const getMyOrders = asyncHandler(async (req, res) => {
   const [orders, total] = await Promise.all([
     Order.find(query)
       .select(
-        "orderNumber checkoutMode orderStatus paymentStatus paymentMethod total totalDiscount deliveryFee items createdAt updatedAt"
+        "orderNumber checkoutMode locale orderStatus paymentStatus paymentMethod total totalDiscount deliveryFee items createdAt updatedAt"
       )
       .sort({ createdAt: -1 })
       .skip(skip)

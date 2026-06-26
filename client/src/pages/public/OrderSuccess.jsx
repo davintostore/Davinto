@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
 import Button from "../../components/ui/Button";
@@ -9,7 +8,6 @@ import Container from "../../components/ui/Container";
 import PageHeader from "../../components/ui/PageHeader";
 import SectionLabel from "../../components/ui/SectionLabel";
 
-import { trackOrderRequest } from "../../services/orderService";
 import { trackPurchase } from "../../utils/metaPixel";
 import { useCustomerAuth } from "../../context/customerAuthContext";
 import {
@@ -18,8 +16,11 @@ import {
   getPaymentStatusLabel,
 } from "../../utils/translatedLabels";
 import {
-  getLocalizedBundle,
-  getLocalizedOffer,
+  getLocalizedAppliedBundle,
+  getLocalizedAppliedOffer,
+  getLocalizedDeliverySnapshot,
+  getLocalizedOrderItem,
+  getLocalizedPaymentSnapshot,
 } from "../../utils/localizedContent";
 
 const ORDER_HANDOFF_KEY = "davinto_order_handoff";
@@ -47,7 +48,6 @@ const OrderSuccess = () => {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { isCustomerAuthenticated } = useCustomerAuth();
-  const [isTokenVisible, setIsTokenVisible] = useState(false);
 
   const storedOrder = useMemo(() => {
     if (location.state?.order) {
@@ -64,31 +64,27 @@ const OrderSuccess = () => {
     }
   }, [location.state]);
 
-  const [trackingCredentials] = useState(() => ({
+  const [trackingDetails] = useState(() => ({
     orderNumber:
       searchParams.get("orderNumber") || storedOrder?.orderNumber || "",
-    lookupToken:
-      searchParams.get("lookupToken") || storedOrder?.lookupToken || "",
+    email:
+      location.state?.email ||
+      storedOrder?.customerInfo?.email ||
+      searchParams.get("email") ||
+      "",
   }));
 
-  const { orderNumber, lookupToken } = trackingCredentials;
+  const { orderNumber, email } = trackingDetails;
   const paymentResult = searchParams.get("payment") || "";
-
-  const {
-    data: trackedOrderData,
-    isLoading: isTrackingLatestOrder,
-  } = useQuery({
-    queryKey: ["order-success-track", orderNumber, lookupToken],
-    queryFn: () =>
-      trackOrderRequest({
-        orderNumber,
-        lookupToken,
-      }),
-    enabled: Boolean(orderNumber && lookupToken),
-    retry: 2,
-  });
-
-  const order = trackedOrderData?.order || storedOrder;
+  const order = storedOrder;
+  const localizedPaymentSnapshot = getLocalizedPaymentSnapshot(
+    order?.paymentSnapshot,
+    language
+  );
+  const localizedDeliverySnapshot = getLocalizedDeliverySnapshot(
+    order?.deliverySnapshot,
+    language
+  );
 
   useEffect(() => {
     document.title = orderNumber
@@ -101,24 +97,10 @@ const OrderSuccess = () => {
 
     if (!searchParams.has("lookupToken")) return;
 
-    // TODO(Paymob v2): Remove the legacy query-token fallback after Paymob
-    // returns can use a server-side payment/session handoff.
     const nextSearchParams = new URLSearchParams(searchParams);
     nextSearchParams.delete("lookupToken");
     setSearchParams(nextSearchParams, { replace: true });
   }, [searchParams, setSearchParams]);
-
-  useEffect(() => {
-    if (!trackedOrderData?.order?.orderNumber || !lookupToken) return;
-
-    sessionStorage.setItem(
-      ORDER_HANDOFF_KEY,
-      JSON.stringify({
-        ...trackedOrderData.order,
-        lookupToken,
-      })
-    );
-  }, [trackedOrderData, lookupToken]);
 
   useEffect(() => {
     if (!shouldFirePurchaseForOrder(order)) return;
@@ -154,7 +136,7 @@ const OrderSuccess = () => {
 
       <section className="fashion-section">
         <Container>
-          {!orderNumber || !lookupToken ? (
+          {!orderNumber ? (
             <Card className="py-14 text-center">
               <SectionLabel className="justify-center">
                 {t("orders:success.missingLabel")}
@@ -193,12 +175,6 @@ const OrderSuccess = () => {
                   {t("orders:success.description")}
                 </p>
 
-                {isTrackingLatestOrder && (
-                  <div className="mt-6 border border-[#f5f0e8]/12 bg-[#f5f0e8]/4 px-4 py-3 text-sm text-[#f5f0e8]/45">
-                    {t("orders:success.updating")}
-                  </div>
-                )}
-
                 {showPaymentSuccess && (
                   <div className="mt-6 border border-[#c7a852]/35 bg-[#c7a852]/10 px-4 py-3 text-sm text-[#f5f0e8]">
                     {t("orders:success.paymentSuccess")}
@@ -222,31 +198,17 @@ const OrderSuccess = () => {
                     </p>
                   </div>
 
-                  <div className="status-panel">
-                    <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
-                      {t("orders:success.trackingToken")}
-                    </p>
+                  {email && (
+                    <div className="status-panel">
+                      <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
+                        {t("orders:success.orderEmail")}
+                      </p>
 
-                    {isTokenVisible ? (
                       <p className="mt-3 break-all text-sm font-bold text-[#f5f0e8]">
-                        {lookupToken}
+                        {email}
                       </p>
-                    ) : (
-                      <p className="mt-3 text-sm text-[#f5f0e8]/55">
-                        {t("orders:success.tokenHidden")}
-                      </p>
-                    )}
-
-                    <button
-                      type="button"
-                      className="mt-3 text-xs font-black uppercase tracking-[0.2em] text-[#c7a852] underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#c7a852]"
-                      onClick={() => setIsTokenVisible((current) => !current)}
-                    >
-                      {isTokenVisible
-                        ? t("orders:success.hideToken")
-                        : t("orders:success.showToken")}
-                    </button>
-                  </div>
+                    </div>
+                  )}
                 </div>
 
                 {order && (
@@ -300,15 +262,29 @@ const OrderSuccess = () => {
                     </p>
 
                     <div className="mt-3 space-y-2">
-                      {order.appliedBundles.map((bundle, index) => (
-                        <p
-                          key={`${bundle.slug}-${index}`}
-                          className="text-sm text-[#f5f0e8]/72"
-                        >
-                          {getLocalizedBundle(bundle, language).title}: -
-                          {formatMoney(bundle.discountAmount)}
-                        </p>
-                      ))}
+                      {order.appliedBundles.map((bundle, index) => {
+                        const localizedBundle = getLocalizedAppliedBundle(
+                          bundle,
+                          language
+                        );
+
+                        return (
+                          <div
+                            key={`${bundle.slug}-${index}`}
+                            className="text-sm text-[#f5f0e8]/72"
+                          >
+                            <p>
+                              {localizedBundle.title}: -
+                              {formatMoney(bundle.discountAmount)}
+                            </p>
+                            {localizedBundle.description && (
+                              <p className="mt-1 text-xs leading-6 text-[#f5f0e8]/52">
+                                {localizedBundle.description}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -320,19 +296,33 @@ const OrderSuccess = () => {
                     </p>
 
                     <div className="mt-3 space-y-2">
-                      {order.appliedOffers.map((offer, index) => (
-                        <p
-                          key={`${offer.slug}-${index}`}
-                          className="text-sm text-[#f5f0e8]/72"
-                        >
-                          {getLocalizedOffer(offer, language).title}
-                          {offer.discountAmount > 0
-                            ? `: -${formatMoney(offer.discountAmount)}`
-                            : offer.freeDeliveryApplied
-                              ? `: ${t("checkout:freeDelivery")}`
-                              : ""}
-                        </p>
-                      ))}
+                      {order.appliedOffers.map((offer, index) => {
+                        const localizedOffer = getLocalizedAppliedOffer(
+                          offer,
+                          language
+                        );
+
+                        return (
+                          <div
+                            key={`${offer.slug}-${index}`}
+                            className="text-sm text-[#f5f0e8]/72"
+                          >
+                            <p>
+                              {localizedOffer.title}
+                              {offer.discountAmount > 0
+                                ? `: -${formatMoney(offer.discountAmount)}`
+                                : offer.freeDeliveryApplied
+                                  ? `: ${t("checkout:freeDelivery")}`
+                                  : ""}
+                            </p>
+                            {localizedOffer.description && (
+                              <p className="mt-1 text-xs leading-6 text-[#f5f0e8]/52">
+                                {localizedOffer.description}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -351,10 +341,7 @@ const OrderSuccess = () => {
                 )}
 
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                  <Link
-                    to="/track-order"
-                    state={{ orderNumber, lookupToken }}
-                  >
+                  <Link to="/track-order" state={{ orderNumber, email }}>
                     <Button>{t("navigation:trackOrder")}</Button>
                   </Link>
 
@@ -380,42 +367,46 @@ const OrderSuccess = () => {
                   <SectionLabel>{t("orders:success.summary")}</SectionLabel>
 
                   <div className="space-y-4">
-                    {order.items?.map((item) => (
-                      <div
-                        key={
-                          item._id ||
-                          `${item.product}-${item.color?.name}-${item.size?.label}`
-                        }
-                        className="flex gap-3 border-b border-[#f5f0e8]/10 pb-4"
-                      >
-                        <div className="h-20 w-16 shrink-0 overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f]">
-                          {item.image ? (
-                            <img
-                              src={item.image}
-                              alt={item.name}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <div className="h-full w-full bg-white/5" />
-                          )}
+                    {order.items?.map((rawItem) => {
+                      const item = getLocalizedOrderItem(rawItem, language);
+
+                      return (
+                        <div
+                          key={
+                            item._id ||
+                            `${item.product}-${item.color?.name}-${item.size?.label}`
+                          }
+                          className="flex gap-3 border-b border-[#f5f0e8]/10 pb-4"
+                        >
+                          <div className="h-20 w-16 shrink-0 overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f]">
+                            {item.image ? (
+                              <img
+                                src={item.image}
+                                alt={item.imageAlt || item.name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="h-full w-full bg-white/5" />
+                            )}
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-serif text-base font-semibold text-[#f5f0e8]">
+                              {item.name}
+                            </p>
+
+                            <p className="mt-1 text-xs text-white/40">
+                              {item.color?.name} / {item.size?.label} ×{" "}
+                              {item.quantity}
+                            </p>
+
+                            <p className="mt-2 text-sm font-bold text-[#c7a852]">
+                              {formatMoney(item.lineSubtotal)}
+                            </p>
+                          </div>
                         </div>
-
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate font-serif text-base font-semibold text-[#f5f0e8]">
-                            {item.name}
-                          </p>
-
-                          <p className="mt-1 text-xs text-white/40">
-                            {item.color?.name} / {item.size?.label} ×{" "}
-                            {item.quantity}
-                          </p>
-
-                          <p className="mt-2 text-sm font-bold text-[#c7a852]">
-                            {formatMoney(item.lineSubtotal)}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   <div className="mt-5 space-y-3 text-sm">
@@ -475,6 +466,28 @@ const OrderSuccess = () => {
                         )}
                       </span>
                     </div>
+
+                    {localizedDeliverySnapshot?.notes && (
+                      <p className="border border-[#f5f0e8]/10 bg-[#f5f0e8]/3 p-3 text-xs leading-6 text-[#f5f0e8]/45">
+                        {localizedDeliverySnapshot.notes}
+                      </p>
+                    )}
+
+                    {(localizedPaymentSnapshot?.label ||
+                      localizedPaymentSnapshot?.instructions) && (
+                      <div className="border border-[#f5f0e8]/10 bg-[#f5f0e8]/3 p-3 text-xs leading-6 text-[#f5f0e8]/45">
+                        {localizedPaymentSnapshot?.label && (
+                          <p className="font-bold text-[#f5f0e8]/70">
+                            {localizedPaymentSnapshot.label}
+                          </p>
+                        )}
+                        {localizedPaymentSnapshot?.instructions && (
+                          <p className="mt-1">
+                            {localizedPaymentSnapshot.instructions}
+                          </p>
+                        )}
+                      </div>
+                    )}
 
                     <div className="flex justify-between border-t border-[#c7a852]/25 pt-4 font-serif text-xl font-semibold">
                       <span>{t("common:total")}</span>

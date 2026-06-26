@@ -1,5 +1,9 @@
 const SiteSettings = require("../models/SiteSettings");
 const asyncHandler = require("../utils/asyncHandler");
+const {
+  getDefaultDeliveryZones,
+  getDeliveryZonesWithDefaults,
+} = require("../utils/egyptGovernorates");
 
 const normalizeText = (value = "") => {
   return String(value ?? "").trim();
@@ -84,6 +88,8 @@ const serializeSettings = (settings) => {
   const currencySymbol =
     normalizeText(settings.currencySymbol) || currencyCode;
 
+  const deliveryZones = getDeliveryZonesWithDefaults(settings.delivery?.zones);
+
   const contract = {
     store: {
       name: normalizeText(settings.storeName) || "Davinto",
@@ -107,6 +113,7 @@ const serializeSettings = (settings) => {
         settings.delivery?.freeDeliveryThreshold || 0
       ),
       notes: normalizeText(settings.delivery?.notes),
+      zones: deliveryZones,
     },
     payments: {
       cod: serializePaymentMethod(settings.payments?.cod),
@@ -165,6 +172,22 @@ const normalizeSettingsPayload = (body = {}, settings) => {
   const currentTranslations = current.translations;
   const arabic = body.translations?.ar;
   const currentArabic = currentTranslations.ar;
+  const defaultDeliveryZones = getDefaultDeliveryZones();
+  const deliveryZones = Object.fromEntries(
+    Object.entries(defaultDeliveryZones).map(([slug, defaultFee]) => [
+      slug,
+      Math.max(
+        0,
+        Number(
+          firstDefined(
+            body.delivery?.zones?.[slug],
+            current.delivery.zones?.[slug],
+            defaultFee
+          )
+        )
+      ),
+    ])
+  );
 
   return {
     storeName:
@@ -240,6 +263,7 @@ const normalizeSettingsPayload = (body = {}, settings) => {
       notes: normalizeText(
         firstDefined(body.delivery?.notes, current.delivery.notes)
       ),
+      zones: deliveryZones,
     },
     payments: {
       cod: normalizePaymentMethod(body.payments?.cod, current.payments.cod),

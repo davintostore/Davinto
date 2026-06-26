@@ -195,26 +195,6 @@ const Account = () => {
                   </div>
                   <div className="flex justify-between gap-4 py-4">
                     <span className="text-[#f5f0e8]/45">
-                      {t("account:emailVerified")}
-                    </span>
-                    <span className="font-bold">
-                      {customer?.emailVerified
-                        ? t("common:yes")
-                        : t("common:notYet")}
-                    </span>
-                  </div>
-                  <div className="flex justify-between gap-4 py-4">
-                    <span className="text-[#f5f0e8]/45">
-                      {t("account:phoneVerified")}
-                    </span>
-                    <span className="font-bold">
-                      {customer?.phoneVerified
-                        ? t("common:yes")
-                        : t("common:notYet")}
-                    </span>
-                  </div>
-                  <div className="flex justify-between gap-4 py-4">
-                    <span className="text-[#f5f0e8]/45">
                       {t("account:memberSince")}
                     </span>
                     <span className="text-right font-bold">

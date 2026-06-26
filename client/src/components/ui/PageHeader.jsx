@@ -9,14 +9,16 @@ const PageHeader = ({
   description,
   children,
   className = "",
+  showMeta = null,
 }) => {
   const { t } = useTranslation("navigation");
   const location = useLocation();
   const isAdminPage = location.pathname.startsWith("/admin");
+  const shouldShowMeta = showMeta ?? isAdminPage;
 
   return (
     <section
-      className={`relative overflow-hidden border-b border-[#c7a852]/25 bg-[#882c30] pt-28 pb-16 sm:pt-36 sm:pb-24 ${className}`}
+      className={`relative overflow-hidden border-b border-[#c7a852]/25 bg-[#882c30] pt-16 pb-10 sm:pt-20 sm:pb-14 ${className}`}
     >
       <div
         className="pointer-events-none absolute inset-0 opacity-35"
@@ -33,7 +35,7 @@ const PageHeader = ({
             {label && <SectionLabel>{label}</SectionLabel>}
 
             <div className="max-w-5xl">
-              <h1 className="editorial-heading text-6xl text-[#f5f0e8] sm:text-8xl lg:text-[7.4rem]">
+              <h1 className="editorial-heading page-display-title text-[#f5f0e8]">
                 {title}
               </h1>
 
@@ -47,14 +49,16 @@ const PageHeader = ({
             </div>
           </div>
 
-          <div className="hidden border-l border-[#f5f0e8]/25 pl-6 lg:block">
-            <p className="brand-wordmark text-4xl text-[#c7a852]">D/01</p>
-            <p className="mt-3 text-[0.65rem] font-black uppercase leading-5 tracking-[0.28em] text-[#f5f0e8]/55">
-              {isAdminPage
-                ? "Davinto seasonal catalogue"
-                : t("seasonalCatalogue")}
-            </p>
-          </div>
+          {shouldShowMeta && (
+            <div className="hidden border-l border-[#f5f0e8]/25 pl-6 lg:block">
+              <p className="brand-wordmark text-4xl text-[#c7a852]">D/01</p>
+              <p className="mt-3 text-[0.65rem] font-black uppercase leading-5 tracking-[0.28em] text-[#f5f0e8]/55">
+                {isAdminPage
+                  ? "Davinto seasonal catalogue"
+                  : t("seasonalCatalogue")}
+              </p>
+            </div>
+          )}
         </div>
       </Container>
     </section>

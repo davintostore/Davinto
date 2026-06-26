@@ -36,9 +36,14 @@ const defaultForm = {
   },
 
   delivery: {
-    baseFee: 0,
+    baseFee: 120,
     freeDeliveryThreshold: 0,
     notes: "",
+    zones: {
+      cairo: 70,
+      giza: 70,
+      other: 120,
+    },
   },
 
   payments: {
@@ -48,12 +53,12 @@ const defaultForm = {
       instructions: "Pay when your order arrives.",
     },
     instapay: {
-      enabled: false,
+      enabled: true,
       label: "Instapay",
       instructions: "Send the payment then paste the transaction reference.",
     },
     vodafoneCash: {
-      enabled: false,
+      enabled: true,
       label: "Vodafone Cash",
       instructions: "Send the payment then paste the transaction reference.",
     },
@@ -65,9 +70,9 @@ const defaultForm = {
   },
 
   manualPayment: {
-    instapayHandle: "",
+    instapayHandle: "01271530992",
     instapayQrImage: "",
-    vodafoneCashNumber: "",
+    vodafoneCashNumber: "01097187348",
     vodafoneCashQrImage: "",
     requireTransactionReference: true,
     requireProofImage: false,
@@ -154,6 +159,10 @@ const mergeSettingsIntoForm = (settings = {}) => {
     delivery: {
       ...base.delivery,
       ...(settings.delivery || {}),
+      zones: {
+        ...base.delivery.zones,
+        ...(settings.delivery?.zones || {}),
+      },
     },
 
     payments: {
@@ -235,6 +244,10 @@ const AdminSettings = () => {
     type: "",
     message: "",
   });
+  const [testEmailFeedback, setTestEmailFeedback] = useState({
+    type: "",
+    message: "",
+  });
   const [testEmailToOverride, setTestEmailToOverride] = useState(null);
 
   const {
@@ -298,6 +311,25 @@ const AdminSettings = () => {
         },
       },
     }));
+
+    clearFeedback();
+  };
+
+  const updateDeliveryZoneField = (zone, value) => {
+    setFormDataOverride((current) => {
+      const source = current || loadedFormData;
+
+      return {
+        ...source,
+        delivery: {
+          ...source.delivery,
+          zones: {
+            ...source.delivery.zones,
+            [zone]: value,
+          },
+        },
+      };
+    });
 
     clearFeedback();
   };
@@ -385,6 +417,11 @@ const AdminSettings = () => {
           formData.delivery.freeDeliveryThreshold || 0
         ),
         notes: formData.delivery.notes.trim(),
+        zones: {
+          cairo: Number(formData.delivery.zones?.cairo || 0),
+          giza: Number(formData.delivery.zones?.giza || 0),
+          other: Number(formData.delivery.zones?.other || 0),
+        },
       },
 
       payments: {
@@ -500,6 +537,10 @@ const AdminSettings = () => {
     mutationFn: sendAdminTestEmailRequest,
     onSuccess: (response) => {
       if (response?.success) {
+        setTestEmailFeedback({
+          type: "success",
+          message: response.message || "Test email sent successfully.",
+        });
         showFeedback(
           "success",
           response.message || "Test email sent successfully."
@@ -507,6 +548,12 @@ const AdminSettings = () => {
         return;
       }
 
+      setTestEmailFeedback({
+        type: response?.skipped ? "warning" : "error",
+        message:
+          response?.message ||
+          "Test email could not be sent. Check SMTP settings.",
+      });
       showFeedback(
         "error",
         response?.message ||
@@ -514,6 +561,13 @@ const AdminSettings = () => {
       );
     },
     onError: (err) => {
+      setTestEmailFeedback({
+        type: "error",
+        message:
+          err?.friendlyMessage ||
+          err?.message ||
+          "Test email could not be sent.",
+      });
       showFeedback(
         "error",
         err?.friendlyMessage ||
@@ -547,6 +601,11 @@ const AdminSettings = () => {
   };
 
   const handleTestEmail = () => {
+    setTestEmailFeedback({
+      type: "",
+      message: "",
+    });
+
     testEmailMutation.mutate({
       to: testEmailTo.trim() || undefined,
     });
@@ -746,6 +805,39 @@ const AdminSettings = () => {
                       )
                     }
                     placeholder="0 = disabled"
+                  />
+
+                  <Input
+                    label="Cairo Fee"
+                    type="number"
+                    min="0"
+                    value={formData.delivery.zones?.cairo}
+                    onChange={(event) =>
+                      updateDeliveryZoneField("cairo", event.target.value)
+                    }
+                    placeholder="70"
+                  />
+
+                  <Input
+                    label="Giza Fee"
+                    type="number"
+                    min="0"
+                    value={formData.delivery.zones?.giza}
+                    onChange={(event) =>
+                      updateDeliveryZoneField("giza", event.target.value)
+                    }
+                    placeholder="70"
+                  />
+
+                  <Input
+                    label="Other Areas Fee"
+                    type="number"
+                    min="0"
+                    value={formData.delivery.zones?.other}
+                    onChange={(event) =>
+                      updateDeliveryZoneField("other", event.target.value)
+                    }
+                    placeholder="120"
                   />
 
                   <div className="md:col-span-2">
@@ -1136,6 +1228,20 @@ const AdminSettings = () => {
                     ? "Sending Test..."
                     : "Send Test Email"}
                 </Button>
+
+                {testEmailFeedback.message && (
+                  <div
+                    className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${
+                      testEmailFeedback.type === "success"
+                        ? "border-emerald-300/25 bg-emerald-400/10 text-emerald-100"
+                        : testEmailFeedback.type === "warning"
+                          ? "border-amber-300/25 bg-amber-400/10 text-amber-100"
+                          : "border-red-300/25 bg-red-400/10 text-red-100"
+                    }`}
+                  >
+                    {testEmailFeedback.message}
+                  </div>
+                )}
 
                 <p className="mt-4 text-xs leading-6 text-white/35">
                   New order emails are sent automatically after an order is
