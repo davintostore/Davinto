@@ -308,8 +308,12 @@ html[lang="ar"] .page-shell label {
 }
 
 .davinto-announcement-track {
+  position: absolute;
+  top: 0;
+  left: 100%;
   animation: davintoAnnouncementTicker 16s linear infinite;
   direction: ltr;
+  transform: translate3d(0, 0, 0);
   unicode-bidi: isolate;
   will-change: transform;
 }
@@ -320,11 +324,11 @@ html[lang="ar"] .page-shell label {
 
 @keyframes davintoAnnouncementTicker {
   from {
-    transform: translate3d(100vw, 0, 0);
+    transform: translate3d(0, 0, 0);
   }
 
   to {
-    transform: translate3d(-100%, 0, 0);
+    transform: translate3d(calc(-100vw - 100%), 0, 0);
   }
 }
 
@@ -488,7 +492,11 @@ select:-webkit-autofill {
 
   .davinto-announcement-track {
     animation: none !important;
+    left: auto !important;
+    position: static !important;
     transform: none !important;
+    width: 100%;
+    justify-content: center;
   }
 
   .davinto-hero-video {

@@ -294,7 +294,7 @@ const PublicLayout = () => {
         )}
 
         <div className="overflow-hidden border-t border-[#f5f0e8]/8 bg-[#882c30]">
-          <div className="h-7 overflow-hidden">
+          <div className="relative h-7 overflow-hidden">
             <span
               className="davinto-announcement-track flex h-full w-max items-center gap-4 whitespace-nowrap px-8 text-[0.62rem] font-black uppercase tracking-[0.18em] text-[#f5f0e8]/85 sm:tracking-[0.22em]"
               dir="ltr"
