@@ -7,6 +7,7 @@ import Input from "../../components/ui/Input";
 import PageHeader from "../../components/ui/PageHeader";
 import SectionLabel from "../../components/ui/SectionLabel";
 import Textarea from "../../components/ui/Textarea";
+import useSeo from "../../hooks/useSeo";
 
 import {
   getAdminSettingsRequest,
@@ -238,6 +239,13 @@ const mergeSettingsIntoForm = (settings = {}) => {
 
 const AdminSettings = () => {
   const queryClient = useQueryClient();
+
+  // SEO
+  useSeo({
+    title: "Admin Settings | Davinto Store",
+    description: "Admin settings management for Davinto Store.",
+    robots: "noindex,nofollow",
+  });
 
   const [formDataOverride, setFormDataOverride] = useState(null);
   const [feedback, setFeedback] = useState({

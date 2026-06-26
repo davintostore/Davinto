@@ -7,6 +7,7 @@ import Input from "../../components/ui/Input";
 import PageHeader from "../../components/ui/PageHeader";
 import Select from "../../components/ui/Select";
 import Textarea from "../../components/ui/Textarea";
+import useSeo from "../../hooks/useSeo";
 
 import {
   createDiscountCodeRequest,
@@ -63,6 +64,13 @@ const statusStyle = (status) => {
 
 const AdminDiscountCodes = () => {
   const queryClient = useQueryClient();
+
+  // SEO
+  useSeo({
+    title: "Admin Discount Codes | Davinto Store",
+    description: "Admin discount codes management for Davinto Store.",
+    robots: "noindex,nofollow",
+  });
 
   const [formData, setFormData] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);

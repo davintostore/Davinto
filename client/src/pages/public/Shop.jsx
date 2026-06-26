@@ -8,6 +8,7 @@ import ProductCard from "../../components/product/ProductCard";
 import Button from "../../components/ui/Button";
 import Container from "../../components/ui/Container";
 import PageHeader from "../../components/ui/PageHeader";
+import useSeo from "../../hooks/useSeo";
 
 import { getPublicCategoriesRequest } from "../../services/categoryService";
 import { getPublicProductsRequest } from "../../services/productService";
@@ -21,6 +22,18 @@ const Shop = () => {
   const lastTrackedSearchRef = useRef("");
   const resultsRef = useRef(null);
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // SEO
+  useSeo({
+    title: language === "ar"
+      ? "تصفح متجر دافينتو | ملابس وتصاميم فنية عالية الجودة"
+      : "Shop Davinto | Premium T-Shirts & Artwear",
+    description: language === "ar"
+      ? "تصفح مجموعة دافينتو من الملابس والتصاميم الفنية مع خيارات شحن بسيطة عبر جميع أنحاء مصر."
+      : "Shop Davinto clothing, blanks, and art-inspired pieces with simple checkout and delivery across Egypt.",
+    robots: "index,follow",
+    canonical: `${window.location.origin}/shop`,
+  });
 
   const filters = useMemo(() => {
     const availability = searchParams.get("availability") || "all";

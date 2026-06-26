@@ -11,6 +11,7 @@ import PageHeader from "../../components/ui/PageHeader";
 import SectionLabel from "../../components/ui/SectionLabel";
 import Select from "../../components/ui/Select";
 import Textarea from "../../components/ui/Textarea";
+import useSeo from "../../hooks/useSeo";
 
 import { useCart } from "../../context/cartContext";
 import { useCustomerAuth } from "../../context/customerAuthContext";
@@ -70,6 +71,17 @@ const Checkout = () => {
   const navigate = useNavigate();
   const initiateCheckoutTrackedRef = useRef(false);
   const { customer } = useCustomerAuth();
+
+  // SEO
+  useSeo({
+    title: language === "ar" 
+      ? "الدفع | متجر دافينتو" 
+      : "Checkout | Davinto Store",
+    description: language === "ar"
+      ? "أكمل طلبك من متجر دافينتو مع خيارات التوصيل عبر جميع أنحاء مصر."
+      : "Complete your Davinto order with delivery across Egypt.",
+    robots: "noindex,nofollow",
+  });
 
   const {
     items,

@@ -7,6 +7,7 @@ import Input from "../../components/ui/Input";
 import PageHeader from "../../components/ui/PageHeader";
 import Select from "../../components/ui/Select";
 import Textarea from "../../components/ui/Textarea";
+import useSeo from "../../hooks/useSeo";
 
 import {
   createBundleRequest,
@@ -108,6 +109,13 @@ const getScopeLabel = (scope) => {
 
 const AdminBundles = () => {
   const queryClient = useQueryClient();
+
+  // SEO
+  useSeo({
+    title: "Admin Bundles | Davinto Store",
+    description: "Admin bundles management for Davinto Store.",
+    robots: "noindex,nofollow",
+  });
 
   const [formData, setFormData] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);

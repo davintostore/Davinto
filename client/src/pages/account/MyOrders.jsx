@@ -10,6 +10,7 @@ import Container from "../../components/ui/Container";
 import PageHeader from "../../components/ui/PageHeader";
 import SectionLabel from "../../components/ui/SectionLabel";
 import Select from "../../components/ui/Select";
+import useSeo from "../../hooks/useSeo";
 import {
   getMyOrderByIdRequest,
   getMyOrdersRequest,
@@ -415,6 +416,18 @@ const MyOrders = () => {
       ? formatCustomerDate(value, language, withTime)
       : t("common:unavailable");
   const { refreshSession } = useCustomerAuth();
+
+  // SEO
+  useSeo({
+    title: language === "ar" 
+      ? "طلباتي | متجر دافينتو" 
+      : "My Orders | Davinto Store",
+    description: language === "ar"
+      ? "عرض طلباتك السابقة وتتبع حالتها على متجر دافينتو."
+      : "View your orders and track their status on Davinto Store.",
+    robots: "noindex,nofollow",
+  });
+
   const [page, setPage] = useState(1);
   const [orderStatus, setOrderStatus] = useState("");
   const [paymentStatus, setPaymentStatus] = useState("");

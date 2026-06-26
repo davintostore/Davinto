@@ -7,6 +7,7 @@ import Card from "../../components/ui/Card";
 import Container from "../../components/ui/Container";
 import PageHeader from "../../components/ui/PageHeader";
 import SectionLabel from "../../components/ui/SectionLabel";
+import useSeo from "../../hooks/useSeo";
 
 import { useCart } from "../../context/cartContext";
 import { formatCurrency } from "../../utils/translatedLabels";
@@ -14,6 +15,17 @@ import { formatCurrency } from "../../utils/translatedLabels";
 const Cart = () => {
   const { t, i18n } = useTranslation(["cart", "common"]);
   const language = i18n.resolvedLanguage === "ar" ? "ar" : "en";
+
+  // SEO
+  useSeo({
+    title: language === "ar" 
+      ? "سلتك | متجر دافينتو" 
+      : "Your Cart | Davinto Store",
+    description: language === "ar"
+      ? "راجع سلتك قبل الدفع في متجر دافينتو."
+      : "Review your Davinto cart before checkout.",
+    robots: "noindex,nofollow",
+  });
   const formatMoney = (value) => formatCurrency(value, language);
   const {
     items,

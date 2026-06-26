@@ -5,6 +5,7 @@ import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
 import PageHeader from "../../components/ui/PageHeader";
 import SectionLabel from "../../components/ui/SectionLabel";
+import useSeo from "../../hooks/useSeo";
 
 import { getAdminDashboardStatsRequest } from "../../services/dashboardService";
 
@@ -71,6 +72,13 @@ const AdminDashboard = () => {
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["admin-dashboard-stats"],
     queryFn: getAdminDashboardStatsRequest,
+  });
+
+  // SEO
+  useSeo({
+    title: "Admin Dashboard | Davinto Store",
+    description: "Admin dashboard for Davinto Store.",
+    robots: "noindex,nofollow",
   });
 
   const stats = data?.stats;

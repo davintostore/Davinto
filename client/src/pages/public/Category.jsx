@@ -8,6 +8,7 @@ import ProductCard from "../../components/product/ProductCard";
 import Button from "../../components/ui/Button";
 import Container from "../../components/ui/Container";
 import PageHeader from "../../components/ui/PageHeader";
+import useSeo from "../../hooks/useSeo";
 
 import { getPublicProductsRequest } from "../../services/productService";
 import api from "../../api/axios";
@@ -26,21 +27,6 @@ const Category = () => {
   const { slug } = useParams();
   const resultsRef = useRef(null);
   const [searchParams, setSearchParams] = useSearchParams();
-  const filters = useMemo(() => {
-    const availability = searchParams.get("availability") || "all";
-    const parsedPage = Number.parseInt(searchParams.get("page") || "1", 10);
-
-    return {
-      sort: searchParams.get("sort") || "newest",
-      color: searchParams.get("color") || "",
-      minPrice: searchParams.get("minPrice") || "",
-      maxPrice: searchParams.get("maxPrice") || "",
-      availability: ["all", "inStock", "outOfStock"].includes(availability)
-        ? availability
-        : "all",
-      page: Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1,
-    };
-  }, [searchParams]);
 
   const {
     data: categoryData,
@@ -51,6 +37,34 @@ const Category = () => {
     queryFn: () => getCategoryBySlugRequest(slug),
     enabled: Boolean(slug),
   });
+
+  const localizedCategory = useMemo(
+    () => getLocalizedCategory(categoryData?.category, language),
+    [categoryData, language]
+  );
+
+  // SEO
+  useSeo({
+    title: localizedCategory?.name 
+      ? `${localizedCategory.name} | Davinto Store`
+      : "Category | Davinto Store",
+    description: `Explore ${localizedCategory?.name || "products"} from Davinto Store with simple checkout and delivery across Egypt.`,
+    robots: "index,follow",
+    canonical: `${window.location.origin}/category/${slug}`,
+  });
+
+  const filters = useMemo(() => {
+    const availability = searchParams.get("availability") || "all";
+    const parsedPage = Number.parseInt(searchParams.get("page") || "1", 10);
+    return {
+      availability,
+      page: parsedPage,
+      sort: searchParams.get("sort") || "newest",
+      color: searchParams.get("color") || "",
+      minPrice: searchParams.get("minPrice") || "",
+      maxPrice: searchParams.get("maxPrice") || "",
+    };
+  }, [searchParams]);
 
   const {
     data: productsData,

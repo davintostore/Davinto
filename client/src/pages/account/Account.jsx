@@ -9,6 +9,7 @@ import Input from "../../components/ui/Input";
 import PageHeader from "../../components/ui/PageHeader";
 import SectionLabel from "../../components/ui/SectionLabel";
 import Select from "../../components/ui/Select";
+import useSeo from "../../hooks/useSeo";
 import { useCustomerAuth } from "../../context/customerAuthContext";
 import { formatCustomerDate } from "../../utils/translatedLabels";
 
@@ -21,6 +22,17 @@ const Account = () => {
       : t("common:unavailable");
   const navigate = useNavigate();
   const { customer, updateProfile, signout } = useCustomerAuth();
+
+  // SEO
+  useSeo({
+    title: language === "ar" 
+      ? "حسابي | متجر دافينتو" 
+      : "My Account | Davinto Store",
+    description: language === "ar"
+      ? "إدارة حسابك الشخصي على متجر دافينتو."
+      : "Manage your Davinto Store account.",
+    robots: "noindex,nofollow",
+  });
 
   const [formData, setFormData] = useState(() => ({
     name: customer?.name || "",

@@ -8,6 +8,7 @@ import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
 import Container from "../../components/ui/Container";
 import SectionLabel from "../../components/ui/SectionLabel";
+import useSeo from "../../hooks/useSeo";
 
 import { useCart } from "../../context/cartContext";
 import { getPublicProductBySlugRequest } from "../../services/productService";
@@ -60,8 +61,6 @@ const ProductDetails = () => {
   });
 
   const product = data?.product;
-  // TODO(Phase 4B3): Decide whether checkout/order snapshots should preserve
-  // the customer's localized product and color labels at purchase time.
   const localizedProduct = useMemo(
     () => getLocalizedProduct(product, language),
     [product, language]
@@ -71,6 +70,39 @@ const ProductDetails = () => {
     [product, language]
   );
   const activeColors = useMemo(() => getActiveColors(product), [product]);
+
+  // SEO
+  useSeo({
+    title: localizedProduct?.name 
+      ? `${localizedProduct.name} | Davinto Store`
+      : "Product | Davinto Store",
+    description: `Shop ${localizedProduct?.name || "product"} from Davinto Store with available sizes, delivery options, and order tracking.`,
+    robots: "index,follow",
+    canonical: `${window.location.origin}/product/${slug}`,
+    og: {
+      title: localizedProduct?.name || "Davinto Product",
+      description: localizedProduct?.shortDescription || "Shop premium clothing from Davinto Store",
+      type: "product",
+      url: `${window.location.origin}/product/${slug}`,
+    },
+    jsonLd: product ? {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: localizedProduct?.name || product.name,
+      description: localizedProduct?.shortDescription || product.shortDescription,
+      brand: {
+        "@type": "Brand",
+        name: "Davinto",
+      },
+      offers: {
+        "@type": "Offer",
+        priceCurrency: "EGP",
+        price: product.price?.toFixed(2) || "0",
+        availability: product.isActive ? "InStock" : "OutOfStock",
+        url: `${window.location.origin}/product/${slug}`,
+      },
+    } : null,
+  });
 
   const [selectedColorId, setSelectedColorId] = useState("");
   const [selectedSizeLabel, setSelectedSizeLabel] = useState("");

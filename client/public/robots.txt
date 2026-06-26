@@ -1,0 +1,26 @@
+# Davinto Store robots.txt
+# Allow public product, shop, and category pages
+# Disallow private, admin, and checkout paths
+
+User-agent: *
+Allow: /
+Allow: /shop
+Allow: /category/
+Allow: /product/
+
+# Private paths - no indexing
+Disallow: /admin
+Disallow: /admin/
+Disallow: /account
+Disallow: /account/
+Disallow: /my-orders
+Disallow: /cart
+Disallow: /checkout
+Disallow: /signin
+Disallow: /signup
+Disallow: /order-success
+Disallow: /track-order
+Disallow: /admin/login
+
+# Standard crawl delay
+Crawl-delay: 1

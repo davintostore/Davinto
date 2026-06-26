@@ -9,6 +9,7 @@ import Container from "../../components/ui/Container";
 import Input from "../../components/ui/Input";
 import PageHeader from "../../components/ui/PageHeader";
 import SectionLabel from "../../components/ui/SectionLabel";
+import useSeo from "../../hooks/useSeo";
 
 import { trackOrderRequest } from "../../services/orderService";
 import {
@@ -29,6 +30,17 @@ import {
 const TrackOrder = () => {
   const { t, i18n } = useTranslation(["orders", "common", "checkout"]);
   const language = i18n.resolvedLanguage === "ar" ? "ar" : "en";
+
+  // SEO
+  useSeo({
+    title: language === "ar" 
+      ? "تتبع طلبك | متجر دافينتو" 
+      : "Track Your Order | Davinto Store",
+    description: language === "ar"
+      ? "تتبع طلبك في متجر دافينتو باستخدام رقم الطلب والبريد الإلكتروني للخروج."
+      : "Track your Davinto order using your order number and checkout email.",
+    robots: "noindex,nofollow",
+  });
   const formatMoney = (value) => formatCurrency(value, language);
   const formatDate = (value) =>
     value ? formatCustomerDate(value, language, true) : "";

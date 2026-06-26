@@ -7,6 +7,7 @@ import Input from "../../components/ui/Input";
 import PageHeader from "../../components/ui/PageHeader";
 import Select from "../../components/ui/Select";
 import Textarea from "../../components/ui/Textarea";
+import useSeo from "../../hooks/useSeo";
 
 import {
   createCategoryRequest,
@@ -37,6 +38,13 @@ const statusLabels = {
 
 const AdminCategories = () => {
   const queryClient = useQueryClient();
+
+  // SEO
+  useSeo({
+    title: "Admin Categories | Davinto Store",
+    description: "Admin categories management for Davinto Store.",
+    robots: "noindex,nofollow",
+  });
 
   const [formData, setFormData] = useState(emptyForm);
   const [editingCategoryId, setEditingCategoryId] = useState(null);

@@ -7,6 +7,7 @@ import Input from "../../components/ui/Input";
 import PageHeader from "../../components/ui/PageHeader";
 import Select from "../../components/ui/Select";
 import Textarea from "../../components/ui/Textarea";
+import useSeo from "../../hooks/useSeo";
 
 import { getAdminCategoriesRequest } from "../../services/categoryService";
 import {
@@ -164,6 +165,13 @@ const normalizeProductForForm = (product) => {
 
 const AdminProducts = () => {
   const queryClient = useQueryClient();
+
+  // SEO
+  useSeo({
+    title: "Admin Products | Davinto Store",
+    description: "Admin products management for Davinto Store.",
+    robots: "noindex,nofollow",
+  });
 
   const [formData, setFormData] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);

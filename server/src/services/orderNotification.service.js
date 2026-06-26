@@ -272,6 +272,44 @@ const buildItemsText = (order) =>
     )
     .join("\n");
 
+const buildCustomerItemsSummary = (items = []) => {
+  if (!Array.isArray(items) || items.length === 0) {
+    return "No items";
+  }
+
+  const displayItems = items.slice(0, 3);
+  const html = displayItems
+    .map((item) => {
+      return `<p style="margin:0 0 8px;color:#f7f3ea;font-size:13px;">
+        ${escapeHtml(item.name)} (${escapeHtml(item.color?.name || "")} / ${escapeHtml(item.size?.label || "")}) × ${item.quantity}
+      </p>`;
+    })
+    .join("");
+
+  if (items.length > 3) {
+    return html + `<p style="margin:0;color:rgba(247,243,234,0.60);font-size:13px;">and ${items.length - 3} more item(s)</p>`;
+  }
+
+  return html;
+};
+
+const buildCustomerItemsText = (items = []) => {
+  if (!Array.isArray(items) || items.length === 0) {
+    return "No items";
+  }
+
+  const displayItems = items.slice(0, 3);
+  const text = displayItems
+    .map((item) => `- ${item.name} (${item.color?.name || ""} / ${item.size?.label || ""}) × ${item.quantity}`)
+    .join("\n");
+
+  if (items.length > 3) {
+    return text + `\n... and ${items.length - 3} more item(s)`;
+  }
+
+  return text;
+};
+
 const buildAdminOrderText = (order) => {
   const lines = [
     `New Davinto Order`,
@@ -313,22 +351,18 @@ const buildCustomerOrderText = (order) => {
     `Your Davinto order has been received.`,
     ``,
     `Order Number: ${order.orderNumber}`,
-    `Track Order: ${getTrackingUrl(order)}`,
-    `Use your order number and checkout email to track your order.`,
-    ``,
-    `Order Status: ${formatStatus(order.orderStatus)}`,
-    `Payment Status: ${formatStatus(order.paymentStatus)}`,
-    `Payment Method: ${getPaymentMethodLabel(order.paymentMethod)}`,
-    `Delivery: ${formatMoney(order.deliveryFee)}`,
-    `Governorate: ${order.customerInfo?.city || ""}`,
-    `Address: ${order.customerInfo?.address || ""}`,
-    ``,
     `Total: ${formatMoney(order.total)}`,
+    `Payment Method: ${getPaymentMethodLabel(order.paymentMethod)}`,
+    `Delivery To: ${order.customerInfo?.city || ""}, ${order.customerInfo?.address || ""}`,
     ``,
     `Items:`,
-    buildItemsText(order),
+    buildCustomerItemsText(order.items),
     ``,
-    `Thank you for shopping with Davinto.`,
+    `Track your order: ${getTrackingUrl(order)}`,
+    `Use your order number and checkout email to track.`,
+    ``,
+    `Thank you,`,
+    `Davinto Store`,
   ].join("\n");
 };
 
@@ -407,50 +441,40 @@ const buildCustomerOrderHtml = (order) => {
   const trackingUrl = getTrackingUrl(order);
 
   return buildEmailShell({
-    title: `Order ${order.orderNumber} Received`,
-    preview: `Your Davinto order has been received.`,
+    title: `Order Received`,
+    preview: `Order ${order.orderNumber} received.`,
     children: `
-      <p style="margin:0 0 22px;color:rgba(247,243,234,0.65);font-size:15px;line-height:1.8;">
-        Hi ${escapeHtml(order.customerInfo?.fullName || "there")}, your order has been received successfully. You can track it anytime using your order number and checkout email.
+      <p style="margin:0 0 16px;color:rgba(247,243,234,0.75);font-size:14px;line-height:1.6;">
+        Hi ${escapeHtml(order.customerInfo?.fullName || "there")},<br />
+        Your order has been received.
       </p>
 
-      <div style="padding:18px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.035);border-radius:20px;">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-          ${buildDetailRow("Order Number", order.orderNumber, true)}
-          ${buildDetailRow("Order Status", formatStatus(order.orderStatus))}
-          ${buildDetailRow("Payment Status", formatStatus(order.paymentStatus))}
-          ${buildDetailRow("Payment Method", getPaymentMethodLabel(order.paymentMethod))}
-          ${buildDetailRow("Total", formatMoney(order.total), true)}
-        </table>
+      <div style="padding:14px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.035);border-radius:12px;margin-bottom:16px;">
+        <p style="margin:0 0 8px;color:rgba(247,243,234,0.50);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Order Details</p>
+        <p style="margin:0 0 4px;color:#f7f3ea;font-size:13px;"><strong>Order #</strong> ${escapeHtml(order.orderNumber)}</p>
+        <p style="margin:0 0 4px;color:#f7f3ea;font-size:13px;"><strong>Total:</strong> ${escapeHtml(formatMoney(order.total))}</p>
+        <p style="margin:0 0 4px;color:#f7f3ea;font-size:13px;"><strong>Payment:</strong> ${escapeHtml(getPaymentMethodLabel(order.paymentMethod))}</p>
+        <p style="margin:0;color:#f7f3ea;font-size:13px;"><strong>Delivery:</strong> ${escapeHtml(order.customerInfo?.city || "")}</p>
       </div>
 
-      ${buildDeliveryHtml(order)}
-
-      <div style="margin-top:18px;padding:18px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.035);border-radius:20px;">
-        <p style="margin:0 0 12px;color:rgba(247,243,234,0.45);font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:800;">
-          Items
-        </p>
-
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-          ${buildItemsHtml(order.items)}
-        </table>
+      <div style="padding:14px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.035);border-radius:12px;margin-bottom:16px;">
+        <p style="margin:0 0 8px;color:rgba(247,243,234,0.50);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Items</p>
+        ${buildCustomerItemsSummary(order.items)}
       </div>
 
-      ${buildSavingsHtml(order)}
-
-      <div style="margin-top:18px;padding:18px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.035);border-radius:20px;">
-        <p style="margin:0 0 12px;color:rgba(247,243,234,0.45);font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:800;">
-          Totals
-        </p>
-
-        ${buildTotalsHtml(order)}
-      </div>
-
-      <div style="margin-top:22px;">
-        <a href="${escapeHtml(trackingUrl)}" style="display:inline-block;background:#f7f3ea;color:#090909;text-decoration:none;padding:14px 20px;border-radius:999px;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:2px;">
+      <div style="text-align:center;margin-top:16px;">
+        <a href="${escapeHtml(trackingUrl)}" style="display:inline-block;background:#f7f3ea;color:#090909;text-decoration:none;padding:10px 16px;border-radius:6px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;">
           Track Order
         </a>
       </div>
+
+      <p style="margin:16px 0 0;color:rgba(247,243,234,0.50);font-size:12px;line-height:1.6;">
+        Use your order number and checkout email to track your order.
+      </p>
+
+      <p style="margin:12px 0 0;color:rgba(247,243,234,0.50);font-size:12px;">
+        Thank you for shopping with Davinto.
+      </p>
     `,
   });
 };
@@ -482,9 +506,10 @@ const sendCustomerOrderConfirmation = async (order) => {
 
   return sendEmail({
     to: customerEmail,
-    subject: `Davinto Order ${order.orderNumber} Received`,
+    subject: `Davinto order received — ${order.orderNumber}`,
     text: buildCustomerOrderText(order),
     html: buildCustomerOrderHtml(order),
+    replyTo: normalizeText(process.env.SMTP_USER) || undefined,
   });
 };
 

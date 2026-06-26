@@ -7,6 +7,7 @@ import Card from "../../components/ui/Card";
 import Container from "../../components/ui/Container";
 import Input from "../../components/ui/Input";
 import SectionLabel from "../../components/ui/SectionLabel";
+import useSeo from "../../hooks/useSeo";
 import { useCustomerAuth } from "../../context/customerAuthContext";
 
 const getIntendedDestination = (location) => {
@@ -20,11 +21,23 @@ const getIntendedDestination = (location) => {
 };
 
 const SignUp = () => {
-  const { t } = useTranslation("auth");
+  const { t, i18n } = useTranslation("auth");
+  const language = i18n.resolvedLanguage === "ar" ? "ar" : "en";
   const navigate = useNavigate();
   const location = useLocation();
   const { signup, isCustomerAuthenticated, isCustomerLoading } =
     useCustomerAuth();
+
+  // SEO
+  useSeo({
+    title: language === "ar" 
+      ? "إنشاء حساب | متجر دافينتو" 
+      : "Create Account | Davinto Store",
+    description: language === "ar"
+      ? "أنشئ حسابًا جديدًا في متجر دافينتو لتتمكن من التسوق بسهولة."
+      : "Create a new account at Davinto Store.",
+    robots: "noindex,nofollow",
+  });
 
   const [formData, setFormData] = useState({
     name: "",

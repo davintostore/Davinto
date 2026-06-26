@@ -8,6 +8,7 @@ import PageHeader from "../../components/ui/PageHeader";
 import Select from "../../components/ui/Select";
 import SectionLabel from "../../components/ui/SectionLabel";
 import Textarea from "../../components/ui/Textarea";
+import useSeo from "../../hooks/useSeo";
 
 import {
   getAdminOrdersRequest,
@@ -131,6 +132,13 @@ const canRetryPaymob = (order) => {
 
 const AdminOrders = () => {
   const queryClient = useQueryClient();
+
+  // SEO
+  useSeo({
+    title: "Admin Orders | Davinto Store",
+    description: "Admin orders management for Davinto Store.",
+    robots: "noindex,nofollow",
+  });
 
   const [filters, setFilters] = useState({
     search: "",

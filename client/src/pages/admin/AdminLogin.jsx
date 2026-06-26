@@ -4,6 +4,7 @@ import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import Card from "../../components/ui/Card";
 import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
+import useSeo from "../../hooks/useSeo";
 import { useAdminAuth } from "../../context/adminAuthContext";
 
 const AdminLogin = () => {
@@ -11,6 +12,13 @@ const AdminLogin = () => {
   const location = useLocation();
 
   const { login, isAuthenticated, isCheckingAuth } = useAdminAuth();
+
+  // SEO
+  useSeo({
+    title: "Admin Login | Davinto Store",
+    description: "Admin login for Davinto Store.",
+    robots: "noindex,nofollow",
+  });
 
   const [formData, setFormData] = useState({
     email: "",

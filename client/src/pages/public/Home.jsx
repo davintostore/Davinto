@@ -8,6 +8,7 @@ import ProductCard from "../../components/product/ProductCard";
 import Container from "../../components/ui/Container";
 import Button from "../../components/ui/Button";
 import SectionLabel from "../../components/ui/SectionLabel";
+import useSeo from "../../hooks/useSeo";
 
 import { getPublicCategoriesRequest } from "../../services/categoryService";
 import { getPublicProductsRequest } from "../../services/productService";
@@ -16,6 +17,40 @@ import { getLocalizedCategory } from "../../utils/localizedContent";
 const Home = () => {
   const { t, i18n } = useTranslation("home");
   const language = i18n.resolvedLanguage === "ar" ? "ar" : "en";
+
+  // SEO
+  useSeo({
+    title: language === "ar" 
+      ? "متجر دافينتو | ملابس يومية عالية الجودة" 
+      : "Davinto Store | Premium Everyday Clothing",
+    description: language === "ar"
+      ? "اكتشف متجر دافينتو - ملابس يومية عالية الجودة وقطع فنية وتصاميم مستوحاة من الفن."
+      : "Discover Davinto Store — premium everyday clothing, graphic pieces, blanks, and art-inspired designs made for effortless style.",
+    robots: "index,follow",
+    og: {
+      title: language === "ar" 
+        ? "متجر دافينتو | ملابس يومية عالية الجودة" 
+        : "Davinto Store | Premium Everyday Clothing",
+      description: language === "ar"
+        ? "اكتشف متجر دافينتو - ملابس يومية عالية الجودة وقطع فنية."
+        : "Discover premium everyday clothing and art-inspired designs at Davinto Store.",
+      type: "website",
+      url: window.location.origin,
+    },
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "Store",
+      name: "Davinto Store",
+      url: window.location.origin,
+      description: language === "ar"
+        ? "متجر دافينتو للملابس العالية الجودة"
+        : "Premium everyday clothing store",
+      address: {
+        "@type": "PostalAddress",
+        addressCountry: "EG",
+      },
+    },
+  });
   const { data: productsData } = useQuery({
     queryKey: ["home-products"],
     queryFn: () => getPublicProductsRequest({ sort: "newest", limit: 4 }),

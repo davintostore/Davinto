@@ -7,6 +7,7 @@ import Card from "../../components/ui/Card";
 import Container from "../../components/ui/Container";
 import PageHeader from "../../components/ui/PageHeader";
 import SectionLabel from "../../components/ui/SectionLabel";
+import useSeo from "../../hooks/useSeo";
 
 import { trackPurchase } from "../../utils/metaPixel";
 import { useCustomerAuth } from "../../context/customerAuthContext";
@@ -48,6 +49,17 @@ const OrderSuccess = () => {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { isCustomerAuthenticated } = useCustomerAuth();
+
+  // SEO
+  useSeo({
+    title: language === "ar" 
+      ? "تم تأكيد الطلب | متجر دافينتو" 
+      : "Order Confirmed | Davinto Store",
+    description: language === "ar"
+      ? "شكراً لطلبك! يمكنك تتبع طلبك على متجر دافينتو."
+      : "Thank you for your order! You can track it on Davinto Store.",
+    robots: "noindex,nofollow",
+  });
 
   const storedOrder = useMemo(() => {
     if (location.state?.order) {
