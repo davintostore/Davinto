@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
+const { corsOptions } = require("./config/cors");
 
 const healthRoutes = require("./routes/health.routes");
 const authRoutes = require("./routes/auth.routes");
@@ -26,14 +27,7 @@ const app = express();
 // proxy. This keeps IP-based rate limiting accurate without affecting local dev.
 app.set("trust proxy", 1);
 
-const allowedOrigins = [process.env.CLIENT_URL || "http://localhost:5173"];
-
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  })
-);
+app.use(cors(corsOptions));
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
