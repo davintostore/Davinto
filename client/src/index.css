@@ -40,6 +40,14 @@
   font-style: italic;
 }
 
+@font-face {
+  font-family: "The Sans Arabic";
+  src: url("/fonts/THESANSARABIC-LIGHT.ttf") format("truetype");
+  font-display: fallback;
+  font-weight: 300;
+  font-style: normal;
+}
+
 :root {
   --davinto-ink: #1c1917;
   --davinto-ink-deep: #110f0e;
@@ -59,13 +67,13 @@
   --davinto-sans: "Avian", "Trebuchet MS", "Gill Sans", "Gill Sans MT",
     "Segoe UI", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     sans-serif;
-  --davinto-arabic: "Noto Sans Arabic", "Noto Kufi Arabic", Tahoma, Arial,
-    sans-serif;
+  --davinto-arabic: "The Sans Arabic", "Noto Sans Arabic", "Noto Kufi Arabic",
+    Tahoma, Arial, sans-serif;
 
   font-family: var(--davinto-sans);
   color: var(--davinto-paper);
   background: var(--davinto-ink);
-  font-synthesis: none;
+  font-synthesis: weight;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -78,6 +86,7 @@
 html {
   scroll-behavior: smooth;
   background: var(--davinto-ink);
+  font-family: var(--davinto-sans);
 }
 
 body {
@@ -91,14 +100,22 @@ body {
     var(--davinto-ink);
   background-size: 56px 56px, 56px 56px, auto, auto;
   color: var(--davinto-paper);
+  font-family: var(--davinto-sans);
 }
 
-html[dir="rtl"] body {
+html[dir="rtl"],
+html[lang="ar"],
+html[dir="rtl"] body,
+html[lang="ar"] body {
   font-family: var(--davinto-arabic);
 }
 
+html[dir="rtl"] .font-serif,
+html[lang="ar"] .font-serif,
 html[dir="rtl"] .page-shell .editorial-heading,
-html[dir="rtl"] .page-shell .brand-wordmark {
+html[dir="rtl"] .page-shell .brand-wordmark,
+html[lang="ar"] .page-shell .editorial-heading,
+html[lang="ar"] .page-shell .brand-wordmark {
   font-family: var(--davinto-arabic);
   letter-spacing: 0;
 }
@@ -185,7 +202,8 @@ html[dir="rtl"] .page-shell input[type="tel"] {
 button,
 input,
 textarea,
-select {
+select,
+label {
   font: inherit;
 }
 
@@ -199,6 +217,7 @@ button:disabled {
 
 a {
   color: inherit;
+  font-family: inherit;
   text-decoration: none;
 }
 
@@ -257,6 +276,68 @@ img {
   font-family: var(--davinto-display);
   font-weight: 400;
   letter-spacing: -0.055em;
+}
+
+.font-serif {
+  font-family: var(--davinto-display);
+}
+
+.font-sans,
+.page-shell,
+.page-shell button,
+.page-shell input,
+.page-shell textarea,
+.page-shell select,
+.page-shell label {
+  font-family: var(--davinto-sans);
+}
+
+html[dir="rtl"] .page-shell,
+html[dir="rtl"] .page-shell button,
+html[dir="rtl"] .page-shell input,
+html[dir="rtl"] .page-shell textarea,
+html[dir="rtl"] .page-shell select,
+html[dir="rtl"] .page-shell label,
+html[lang="ar"] .page-shell,
+html[lang="ar"] .page-shell button,
+html[lang="ar"] .page-shell input,
+html[lang="ar"] .page-shell textarea,
+html[lang="ar"] .page-shell select,
+html[lang="ar"] .page-shell label {
+  font-family: var(--davinto-arabic);
+}
+
+.davinto-announcement-track {
+  animation: davintoAnnouncementTicker 16s linear infinite;
+  direction: ltr;
+  unicode-bidi: isolate;
+  will-change: transform;
+}
+
+.davinto-announcement-message {
+  unicode-bidi: isolate;
+}
+
+@keyframes davintoAnnouncementTicker {
+  from {
+    transform: translate3d(100vw, 0, 0);
+  }
+
+  to {
+    transform: translate3d(-100%, 0, 0);
+  }
+}
+
+.davinto-hero-poster {
+  background-position: center;
+  background-size: cover;
+  opacity: 1;
+  pointer-events: none;
+}
+
+.davinto-hero-video {
+  opacity: 1;
+  pointer-events: none;
 }
 
 .soft-border {
@@ -348,6 +429,10 @@ img {
   .product-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
+
+  .davinto-announcement-track {
+    animation-duration: 20s;
+  }
 }
 
 @media (max-width: 22rem) {
@@ -399,5 +484,14 @@ select:-webkit-autofill {
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .davinto-announcement-track {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .davinto-hero-video {
+    display: none !important;
   }
 }

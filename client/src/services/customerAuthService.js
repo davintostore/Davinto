@@ -1,8 +1,13 @@
 import axios from "axios";
-
-export const CUSTOMER_ACCESS_TOKEN_KEY = "davinto_customer_access_token";
-export const CUSTOMER_REFRESH_TOKEN_KEY = "davinto_customer_refresh_token";
-export const CUSTOMER_PROFILE_KEY = "davinto_customer_profile";
+export {
+  CUSTOMER_ACCESS_TOKEN_KEY,
+  CUSTOMER_PROFILE_KEY,
+  CUSTOMER_REFRESH_TOKEN_KEY,
+  clearCustomerSessionStorage,
+  readStoredCustomerProfile,
+  saveCustomerSessionStorage,
+} from "../utils/authSessionStorage";
+import { CUSTOMER_ACCESS_TOKEN_KEY } from "../utils/authSessionStorage";
 
 const customerAuthApi = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
@@ -41,40 +46,6 @@ const withCustomerAuthorization = () => {
       Authorization: `Bearer ${accessToken}`,
     },
   };
-};
-
-export const readStoredCustomerProfile = () => {
-  try {
-    const storedCustomer = localStorage.getItem(CUSTOMER_PROFILE_KEY);
-    return storedCustomer ? JSON.parse(storedCustomer) : null;
-  } catch {
-    localStorage.removeItem(CUSTOMER_PROFILE_KEY);
-    return null;
-  }
-};
-
-export const saveCustomerSessionStorage = ({
-  customer,
-  accessToken,
-  refreshToken,
-}) => {
-  if (accessToken) {
-    localStorage.setItem(CUSTOMER_ACCESS_TOKEN_KEY, accessToken);
-  }
-
-  if (refreshToken) {
-    localStorage.setItem(CUSTOMER_REFRESH_TOKEN_KEY, refreshToken);
-  }
-
-  if (customer) {
-    localStorage.setItem(CUSTOMER_PROFILE_KEY, JSON.stringify(customer));
-  }
-};
-
-export const clearCustomerSessionStorage = () => {
-  localStorage.removeItem(CUSTOMER_ACCESS_TOKEN_KEY);
-  localStorage.removeItem(CUSTOMER_REFRESH_TOKEN_KEY);
-  localStorage.removeItem(CUSTOMER_PROFILE_KEY);
 };
 
 export const signupCustomerRequest = async (payload) => {

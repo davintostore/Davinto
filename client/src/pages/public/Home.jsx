@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowUpRight } from "lucide-react";
@@ -10,9 +10,91 @@ import Button from "../../components/ui/Button";
 import SectionLabel from "../../components/ui/SectionLabel";
 import useSeo from "../../hooks/useSeo";
 
+import { socialLinks } from "../../constants/socialLinks";
 import { getPublicCategoriesRequest } from "../../services/categoryService";
 import { getPublicProductsRequest } from "../../services/productService";
 import { getLocalizedCategory } from "../../utils/localizedContent";
+
+const HERO_VIDEO_SOURCES = {
+  desktop: {
+    poster: "/videos/hero-desktop-poster.webp",
+    webm: "/videos/hero-desktop.webm",
+    mp4: "/videos/hero-desktop.mp4",
+  },
+  mobile: {
+    poster: "/videos/hero-mobile-poster.webp",
+    webm: "/videos/hero-mobile.webm",
+    mp4: "/videos/hero-mobile.mp4",
+  },
+};
+
+const HeroBackgroundVideo = () => {
+  const [videoVariant, setVideoVariant] = useState(null);
+  const [shouldRenderVideo, setShouldRenderVideo] = useState(false);
+  const [isVideoAvailable, setIsVideoAvailable] = useState(true);
+
+  useEffect(() => {
+    const mobileQuery = window.matchMedia("(max-width: 767px)");
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    const syncVideoState = () => {
+      setVideoVariant(mobileQuery.matches ? "mobile" : "desktop");
+      setShouldRenderVideo(!motionQuery.matches);
+      setIsVideoAvailable(true);
+    };
+
+    syncVideoState();
+    mobileQuery.addEventListener("change", syncVideoState);
+    motionQuery.addEventListener("change", syncVideoState);
+
+    return () => {
+      mobileQuery.removeEventListener("change", syncVideoState);
+      motionQuery.removeEventListener("change", syncVideoState);
+    };
+  }, []);
+
+  if (!videoVariant || !shouldRenderVideo || !isVideoAvailable) {
+    if (!videoVariant) {
+      return null;
+    }
+
+    const posterOnlySource = HERO_VIDEO_SOURCES[videoVariant];
+
+    return (
+      <div
+        className="davinto-hero-poster absolute inset-0"
+        style={{ backgroundImage: `url("${posterOnlySource.poster}")` }}
+      />
+    );
+  }
+
+  const source = HERO_VIDEO_SOURCES[videoVariant];
+
+  return (
+    <>
+      <div
+        className="davinto-hero-poster absolute inset-0"
+        style={{ backgroundImage: `url("${source.poster}")` }}
+      />
+      <video
+        key={videoVariant}
+        className="davinto-hero-video absolute inset-0 h-full w-full object-cover"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        poster={source.poster}
+        aria-hidden="true"
+        tabIndex={-1}
+        onError={() => setIsVideoAvailable(false)}
+      >
+        <source src={source.webm} type="video/webm" />
+        <source src={source.mp4} type="video/mp4" />
+      </video>
+    </>
+  );
+};
 
 const Home = () => {
   const { t, i18n } = useTranslation("home");
@@ -42,6 +124,7 @@ const Home = () => {
       "@type": "Store",
       name: "Davinto Store",
       url: window.location.origin,
+      sameAs: socialLinks.map((link) => link.href),
       description: language === "ar"
         ? "متجر دافينتو للملابس العالية الجودة"
         : "Premium everyday clothing store",
@@ -84,12 +167,8 @@ const Home = () => {
     <>
       <section className="relative overflow-hidden border-b border-[#c7a852]/25 bg-[#110f0e]">
         <div className="absolute inset-0 bg-[linear-gradient(90deg,#110f0e_0%,#110f0e_50%,#882c30_50%,#4a181b_100%)]" />
-        <div className="absolute inset-y-0 right-0 hidden w-1/2 border-l border-[#f5f0e8]/10 bg-[linear-gradient(145deg,rgba(199,168,82,.12),rgba(136,44,48,.72)_38%,rgba(17,15,14,.86))] lg:block">
-          <p className="brand-wordmark absolute bottom-8 right-8 text-[12rem] leading-none text-[#f5f0e8]/8">
-            D
-          </p>
-        </div>
-        <div className="absolute inset-0 bg-[linear-gradient(105deg,rgba(17,15,14,.98)_0%,rgba(17,15,14,.82)_46%,rgba(17,15,14,.22)_100%)]" />
+        <HeroBackgroundVideo />
+        <div className="absolute inset-0 bg-[linear-gradient(105deg,rgba(17,15,14,.74)_0%,rgba(17,15,14,.54)_48%,rgba(17,15,14,.3)_100%)]" />
 
         <Container className="relative flex min-h-[clamp(36rem,74svh,46rem)] items-end pb-14 pt-32 sm:pb-16 sm:pt-36 lg:items-center lg:py-24">
           <div className="max-w-6xl">
@@ -135,26 +214,33 @@ const Home = () => {
               </p>
             </div>
 
-            <div className="grid border-t border-[#f5f0e8]/25">
+            <div className="grid gap-3 sm:gap-4">
               {visibleCategories.map((category) => {
                 const content = (
-                  <div className="group flex items-center justify-between border-b border-[#f5f0e8]/25 py-5 sm:py-6">
+                  <div className="flex items-center justify-between gap-5 border border-[#f5f0e8]/20 bg-[#f5f0e8]/6 px-5 py-4 transition duration-200 group-hover:-translate-y-0.5 group-hover:border-[#c7a852]/70 group-hover:bg-[#f5f0e8]/10 group-focus-visible:border-[#c7a852] sm:px-6 sm:py-5">
                     <span className="font-serif text-3xl text-[#f5f0e8] transition group-hover:text-[#c7a852] sm:text-5xl">
                       {category.name}
                     </span>
-                    <ArrowUpRight
-                      className="text-[#f5f0e8]/50 transition group-hover:text-[#c7a852]"
-                      size={22}
-                    />
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center border border-[#f5f0e8]/18 text-[#f5f0e8]/60 transition group-hover:border-[#c7a852] group-hover:text-[#c7a852]">
+                      <ArrowUpRight size={20} />
+                    </span>
                   </div>
                 );
 
                 return category.slug ? (
-                  <Link key={category._id} to={`/category/${category.slug}`}>
+                  <Link
+                    key={category._id}
+                    to={`/category/${category.slug}`}
+                    className="group block focus-visible:outline-offset-4"
+                  >
                     {content}
                   </Link>
                 ) : (
-                  <Link key={category._id} to="/shop">
+                  <Link
+                    key={category._id}
+                    to="/shop"
+                    className="group block focus-visible:outline-offset-4"
+                  >
                     {content}
                   </Link>
                 );

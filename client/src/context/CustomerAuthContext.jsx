@@ -5,21 +5,28 @@ import {
   useRef,
   useState,
 } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { CustomerAuthContext } from "./customerAuthContext";
 import {
-  CUSTOMER_ACCESS_TOKEN_KEY,
-  CUSTOMER_REFRESH_TOKEN_KEY,
-  clearCustomerSessionStorage,
   getCustomerMeRequest,
-  readStoredCustomerProfile,
   refreshCustomerTokenRequest,
-  saveCustomerSessionStorage,
   signinCustomerRequest,
   signoutCustomerRequest,
   signupCustomerRequest,
   updateCustomerMeRequest,
 } from "../services/customerAuthService";
+import {
+  AUTH_SESSION_EVENTS,
+  CUSTOMER_ACCESS_TOKEN_KEY,
+  CUSTOMER_REFRESH_TOKEN_KEY,
+  clearAdminSessionStorage,
+  clearCustomerSessionStorage,
+  hasAdminSessionStorage,
+  hasCustomerSessionStorage,
+  readStoredCustomerProfile,
+  saveCustomerSessionStorage,
+} from "../utils/authSessionStorage";
 
 const readStoredToken = (key) => localStorage.getItem(key) || "";
 
@@ -36,14 +43,30 @@ const validateAuthResponse = (response) => {
 };
 
 export const CustomerAuthProvider = ({ children }) => {
-  const initialAccessToken = readStoredToken(CUSTOMER_ACCESS_TOKEN_KEY);
-  const initialRefreshToken = readStoredToken(CUSTOMER_REFRESH_TOKEN_KEY);
+  const queryClient = useQueryClient();
+  const [initialSession] = useState(() => {
+    if (hasAdminSessionStorage() && hasCustomerSessionStorage()) {
+      clearCustomerSessionStorage({ notify: false });
 
-  const [customer, setCustomer] = useState(readStoredCustomerProfile);
-  const [accessToken, setAccessToken] = useState(initialAccessToken);
-  const [refreshToken, setRefreshToken] = useState(initialRefreshToken);
+      return {
+        customer: null,
+        accessToken: "",
+        refreshToken: "",
+      };
+    }
+
+    return {
+      customer: readStoredCustomerProfile(),
+      accessToken: readStoredToken(CUSTOMER_ACCESS_TOKEN_KEY),
+      refreshToken: readStoredToken(CUSTOMER_REFRESH_TOKEN_KEY),
+    };
+  });
+
+  const [customer, setCustomer] = useState(initialSession.customer);
+  const [accessToken, setAccessToken] = useState(initialSession.accessToken);
+  const [refreshToken, setRefreshToken] = useState(initialSession.refreshToken);
   const [isCustomerLoading, setIsCustomerLoading] = useState(
-    Boolean(initialAccessToken || initialRefreshToken)
+    Boolean(initialSession.accessToken || initialSession.refreshToken)
   );
 
   const bootstrapStartedRef = useRef(false);
@@ -53,13 +76,17 @@ export const CustomerAuthProvider = ({ children }) => {
   const setSession = useCallback((response) => {
     const validResponse = validateAuthResponse(response);
 
+    clearAdminSessionStorage();
+    queryClient.removeQueries({
+      predicate: ({ queryKey }) => String(queryKey[0] || "").startsWith("admin"),
+    });
     saveCustomerSessionStorage(validResponse);
     setCustomer(validResponse.customer);
     setAccessToken(validResponse.accessToken);
     setRefreshToken(validResponse.refreshToken);
 
     return validResponse.customer;
-  }, []);
+  }, [queryClient]);
 
   const clearSession = useCallback(() => {
     clearCustomerSessionStorage();
@@ -208,6 +235,27 @@ export const CustomerAuthProvider = ({ children }) => {
 
     restoreSession();
   }, [clearSession, refreshSession]);
+
+  useEffect(() => {
+    const handleCustomerCleared = () => {
+      setCustomer(null);
+      setAccessToken("");
+      setRefreshToken("");
+      setIsCustomerLoading(false);
+    };
+
+    window.addEventListener(
+      AUTH_SESSION_EVENTS.customerCleared,
+      handleCustomerCleared
+    );
+
+    return () => {
+      window.removeEventListener(
+        AUTH_SESSION_EVENTS.customerCleared,
+        handleCustomerCleared
+      );
+    };
+  }, []);
 
   const value = useMemo(
     () => ({

@@ -4,27 +4,25 @@ import {
   useMemo,
   useState,
 } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { AdminAuthContext } from "./adminAuthContext";
 import {
   getAdminProfileRequest,
   loginAdminRequest,
 } from "../services/adminAuthService";
-
-const ADMIN_TOKEN_KEY = "davinto_admin_token";
-const ADMIN_USER_KEY = "davinto_admin_user";
-
-const readStoredAdmin = () => {
-  try {
-    const storedAdmin = localStorage.getItem(ADMIN_USER_KEY);
-    return storedAdmin ? JSON.parse(storedAdmin) : null;
-  } catch {
-    localStorage.removeItem(ADMIN_USER_KEY);
-    return null;
-  }
-};
+import {
+  ADMIN_TOKEN_KEY,
+  ADMIN_USER_KEY,
+  AUTH_SESSION_EVENTS,
+  clearAdminSessionStorage,
+  clearCustomerSessionStorage,
+  readStoredAdmin,
+  saveAdminSessionStorage,
+} from "../utils/authSessionStorage";
 
 export const AdminAuthProvider = ({ children }) => {
+  const queryClient = useQueryClient();
   const [admin, setAdmin] = useState(readStoredAdmin);
   const [token, setToken] = useState(() => localStorage.getItem(ADMIN_TOKEN_KEY));
   const [isCheckingAuth, setIsCheckingAuth] = useState(Boolean(token));
@@ -32,16 +30,18 @@ export const AdminAuthProvider = ({ children }) => {
   const isAuthenticated = Boolean(admin && token);
 
   const saveSession = useCallback((nextToken, nextAdmin) => {
-    localStorage.setItem(ADMIN_TOKEN_KEY, nextToken);
-    localStorage.setItem(ADMIN_USER_KEY, JSON.stringify(nextAdmin));
+    clearCustomerSessionStorage();
+    queryClient.removeQueries({
+      predicate: ({ queryKey }) => String(queryKey[0] || "").startsWith("customer"),
+    });
+    saveAdminSessionStorage({ token: nextToken, admin: nextAdmin });
 
     setToken(nextToken);
     setAdmin(nextAdmin);
-  }, []);
+  }, [queryClient]);
 
   const logout = useCallback(() => {
-    localStorage.removeItem(ADMIN_TOKEN_KEY);
-    localStorage.removeItem(ADMIN_USER_KEY);
+    clearAdminSessionStorage();
 
     setToken(null);
     setAdmin(null);
@@ -104,6 +104,23 @@ export const AdminAuthProvider = ({ children }) => {
 
     checkSession();
   }, [logout, refreshAdmin]);
+
+  useEffect(() => {
+    const handleAdminCleared = () => {
+      setToken(null);
+      setAdmin(null);
+      setIsCheckingAuth(false);
+    };
+
+    window.addEventListener(AUTH_SESSION_EVENTS.adminCleared, handleAdminCleared);
+
+    return () => {
+      window.removeEventListener(
+        AUTH_SESSION_EVENTS.adminCleared,
+        handleAdminCleared
+      );
+    };
+  }, []);
 
   const value = useMemo(
     () => ({

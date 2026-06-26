@@ -1,4 +1,5 @@
 import axios from "axios";
+import { ADMIN_TOKEN_KEY } from "../utils/authSessionStorage";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
@@ -10,7 +11,7 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const adminToken = localStorage.getItem("davinto_admin_token");
+    const adminToken = localStorage.getItem(ADMIN_TOKEN_KEY);
     const requestPath = String(config.url || "");
     const isCustomerAuthRequest = requestPath.startsWith("/customer-auth");
     const hasAuthorizationHeader = Boolean(config.headers?.Authorization);

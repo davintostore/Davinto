@@ -1,12 +1,21 @@
 import { useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
-import { LogOut, Menu, ShoppingBag, UserRound, X } from "lucide-react";
+import {
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  ShoppingBag,
+  UserRound,
+  X,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 
 import Container from "../ui/Container";
 import Button from "../ui/Button";
 import LanguageSwitcher from "../i18n/LanguageSwitcher";
+import { socialLinks } from "../../constants/socialLinks";
+import { useAdminAuth } from "../../context/adminAuthContext";
 import { useCart } from "../../context/cartContext";
 import { useCustomerAuth } from "../../context/customerAuthContext";
 import { getPublicSettingsRequest } from "../../services/settingsService";
@@ -17,12 +26,21 @@ const PublicLayout = () => {
   const language = i18n.resolvedLanguage === "ar" ? "ar" : "en";
   const { cartCount } = useCart();
   const {
+    isAuthenticated: isAdminAuthenticated,
+    isCheckingAuth: isCheckingAdminAuth,
+  } = useAdminAuth();
+  const showAdminDashboardLink = !isCheckingAdminAuth && isAdminAuthenticated;
+  const {
     customer,
     isCustomerAuthenticated,
     isCustomerLoading,
     signout,
   } = useCustomerAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const showCustomerNav =
+    !showAdminDashboardLink && !isCustomerLoading && isCustomerAuthenticated;
+  const showGuestSignin =
+    !showAdminDashboardLink && !isCustomerLoading && !isCustomerAuthenticated;
   const { data: settingsData } = useQuery({
     queryKey: ["public-settings"],
     queryFn: getPublicSettingsRequest,
@@ -31,8 +49,8 @@ const PublicLayout = () => {
     settingsData?.settings,
     language
   );
-  const storeName = localizedSettings?.store?.name || "Davinto";
   const storeAddress = localizedSettings?.store?.address || "";
+  const announcementText = t("announcement");
   const navLinks = [
     { label: t("home"), path: "/" },
     { label: t("shop"), path: "/shop" },
@@ -53,14 +71,6 @@ const PublicLayout = () => {
   return (
     <div className="page-shell">
       <header className="fixed inset-x-0 top-0 z-50 border-b border-[#c7a852]/25 bg-[#1c1917]/96">
-        <div className="border-b border-[#f5f0e8]/8 bg-[#882c30]">
-          <Container className="flex min-h-7 items-center justify-center py-1.5 text-center">
-            <p className="text-[0.62rem] font-black uppercase tracking-[0.12em] text-[#f5f0e8]/85 sm:tracking-[0.22em]">
-              {t("announcement")}
-            </p>
-          </Container>
-        </div>
-
         <Container className="flex h-[4.75rem] items-center justify-between">
           <button
             type="button"
@@ -77,18 +87,15 @@ const PublicLayout = () => {
 
           <Link
             to="/"
-            className="group text-center md:text-left"
+            className="flex h-14 w-32 shrink-0 items-center justify-center sm:w-36"
             onClick={() => setIsMenuOpen(false)}
+            aria-label="Davinto"
           >
-            <div className="brand-wordmark text-[2rem] leading-none text-[#f5f0e8]">
-              {storeName}
-            </div>
-            <div className="mt-1.5 flex items-center gap-2">
-              <span className="h-px w-5 bg-[#c7a852] transition-all group-hover:w-9" />
-              <span className="text-[0.5rem] font-black uppercase tracking-[0.28em] text-[#8b8075]">
-                {t("clothingHouse")}
-              </span>
-            </div>
+            <img
+              src="/images/logo/logo-3.webp"
+              alt="Davinto"
+              className="max-h-12 w-full object-contain"
+            />
           </Link>
 
           <nav className="hidden items-center gap-5 lg:flex xl:gap-8">
@@ -109,7 +116,7 @@ const PublicLayout = () => {
               </NavLink>
             ))}
 
-            {!isCustomerLoading && isCustomerAuthenticated && (
+            {showCustomerNav && (
               <>
                 <NavLink
                   to="/account"
@@ -140,7 +147,7 @@ const PublicLayout = () => {
           </nav>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            {!isCustomerLoading && !isCustomerAuthenticated && (
+            {showGuestSignin && (
               <Link
                 to="/signin"
                 onClick={() => setIsMenuOpen(false)}
@@ -153,6 +160,17 @@ const PublicLayout = () => {
 
             <LanguageSwitcher className="hidden lg:inline-flex" compact />
 
+            {showAdminDashboardLink && (
+              <Link
+                to="/admin"
+                onClick={() => setIsMenuOpen(false)}
+                className="hidden h-11 items-center gap-2 border border-[#c7a852]/45 px-4 text-[0.62rem] font-black uppercase tracking-[0.2em] text-[#c7a852] transition hover:border-[#c7a852] hover:text-[#f5f0e8] lg:flex"
+              >
+                <LayoutDashboard size={15} />
+                {t("dashboard")}
+              </Link>
+            )}
+
             <Link
               to="/cart"
               onClick={() => setIsMenuOpen(false)}
@@ -164,7 +182,7 @@ const PublicLayout = () => {
               <span className="text-[#c7a852]">{String(cartCount).padStart(2, "0")}</span>
             </Link>
 
-            {isCustomerAuthenticated && (
+            {showCustomerNav && (
               <button
                 type="button"
                 onClick={handleCustomerSignout}
@@ -207,7 +225,19 @@ const PublicLayout = () => {
                   </NavLink>
                 ))}
 
-                {!isCustomerLoading &&
+                {showAdminDashboardLink && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center justify-between border-b border-[#f5f0e8]/10 py-4 text-sm font-black uppercase tracking-[0.2em] text-[#c7a852]"
+                  >
+                    <span>{t("dashboard")}</span>
+                    <LayoutDashboard size={16} />
+                  </Link>
+                )}
+
+                {!showAdminDashboardLink &&
+                  !isCustomerLoading &&
                   (isCustomerAuthenticated ? (
                     <>
                       <Link
@@ -241,7 +271,7 @@ const PublicLayout = () => {
 
               <LanguageSwitcher className="mt-5 w-full" />
 
-              {isCustomerAuthenticated && (
+              {showCustomerNav && (
                 <button
                   type="button"
                   onClick={handleCustomerSignout}
@@ -262,6 +292,23 @@ const PublicLayout = () => {
             </Container>
           </div>
         )}
+
+        <div className="overflow-hidden border-t border-[#f5f0e8]/8 bg-[#882c30]">
+          <div className="h-7 overflow-hidden">
+            <span
+              className="davinto-announcement-track flex h-full w-max items-center gap-4 whitespace-nowrap px-8 text-[0.62rem] font-black uppercase tracking-[0.18em] text-[#f5f0e8]/85 sm:tracking-[0.22em]"
+              dir="ltr"
+            >
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#c7a852]" />
+              <span
+                className="davinto-announcement-message"
+                dir={language === "ar" ? "rtl" : "ltr"}
+              >
+                {announcementText}
+              </span>
+            </span>
+          </div>
+        </div>
       </header>
 
       <main className="min-h-screen pt-[6.5rem]">
@@ -273,14 +320,11 @@ const PublicLayout = () => {
           <div className="grid gap-12 lg:grid-cols-[1.2fr_0.8fr_0.8fr]">
             <div>
               <img
-                src="/images/logo/logo-1.webp"
+                src="/images/logo/logo-5.webp"
                 alt={t("footer.logoAlt")}
-                className="mb-6 h-auto w-24 sm:w-28"
+                className="mb-6 h-auto w-40 object-contain sm:w-48 lg:w-56"
                 loading="lazy"
               />
-              <p className="brand-wordmark text-6xl text-[#f5f0e8] sm:text-7xl">
-                {storeName}
-              </p>
               <p className="mt-5 max-w-md text-sm leading-7 text-[#f5f0e8]/58">
                 {t("footer.statement")}
               </p>
@@ -306,7 +350,7 @@ const PublicLayout = () => {
                 >
                   {t("cart")}
                 </Link>
-                {isCustomerAuthenticated && (
+                {showCustomerNav && (
                   <>
                     <Link
                       to="/account"
@@ -327,18 +371,26 @@ const PublicLayout = () => {
 
             <div>
               <p className="text-[0.64rem] font-black uppercase tracking-[0.28em] text-[#c7a852]">
-                {t("footer.nextPiece")}
+                {t("footer.social")}
               </p>
-              <p className="mt-5 text-sm leading-7 text-[#f5f0e8]/52">
-                {t("footer.description")}
-              </p>
-              <Link to="/shop" className="mt-6 inline-block">
-                <Button variant="secondary">{t("footer.enterShop")}</Button>
-              </Link>
+              <div className="mt-5 grid gap-3 text-sm text-[#f5f0e8]/58">
+                {socialLinks.map((link) => (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    aria-label={link.ariaLabel}
+                    className="w-fit transition hover:text-[#f5f0e8]"
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
 
-          {isCustomerAuthenticated && (
+          {showCustomerNav && (
             <button
               type="button"
               onClick={handleCustomerSignout}

@@ -12,15 +12,14 @@
   "signOut": "Sign Out",
   "signOutCustomer": "Sign out of customer account",
   "checkout": "Checkout",
+  "dashboard": "Dashboard",
   "openNavigation": "Open navigation",
   "closeNavigation": "Close navigation",
   "seasonalCatalogue": "Davinto essentials",
   "footer": {
     "statement": "Clean everyday T-shirts in essential colors.",
     "navigate": "Navigate",
-    "nextPiece": "Shop",
-    "description": "Choose your color and size, then complete your order in a few simple steps.",
-    "enterShop": "Shop",
+    "social": "Social",
     "logoAlt": "Davinto logo",
     "location": "Davinto / Cairo, Egypt",
     "moment": "Delivered across Egypt"
