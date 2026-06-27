@@ -3,6 +3,10 @@ const Category = require("../models/Category");
 const Offer = require("../models/Offer");
 const asyncHandler = require("../utils/asyncHandler");
 const generateSlug = require("../utils/generateSlug");
+const {
+  deleteCloudinaryImagesIfUnreferenced,
+  uniquePublicIds,
+} = require("../services/cloudinaryCleanup.service");
 
 const createUniqueProductSlug = async (baseValue, excludedId = null) => {
   const baseSlug = generateSlug(baseValue || "product");
@@ -112,6 +116,37 @@ const normalizeImages = (images = [], existingImages = []) => {
       };
     })
     .sort((a, b) => a.position - b.position);
+};
+
+const getProductImageReferences = (product = {}) => {
+  const colors = Array.isArray(product.colors) ? product.colors : [];
+
+  return colors.flatMap((color) => {
+    const images = Array.isArray(color.images) ? color.images : [];
+    return images.map((image) => ({
+      publicId: String(image.publicId || "").trim(),
+      url: String(image.url || "").trim(),
+    }));
+  });
+};
+
+const getRemovedImagePublicIds = (previousProduct = {}, nextProduct = {}) => {
+  const previousImages = getProductImageReferences(previousProduct);
+  const nextImages = getProductImageReferences(nextProduct);
+  const nextPublicIdSet = new Set(
+    uniquePublicIds(nextImages.map((image) => image.publicId))
+  );
+  const nextUrlSet = new Set(
+    nextImages.map((image) => image.url).filter((url) => url)
+  );
+
+  return uniquePublicIds(
+    previousImages
+      .filter((image) => image.publicId)
+      .filter((image) => !nextPublicIdSet.has(image.publicId))
+      .filter((image) => !image.url || !nextUrlSet.has(image.url))
+      .map((image) => image.publicId)
+  );
 };
 
 const normalizeSizes = (sizes = []) => {
@@ -794,6 +829,7 @@ const updateProduct = asyncHandler(async (req, res) => {
     throw new Error("Product not found.");
   }
 
+  const previousImageSnapshot = product.toObject();
   const payload = normalizeProductPayload(req.body, product);
 
   if (!payload.name) {
@@ -850,6 +886,15 @@ const updateProduct = asyncHandler(async (req, res) => {
   }
 
   await product.save();
+
+  const removedImagePublicIds = getRemovedImagePublicIds(
+    previousImageSnapshot,
+    product
+  );
+
+  await deleteCloudinaryImagesIfUnreferenced(removedImagePublicIds, {
+    excludeProductId: product._id,
+  });
 
   const populatedProduct = await Product.findById(product._id).populate(
     "category",

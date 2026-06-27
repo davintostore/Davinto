@@ -1,10 +1,31 @@
 const multer = require("multer");
 
 const storage = multer.memoryStorage();
+const allowedImageMimeTypes = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+]);
+const allowedImageExtensions = new Set([".jpg", ".jpeg", ".png", ".webp"]);
+
+const getFileExtension = (filename = "") => {
+  const normalizedName = String(filename || "").trim().toLowerCase();
+  const dotIndex = normalizedName.lastIndexOf(".");
+
+  return dotIndex >= 0 ? normalizedName.slice(dotIndex) : "";
+};
 
 const imageFileFilter = (req, file, cb) => {
-  if (!file.mimetype.startsWith("image/")) {
-    cb(new Error("Only image files are allowed."), false);
+  const extension = getFileExtension(file.originalname);
+
+  if (
+    !allowedImageMimeTypes.has(file.mimetype) ||
+    !allowedImageExtensions.has(extension)
+  ) {
+    cb(
+      new Error("Only JPG, PNG, and WebP image files are allowed."),
+      false
+    );
     return;
   }
 

@@ -2,6 +2,9 @@ const Category = require("../models/Category");
 const Product = require("../models/Product");
 const asyncHandler = require("../utils/asyncHandler");
 const generateSlug = require("../utils/generateSlug");
+const {
+  deleteCloudinaryImageIfUnreferenced,
+} = require("../services/cloudinaryCleanup.service");
 
 const createUniqueCategorySlug = async (baseValue, excludedId = null) => {
   const baseSlug = generateSlug(baseValue || "category");
@@ -153,6 +156,8 @@ const updateCategory = asyncHandler(async (req, res) => {
     throw new Error("Category not found.");
   }
 
+  const previousImagePublicId = String(category.image?.publicId || "").trim();
+  const previousImageUrl = String(category.image?.url || "").trim();
   const payload = normalizeCategoryPayload(req.body);
 
   if (!payload.name) {
@@ -184,6 +189,19 @@ const updateCategory = asyncHandler(async (req, res) => {
   }
 
   await category.save();
+
+  const nextImagePublicId = String(category.image?.publicId || "").trim();
+  const nextImageUrl = String(category.image?.url || "").trim();
+
+  if (
+    previousImagePublicId &&
+    previousImagePublicId !== nextImagePublicId &&
+    previousImageUrl !== nextImageUrl
+  ) {
+    await deleteCloudinaryImageIfUnreferenced(previousImagePublicId, {
+      excludeCategoryId: category._id,
+    });
+  }
 
   res.status(200).json({
     success: true,
