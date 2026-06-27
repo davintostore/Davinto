@@ -37,7 +37,7 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
   const { t, i18n } = useTranslation(["catalog", "common"]);
   const language = i18n.resolvedLanguage === "ar" ? "ar" : "en";
   const formatMoney = (value) => formatCurrency(value, language);
-  const { addItem, openCartDrawer } = useCart();
+  const { addItem } = useCart();
   const [selectedColorId, setSelectedColorId] = useState("");
   const [selectedSizeLabel, setSelectedSizeLabel] = useState("");
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -196,7 +196,6 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
     });
 
     onClose();
-    openCartDrawer();
   };
 
   if (!isOpen || typeof document === "undefined") return null;

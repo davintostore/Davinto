@@ -78,9 +78,13 @@ const sortImages = (images = []) =>
     .filter((image) => image?.url)
     .sort((a, b) => Number(a.position || 0) - Number(b.position || 0));
 
-const getFallbackProductImages = (product = {}, selectedColor) => {
-  if (Array.isArray(selectedColor?.images) && selectedColor.images.length) {
-    return sortImages(selectedColor.images);
+const getAdminProductImages = (product = {}, selectedColor) => {
+  const selectedColorImages = Array.isArray(selectedColor?.images)
+    ? sortImages(selectedColor.images)
+    : [];
+
+  if (selectedColorImages.length) {
+    return selectedColorImages;
   }
 
   return [product.primaryImage, product.hoverImage]
@@ -102,13 +106,18 @@ export const getProductImageOverrides = (product) => {
 };
 
 export const getProductGalleryImages = (product = {}, selectedColor) => {
-  const overrideUrls = getOverrideImagesForColor(product, selectedColor);
+  const adminImages = getAdminProductImages(product, selectedColor);
 
+  if (adminImages.length) {
+    return adminImages;
+  }
+
+  const overrideUrls = getOverrideImagesForColor(product, selectedColor);
   if (overrideUrls.length) {
     return normalizeImageObjects(overrideUrls, product?.name);
   }
 
-  return getFallbackProductImages(product, selectedColor);
+  return [];
 };
 
 export const getProductPrimaryImage = (product = {}, selectedColor) => {
@@ -117,13 +126,13 @@ export const getProductPrimaryImage = (product = {}, selectedColor) => {
 
 export const getCategoryImage = (category = {}) => {
   const slug = normalizeKey(category?.slug);
-  return categoryImageOverrides[slug] || category?.image?.url || "";
+  return category?.image?.url || categoryImageOverrides[slug] || "";
 };
 
 export const getCartItemImage = (item = {}) => {
-  return getOverrideImagesForColor(item, item.color)[0] || item.image || "";
+  return item.image || getOverrideImagesForColor(item, item.color)[0] || "";
 };
 
 export const getOrderItemImage = (item = {}) => {
-  return getOverrideImagesForColor(item, item.color)[0] || item.image || "";
+  return item.image || getOverrideImagesForColor(item, item.color)[0] || "";
 };

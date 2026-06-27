@@ -1,12 +1,14 @@
-// Local image overrides are used for launch/static Davinto products.
-// Admin/Cloudinary images are fallback for products not defined here.
+// Product images are admin-controlled by default.
+// Category images are admin-controlled by default.
+// localImageManifest is fallback only for product/category images.
+// Static backgrounds can still be code-controlled with local static paths.
 //
-// To change a product image:
+// Product fallback images:
 // 1. Put the image in client/public/images/...
 // 2. Update the product slug/color array below.
 // 3. Commit and deploy.
 //
-// To change a category image:
+// Category fallback images:
 // 1. Put the image in client/public/images/...
 // 2. Update categoryImageOverrides below.
 // 3. Commit and deploy.

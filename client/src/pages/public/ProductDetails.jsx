@@ -99,7 +99,7 @@ const ProductDetails = () => {
   const language = i18n.resolvedLanguage === "ar" ? "ar" : "en";
   const formatMoney = (value) => formatCurrency(value, language);
   const { slug } = useParams();
-  const { addItem, openCartDrawer } = useCart();
+  const { addItem } = useCart();
   const viewedProductRef = useRef("");
 
   const { data, isLoading, isError, error } = useQuery({
@@ -382,8 +382,7 @@ const ProductDetails = () => {
       maxStock: selectedStock,
     });
 
-    setCartMessage(t("catalog:product.addedToCart"));
-    openCartDrawer();
+    setCartMessage("");
   };
 
   const toggleInfoSection = (section) => {
@@ -760,7 +759,7 @@ const ProductDetails = () => {
         </Container>
       </section>
 
-      <section className="fashion-section bg-[#110f0e]">
+      <section className="fashion-section bg-[#050505]">
         <Container>
           <div className="grid gap-10 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
             <div>

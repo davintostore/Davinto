@@ -41,6 +41,19 @@ const normalizeCategoryTranslations = (translations = {}) => {
   };
 };
 
+const normalizeCategoryImage = (image = {}, fallbackAlt = "") => {
+  const source = image && typeof image === "object" ? image : {};
+  const url = String(source.url || "").trim();
+
+  return {
+    url,
+    publicId: url ? String(source.publicId || "").trim() : "",
+    alt: url
+      ? String(source.alt || fallbackAlt || "Davinto category").trim()
+      : "",
+  };
+};
+
 const normalizeCategoryPayload = (body = {}) => {
   const payload = {
     name: body.name?.trim(),
@@ -57,6 +70,10 @@ const normalizeCategoryPayload = (body = {}) => {
 
   if (body.translations !== undefined) {
     payload.translations = normalizeCategoryTranslations(body.translations);
+  }
+
+  if (body.image !== undefined) {
+    payload.image = normalizeCategoryImage(body.image, payload.name);
   }
 
   return payload;
@@ -148,6 +165,10 @@ const updateCategory = asyncHandler(async (req, res) => {
   category.status = payload.status;
   category.sortOrder = payload.sortOrder;
   category.seo = payload.seo;
+
+  if (payload.image !== undefined) {
+    category.image = payload.image;
+  }
 
   if (payload.translations !== undefined) {
     category.translations = payload.translations;

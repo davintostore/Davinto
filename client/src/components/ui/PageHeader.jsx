@@ -16,10 +16,21 @@ const PageHeader = ({
   const location = useLocation();
   const isAdminPage = location.pathname.startsWith("/admin");
   const shouldShowMeta = showMeta ?? isAdminPage;
+  const backgroundClass =
+    isAdminPage && !backgroundImage ? "bg-[#882c30]" : "bg-[#050505]";
+  const overlayStyle = backgroundImage
+    ? {
+        background:
+          "linear-gradient(120deg, rgba(5,5,5,.86), rgba(5,5,5,.46) 58%, rgba(5,5,5,.18))",
+      }
+    : {
+        background:
+          "linear-gradient(120deg, rgba(17,15,14,.84), rgba(17,15,14,.34) 58%, transparent), radial-gradient(circle at 78% 18%, rgba(199,168,82,.12), transparent 24rem)",
+      };
 
   return (
     <section
-      className={`relative overflow-hidden border-b border-[#c7a852]/25 bg-[#882c30] pt-16 pb-10 sm:pt-20 sm:pb-14 ${className}`}
+      className={`relative overflow-hidden border-b border-[#c7a852]/25 ${backgroundClass} pt-16 pb-10 sm:pt-20 sm:pb-14 ${className}`}
       style={
         backgroundImage
           ? {
@@ -31,14 +42,13 @@ const PageHeader = ({
           : undefined
       }
     >
-      <div
-        className="pointer-events-none absolute inset-0 opacity-80"
-        aria-hidden="true"
-        style={{
-          background:
-            "linear-gradient(120deg, rgba(17,15,14,.84), rgba(17,15,14,.34) 58%, transparent), radial-gradient(circle at 78% 18%, rgba(199,168,82,.12), transparent 24rem)",
-        }}
-      />
+      {(isAdminPage || backgroundImage) && (
+        <div
+          className="pointer-events-none absolute inset-0 opacity-80"
+          aria-hidden="true"
+          style={overlayStyle}
+        />
+      )}
 
       <Container className="relative">
         <div className="grid gap-10 lg:grid-cols-[1fr_240px] lg:items-end">

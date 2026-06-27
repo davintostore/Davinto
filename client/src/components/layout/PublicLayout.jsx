@@ -14,6 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import Container from "../ui/Container";
 import Button from "../ui/Button";
 import CartDrawer from "../cart/CartDrawer";
+import CartToast from "../cart/CartToast";
 import LanguageSwitcher from "../i18n/LanguageSwitcher";
 import { socialLinks } from "../../constants/socialLinks";
 import { useAdminAuth } from "../../context/adminAuthContext";
@@ -428,6 +429,7 @@ const PublicLayout = () => {
       </main>
 
       <CartDrawer />
+      <CartToast />
 
       {!hideFooter && (
       <footer className="border-t border-[#c7a852]/25 bg-[#110f0e]">

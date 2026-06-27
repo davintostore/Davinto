@@ -9,6 +9,8 @@ import PageHeader from "../../components/ui/PageHeader";
 import Select from "../../components/ui/Select";
 import Textarea from "../../components/ui/Textarea";
 import useSeo from "../../hooks/useSeo";
+import { uploadImageRequest } from "../../services/uploadService";
+import { hideBrokenImage } from "../../utils/imageFallback";
 
 import {
   createCategoryRequest,
@@ -23,6 +25,9 @@ const emptyForm = {
   description: "",
   status: "active",
   sortOrder: 0,
+  imageUrl: "",
+  imagePublicId: "",
+  imageAlt: "",
   seoTitle: "",
   seoDescription: "",
   arName: "",
@@ -53,6 +58,7 @@ const AdminCategories = () => {
     type: "",
     message: "",
   });
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   const {
@@ -138,12 +144,21 @@ const AdminCategories = () => {
   };
 
   const buildPayload = () => {
+    const imageUrl = formData.imageUrl.trim();
+
     return {
       name: formData.name.trim(),
       slug: formData.slug.trim(),
       description: formData.description.trim(),
       status: formData.status,
       sortOrder: Number(formData.sortOrder || 0),
+      image: {
+        url: imageUrl,
+        publicId: imageUrl ? formData.imagePublicId.trim() : "",
+        alt: imageUrl
+          ? (formData.imageAlt.trim() || formData.name.trim())
+          : "",
+      },
       seo: {
         title: formData.seoTitle.trim(),
         description: formData.seoDescription.trim(),
@@ -159,6 +174,54 @@ const AdminCategories = () => {
         },
       },
     };
+  };
+
+  const handleImageUpload = async (event) => {
+    const input = event.target;
+    const file = input.files?.[0];
+
+    if (!file) return;
+
+    setIsUploadingImage(true);
+
+    try {
+      const response = await uploadImageRequest(file, {
+        folder: "categories",
+      });
+      const uploadedImage = response.image || {};
+
+      setFormData((current) => ({
+        ...current,
+        imageUrl: uploadedImage.url || "",
+        imagePublicId: uploadedImage.publicId || "",
+        imageAlt: current.imageAlt || current.name || "Davinto category",
+      }));
+
+      showFeedback("success", "Category image uploaded successfully.");
+    } catch (err) {
+      showFeedback(
+        "error",
+        err?.friendlyMessage ||
+          err?.message ||
+          "Category image upload failed."
+      );
+    } finally {
+      setIsUploadingImage(false);
+      input.value = "";
+    }
+  };
+
+  const removeImage = () => {
+    setFormData((current) => ({
+      ...current,
+      imageUrl: "",
+      imagePublicId: "",
+      imageAlt: "",
+    }));
+
+    if (feedback.message) {
+      setFeedback({ type: "", message: "" });
+    }
   };
 
   const handleSubmit = (event) => {
@@ -191,6 +254,9 @@ const AdminCategories = () => {
       description: category.description || "",
       status: category.status || "active",
       sortOrder: category.sortOrder || 0,
+      imageUrl: category.image?.url || "",
+      imagePublicId: category.image?.publicId || "",
+      imageAlt: category.image?.alt || "",
       seoTitle: category.seo?.title || "",
       seoDescription: category.seo?.description || "",
       arName: category.translations?.ar?.name || "",
@@ -288,6 +354,81 @@ const AdminCategories = () => {
               onChange={updateField}
               placeholder="Short category description..."
             />
+
+            <div className="rounded-3xl border border-white/10 bg-white/[0.025] p-4">
+              <p className="mb-4 text-xs font-black uppercase tracking-[0.24em] text-white/35">
+                Category Image
+              </p>
+
+              <div className="grid gap-4 lg:grid-cols-[180px_1fr]">
+                <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#110f0e]">
+                  {formData.imageUrl ? (
+                    <img
+                      src={formData.imageUrl}
+                      alt={formData.imageAlt || formData.name || "Category"}
+                      onError={hideBrokenImage}
+                      className="aspect-[4/3] w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex aspect-[4/3] items-center justify-center px-4 text-center text-[0.62rem] font-black uppercase tracking-[0.2em] text-white/30">
+                      No image
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  <Input
+                    label="Image URL"
+                    name="imageUrl"
+                    value={formData.imageUrl}
+                    onChange={updateField}
+                    placeholder="Paste category image URL or upload"
+                  />
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Input
+                      label="Image Alt"
+                      name="imageAlt"
+                      value={formData.imageAlt}
+                      onChange={updateField}
+                      placeholder="Defaults to category name"
+                    />
+
+                    <Input
+                      label="Cloudinary Public ID"
+                      name="imagePublicId"
+                      value={formData.imagePublicId}
+                      onChange={updateField}
+                      placeholder="Auto-filled after upload"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <label className="inline-flex min-h-12 flex-1 cursor-pointer items-center justify-center rounded-[0.2rem] border border-[#c7a852]/55 px-5 py-3 text-center text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#f5f0e8] transition hover:border-[#c7a852] hover:bg-[#c7a852]/10">
+                      <span>
+                        {isUploadingImage ? "Uploading..." : "Upload Image"}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="sr-only"
+                        disabled={isUploadingImage}
+                        onChange={handleImageUpload}
+                      />
+                    </label>
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={removeImage}
+                      disabled={!formData.imageUrl || isUploadingImage}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <Select
@@ -424,9 +565,10 @@ const AdminCategories = () => {
           {!isLoading && !isError && categories.length > 0 && (
             <div className="overflow-hidden rounded-3xl border border-white/10">
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[760px] border-collapse text-left">
+                <table className="w-full min-w-[860px] border-collapse text-left">
                   <thead className="bg-white/[0.045]">
                     <tr className="text-xs uppercase tracking-[0.2em] text-white/40">
+                      <th className="px-4 py-4">Image</th>
                       <th className="px-4 py-4">Name</th>
                       <th className="px-4 py-4">Slug</th>
                       <th className="px-4 py-4">Status</th>
@@ -441,6 +583,24 @@ const AdminCategories = () => {
                         key={category._id}
                         className="border-t border-white/10 text-sm text-white/70"
                       >
+                        <td className="px-4 py-4">
+                          <div className="h-16 w-20 overflow-hidden rounded-xl border border-white/10 bg-[#110f0e]">
+                            {category.image?.url ? (
+                              <img
+                                src={category.image.url}
+                                alt={category.image.alt || category.name}
+                                onError={hideBrokenImage}
+                                className="h-full w-full object-cover"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div className="flex h-full items-center justify-center text-[0.5rem] font-black uppercase tracking-[0.14em] text-white/25">
+                                No image
+                              </div>
+                            )}
+                          </div>
+                        </td>
+
                         <td className="px-4 py-4">
                           <div>
                             <p className="font-bold text-white">

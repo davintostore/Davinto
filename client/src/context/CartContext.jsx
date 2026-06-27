@@ -1,6 +1,8 @@
 import {
   useCallback,
+  useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -46,8 +48,43 @@ const normalizeQuantity = (quantity, maxStock) => {
 export const CartProvider = ({ children }) => {
   const [items, setItems] = useState(readStoredCart);
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
+  const [cartToast, setCartToast] = useState(null);
   const [lastCartQuote, setLastCartQuote] = useState(null);
   const [lastCheckoutQuote, setLastCheckoutQuote] = useState(null);
+  const cartToastTimeoutRef = useRef(null);
+
+  const dismissCartToast = useCallback(() => {
+    if (cartToastTimeoutRef.current) {
+      window.clearTimeout(cartToastTimeoutRef.current);
+      cartToastTimeoutRef.current = null;
+    }
+
+    setCartToast(null);
+  }, []);
+
+  const showAddedToCartToast = useCallback(() => {
+    if (cartToastTimeoutRef.current) {
+      window.clearTimeout(cartToastTimeoutRef.current);
+    }
+
+    setCartToast({
+      id: Date.now(),
+      title: "Added to cart",
+    });
+
+    cartToastTimeoutRef.current = window.setTimeout(() => {
+      setCartToast(null);
+      cartToastTimeoutRef.current = null;
+    }, 2000);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (cartToastTimeoutRef.current) {
+        window.clearTimeout(cartToastTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const updateCart = useCallback((updater) => {
     setItems((currentItems) => {
@@ -110,8 +147,10 @@ export const CartProvider = ({ children }) => {
             : cartItem
         );
       });
+
+      showAddedToCartToast();
     },
-    [updateCart]
+    [showAddedToCartToast, updateCart]
   );
 
   const updateQuantity = useCallback(
@@ -242,6 +281,8 @@ export const CartProvider = ({ children }) => {
       decreaseQuantity,
       removeItem,
       clearCart,
+      cartToast,
+      dismissCartToast,
       isCartDrawerOpen,
       openCartDrawer,
       closeCartDrawer,
@@ -263,6 +304,8 @@ export const CartProvider = ({ children }) => {
       decreaseQuantity,
       removeItem,
       clearCart,
+      cartToast,
+      dismissCartToast,
       isCartDrawerOpen,
       openCartDrawer,
       closeCartDrawer,
