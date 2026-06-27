@@ -2,8 +2,51 @@ const PIXEL_ID = import.meta.env.VITE_META_PIXEL_ID;
 
 const isBrowser = typeof window !== "undefined";
 
+const PRIVATE_META_PIXEL_PATHS = [
+  "/admin",
+  "/admin/login",
+  "/checkout",
+  "/order-success",
+  "/track-order",
+  "/signin",
+  "/signup",
+  "/account",
+  "/my-orders",
+  "/cart",
+];
+
 const isPixelEnabled = () => {
   return Boolean(isBrowser && PIXEL_ID);
+};
+
+export const isPrivateMetaPixelPath = (pathname = "") => {
+  const cleanPath = String(pathname || "/").split("?")[0].split("#")[0] || "/";
+
+  return PRIVATE_META_PIXEL_PATHS.some(
+    (path) => cleanPath === path || cleanPath.startsWith(`${path}/`)
+  );
+};
+
+const canTrackCurrentRoute = () => {
+  if (!isPixelEnabled()) return false;
+  if (!isBrowser) return false;
+
+  return !isPrivateMetaPixelPath(window.location.pathname);
+};
+
+const canTrackPrivateRouteEvent = (eventName = "", options = {}) => {
+  if (!isPixelEnabled()) return false;
+  if (!isBrowser) return false;
+  if (!isPrivateMetaPixelPath(window.location.pathname)) return true;
+
+  // Keep PageView and checkout/account/admin tracking blocked on private pages.
+  // The only private-route exception is a sanitized Purchase event on the
+  // order-success page after OrderSuccess has confirmed real order data exists.
+  return (
+    options.allowPrivateRoute === true &&
+    eventName === "Purchase" &&
+    window.location.pathname === "/order-success"
+  );
 };
 
 const generateEventId = (eventName = "event") => {
@@ -15,8 +58,27 @@ const generateEventId = (eventName = "event") => {
   return `davinto-${eventName}-${random}`;
 };
 
-export const initMetaPixel = () => {
-  if (!isPixelEnabled()) return false;
+const getCommerceItemId = (item = {}) => {
+  const rawId =
+    item.product?._id ||
+    item.product?.id ||
+    item.product ||
+    item.productId ||
+    item._id ||
+    item.id;
+
+  if (!rawId || typeof rawId === "object") return "";
+
+  return String(rawId);
+};
+
+export const initMetaPixel = (options = {}) => {
+  const canInitialize =
+    options.eventName === "Purchase"
+      ? canTrackPrivateRouteEvent(options.eventName, options)
+      : canTrackCurrentRoute();
+
+  if (!canInitialize) return false;
 
   if (window.fbq) return true;
 
@@ -48,9 +110,9 @@ export const initMetaPixel = () => {
 };
 
 export const trackMetaEvent = (eventName, params = {}, options = {}) => {
-  if (!isPixelEnabled()) return null;
+  if (!canTrackPrivateRouteEvent(eventName, options)) return null;
 
-  initMetaPixel();
+  initMetaPixel({ ...options, eventName });
 
   if (!window.fbq) return null;
 
@@ -71,7 +133,7 @@ export const trackMetaEvent = (eventName, params = {}, options = {}) => {
 };
 
 export const trackPageView = () => {
-  if (!isPixelEnabled()) return null;
+  if (!canTrackCurrentRoute()) return null;
 
   initMetaPixel();
 
@@ -174,31 +236,40 @@ export const trackAddPaymentInfo = ({
 };
 
 export const trackPurchase = ({
-  orderId,
   orderNumber,
   items = [],
   value = 0,
   currency = "EGP",
 }) => {
+  const contents = items
+    .map((item) => {
+      const id = getCommerceItemId(item);
+
+      if (!id) return null;
+
+      return {
+        id: String(id),
+        quantity: Number(item.quantity || 1),
+        item_price: Number(item.unitPrice || item.price || 0),
+      };
+    })
+    .filter(Boolean);
+
   return trackMetaEvent(
     "Purchase",
     {
-      content_ids: items.map((item) => String(item.product || item.productId)),
+      content_ids: contents.map((item) => item.id),
       content_type: "product",
       value: Number(value || 0),
       currency,
-      order_id: orderNumber || orderId || "",
       num_items: items.reduce(
         (total, item) => total + Number(item.quantity || 0),
         0
       ),
-      contents: items.map((item) => ({
-        id: String(item.product || item.productId),
-        quantity: Number(item.quantity || 1),
-        item_price: Number(item.unitPrice || item.price || 0),
-      })),
+      contents,
     },
     {
+      allowPrivateRoute: true,
       eventId: orderNumber ? `davinto-purchase-${orderNumber}` : undefined,
     }
   );

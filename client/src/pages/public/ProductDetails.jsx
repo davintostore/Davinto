@@ -50,6 +50,12 @@ const getFirstAvailableSize = (color) => {
   return sizes.find((size) => Number(size.stock || 0) > 0) || sizes[0] || null;
 };
 
+const hasProductAvailableStock = (product) => {
+  return getActiveColors(product).some((color) =>
+    getActiveSizes(color).some((size) => Number(size.stock || 0) > 0)
+  );
+};
+
 const getSimpleBadge = (badge = "", t) => {
   const normalizedBadge = String(badge || "").toLowerCase();
 
@@ -118,6 +124,17 @@ const ProductDetails = () => {
     [product, language]
   );
   const activeColors = useMemo(() => getActiveColors(product), [product]);
+  const offerPreview = product?.activeOfferPreview;
+  const offerPrice = Number(offerPreview?.priceAfterOffer || 0);
+  const hasOfferPrice =
+    offerPrice > 0 && offerPrice < Number(product?.price || 0);
+  const displayPrice = hasOfferPrice ? offerPrice : product?.price;
+  const isOnSale = product?.compareAtPrice > product?.price || hasOfferPrice;
+  const structuredDataPrice = Number(displayPrice || 0);
+  const structuredDataAvailability =
+    product?.status === "active" && hasProductAvailableStock(product)
+      ? "https://schema.org/InStock"
+      : "https://schema.org/OutOfStock";
 
   // SEO
   useSeo({
@@ -142,11 +159,13 @@ const ProductDetails = () => {
         "@type": "Brand",
         name: "Davinto",
       },
+      image: product.primaryImage ? [product.primaryImage] : undefined,
       offers: {
         "@type": "Offer",
         priceCurrency: "EGP",
-        price: product.price?.toFixed(2) || "0",
-        availability: product.isActive ? "InStock" : "OutOfStock",
+        price:
+          structuredDataPrice > 0 ? structuredDataPrice.toFixed(2) : "0",
+        availability: structuredDataAvailability,
         url: `${window.location.origin}/product/${slug}`,
       },
     } : null,
@@ -200,12 +219,6 @@ const ProductDetails = () => {
   );
   const selectedStock = Number(selectedSize?.stock || 0);
   const isInStock = selectedStock > 0;
-  const offerPreview = product?.activeOfferPreview;
-  const offerPrice = Number(offerPreview?.priceAfterOffer || 0);
-  const hasOfferPrice =
-    offerPrice > 0 && offerPrice < Number(product?.price || 0);
-  const displayPrice = hasOfferPrice ? offerPrice : product?.price;
-  const isOnSale = product?.compareAtPrice > product?.price || hasOfferPrice;
   const displayBadges = hasOfferPrice
     ? [t("common:offer")]
     : product?.compareAtPrice > product?.price

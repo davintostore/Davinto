@@ -584,12 +584,12 @@ const AdminProducts = () => {
     mutationFn: deleteProductRequest,
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
-      showFeedback("success", response?.message || "Product deleted.");
+      showFeedback("success", response?.message || "Product archived.");
     },
     onError: (err) => {
       showFeedback(
         "error",
-        err?.friendlyMessage || err?.message || "Failed to delete product."
+        err?.friendlyMessage || err?.message || "Failed to archive product."
       );
     },
   });
@@ -1475,7 +1475,7 @@ const AdminProducts = () => {
                             disabled={deleteMutation.isPending}
                             className="rounded-full border border-red-300/20 px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-red-100 transition hover:bg-red-400/10 disabled:opacity-50"
                           >
-                            Delete
+                            Archive
                           </button>
                         </div>
                       </div>
@@ -1490,12 +1490,14 @@ const AdminProducts = () => {
 
       <ConfirmDialog
         isOpen={Boolean(deleteConfirm)}
-        eyebrow="Delete Product"
+        eyebrow="Archive Product"
         title={
-          deleteConfirm ? `Delete ${deleteConfirm.name}?` : "Delete product?"
+          deleteConfirm
+            ? `Archive ${deleteConfirm.name}?`
+            : "Archive product?"
         }
-        message="If orders use this product later, archive is safer."
-        confirmLabel="Delete"
+        message="This removes the product from the public store without deleting its ID, slug, images, or historical order snapshots."
+        confirmLabel="Archive"
         isPending={deleteMutation.isPending}
         onCancel={() => setDeleteConfirm(null)}
         onConfirm={confirmDelete}

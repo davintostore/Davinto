@@ -12,10 +12,15 @@ npm run sync:images
 ```
 
 The sync script reads the current local assets under `client/public/images`,
-builds the launch product/category image map, and updates only these fields:
+builds the launch product/category image map, and updates only these fields when
+the existing value is blank or a known legacy/local launch path:
 
 - `Product.colors[].images[].url`
 - `Category.image.url`
+
+It is intentionally fallback/legacy-safe. It does not overwrite remote admin
+uploads, `http://` or `https://` URLs, or Cloudinary URLs such as
+`cloudinary.com` / `res.cloudinary.com`. Protected URLs are logged as skipped.
 
 It does not delete, recreate, or reseed products. It does not change product
 IDs, slugs, names, prices, stock, category counts, offers, bundles, discounts,

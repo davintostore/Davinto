@@ -13,6 +13,53 @@ const {
 
 const normalizeText = (value = "") => String(value || "").trim();
 
+const normalizeImagePath = (value = "") =>
+  normalizeText(value).replace(/\\/g, "/").toLowerCase();
+
+const isRemoteImageUrl = (url = "") => /^https?:\/\//i.test(normalizeText(url));
+
+const isCloudinaryImageUrl = (url = "") =>
+  normalizeText(url).toLowerCase().includes("cloudinary.com");
+
+const isKnownSyncSafeLocalUrl = (url = "") => {
+  const normalized = normalizeImagePath(url);
+
+  return (
+    normalized.startsWith("/images/t-shirts/") ||
+    normalized.startsWith("images/t-shirts/") ||
+    normalized.startsWith("/images/blanks/") ||
+    normalized.startsWith("images/blanks/") ||
+    normalized.startsWith("/images/art%20and%20history/") ||
+    normalized.startsWith("images/art%20and%20history/") ||
+    normalized.startsWith("/images/art and history/") ||
+    normalized.startsWith("images/art and history/") ||
+    normalized.startsWith("/images/art-and-history/") ||
+    normalized.startsWith("images/art-and-history/")
+  );
+};
+
+const getSyncDecision = (currentUrl = "") => {
+  if (!currentUrl) {
+    return { shouldSync: true, reason: "missing image URL" };
+  }
+
+  if (isRemoteImageUrl(currentUrl) || isCloudinaryImageUrl(currentUrl)) {
+    return {
+      shouldSync: false,
+      reason: "remote/admin URL kept",
+    };
+  }
+
+  if (isKnownSyncSafeLocalUrl(currentUrl)) {
+    return { shouldSync: true, reason: "known local launch/legacy URL" };
+  }
+
+  return {
+    shouldSync: false,
+    reason: "unrecognized local URL kept",
+  };
+};
+
 const findTargetColorIndex = (product, expectedColorSlug) => {
   const colors = Array.isArray(product.colors) ? product.colors : [];
 
@@ -34,10 +81,16 @@ const logUpdate = ({ type, identifier, fieldPath, before, after }) => {
   console.log(`  -> ${after}`);
 };
 
+const logSkip = ({ type, identifier, fieldPath, currentUrl, reason }) => {
+  console.log(`${type} ${identifier}: skipped ${fieldPath} (${reason})`);
+  console.log(`  kept ${currentUrl || "(empty)"}`);
+};
+
 const syncProducts = async (productImageMap) => {
   let updatedDocuments = 0;
   let updatedFields = 0;
   let skippedDocuments = 0;
+  let skippedFields = 0;
 
   for (const [slug, expected] of Object.entries(productImageMap)) {
     const product = await Product.findOne({ slug }).select("name slug colors").lean();
@@ -75,7 +128,21 @@ const syncProducts = async (productImageMap) => {
       const nextUrl = expected.images[imageIndex];
 
       if (currentUrl !== nextUrl) {
+        const syncDecision = getSyncDecision(currentUrl);
         const fieldPath = `colors.${colorIndex}.images.${imageIndex}.url`;
+
+        if (!syncDecision.shouldSync) {
+          skippedFields += 1;
+          logSkip({
+            type: "Product",
+            identifier: slug,
+            fieldPath,
+            currentUrl,
+            reason: syncDecision.reason,
+          });
+          continue;
+        }
+
         setUpdates[fieldPath] = nextUrl;
         logUpdate({
           type: "Product",
@@ -100,13 +167,14 @@ const syncProducts = async (productImageMap) => {
     }
   }
 
-  return { updatedDocuments, updatedFields, skippedDocuments };
+  return { updatedDocuments, updatedFields, skippedDocuments, skippedFields };
 };
 
 const syncCategories = async (categoryImageMap) => {
   let updatedDocuments = 0;
   let updatedFields = 0;
   let skippedDocuments = 0;
+  let skippedFields = 0;
 
   for (const [slug, nextUrl] of Object.entries(categoryImageMap)) {
     const category = await Category.findOne({ slug }).select("name slug image").lean();
@@ -120,6 +188,20 @@ const syncCategories = async (categoryImageMap) => {
     const currentUrl = normalizeText(category.image?.url);
 
     if (currentUrl === nextUrl) {
+      continue;
+    }
+
+    const syncDecision = getSyncDecision(currentUrl);
+
+    if (!syncDecision.shouldSync) {
+      skippedFields += 1;
+      logSkip({
+        type: "Category",
+        identifier: slug,
+        fieldPath: "image.url",
+        currentUrl,
+        reason: syncDecision.reason,
+      });
       continue;
     }
 
@@ -139,7 +221,7 @@ const syncCategories = async (categoryImageMap) => {
     });
   }
 
-  return { updatedDocuments, updatedFields, skippedDocuments };
+  return { updatedDocuments, updatedFields, skippedDocuments, skippedFields };
 };
 
 const connectToDatabase = async () => {
@@ -186,6 +268,9 @@ const run = async () => {
     );
     console.log(
       `Skipped documents: products=${productResult.skippedDocuments}, categories=${categoryResult.skippedDocuments}`
+    );
+    console.log(
+      `Skipped protected image URL fields: products=${productResult.skippedFields}, categories=${categoryResult.skippedFields}`
     );
 
     if (totalUpdatedFields === 0) {

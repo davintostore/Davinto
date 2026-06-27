@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
 const morgan = require("morgan");
 const { corsOptions } = require("./config/cors");
 
@@ -26,6 +27,23 @@ const app = express();
 // Render and similar hosts forward the original client IP through one trusted
 // proxy. This keeps IP-based rate limiting accurate without affecting local dev.
 app.set("trust proxy", 1);
+app.disable("x-powered-by");
+
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: {
+      policy: "cross-origin",
+    },
+    frameguard: {
+      action: "deny",
+    },
+    referrerPolicy: {
+      policy: "no-referrer",
+    },
+  })
+);
 
 app.use(cors(corsOptions));
 

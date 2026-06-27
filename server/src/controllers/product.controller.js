@@ -407,8 +407,7 @@ const attachActiveOfferPreviews = async (products = []) => {
       )
       .filter((offer) => isProductEligibleForOffer(offer, product))
       .map((offer) => calculateSingleUnitOfferPreview(offer, product))
-      .filter(Boolean)
-      .sort((left, right) => right.discountAmount - left.discountAmount);
+      .filter(Boolean);
 
     return {
       ...productObject,
@@ -898,11 +897,13 @@ const deleteProduct = asyncHandler(async (req, res) => {
     throw new Error("Product not found.");
   }
 
-  await product.deleteOne();
+  product.status = "archived";
+  await product.save();
 
   res.status(200).json({
     success: true,
-    message: "Product deleted successfully.",
+    message: "Product archived successfully.",
+    product,
   });
 });
 

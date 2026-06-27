@@ -10,8 +10,10 @@ const pendingOrderStatuses = [
   "pending_payment_verification",
 ];
 const DASHBOARD_TIME_ZONE = process.env.DASHBOARD_TIME_ZONE || "Africa/Cairo";
+const visibleOrderMatch = { deletedAt: null };
 
 const revenueMatch = {
+  ...visibleOrderMatch,
   orderStatus: { $ne: "cancelled" },
   $or: [{ paymentStatus: "paid" }, { orderStatus: "delivered" }],
 };
@@ -150,6 +152,7 @@ const getLast7DaysStats = async () => {
   const rawStats = await Order.aggregate([
     {
       $match: {
+        ...visibleOrderMatch,
         createdAt: { $gte: startDate },
       },
     },
@@ -280,23 +283,28 @@ const getAdminDashboardStats = asyncHandler(async (req, res) => {
     lowStockItems,
     last7Days,
   ] = await Promise.all([
-    Order.countDocuments({}),
+    Order.countDocuments(visibleOrderMatch),
     Order.countDocuments({
+      ...visibleOrderMatch,
       createdAt: {
         $gte: todayStart,
         $lte: todayEnd,
       },
     }),
     Order.countDocuments({
+      ...visibleOrderMatch,
       orderStatus: { $in: pendingOrderStatuses },
     }),
     Order.countDocuments({
+      ...visibleOrderMatch,
       paymentStatus: "pending_verification",
     }),
     Order.countDocuments({
+      ...visibleOrderMatch,
       orderStatus: "delivered",
     }),
     Order.countDocuments({
+      ...visibleOrderMatch,
       orderStatus: "cancelled",
     }),
     getRevenueStats(revenueMatch),
@@ -307,7 +315,7 @@ const getAdminDashboardStats = asyncHandler(async (req, res) => {
         $lte: todayEnd,
       },
     }),
-    Order.find({})
+    Order.find(visibleOrderMatch)
       .sort({ createdAt: -1 })
       .limit(6)
       .select(

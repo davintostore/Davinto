@@ -24,3 +24,5 @@ Disallow: /admin/login
 
 # Standard crawl delay
 Crawl-delay: 1
+
+Sitemap: https://www.davinto-store.com/sitemap.xml

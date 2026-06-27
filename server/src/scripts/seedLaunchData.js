@@ -3,6 +3,7 @@ require("dotenv").config();
 const mongoose = require("mongoose");
 
 const Category = require("../models/Category");
+const Offer = require("../models/Offer");
 const Product = require("../models/Product");
 const SiteSettings = require("../models/SiteSettings");
 const {
@@ -14,6 +15,7 @@ const { getDefaultDeliveryZones } = require("../utils/egyptGovernorates");
 
 const LAUNCH_PRICE = 650;
 const COMPARE_AT_PRICE = 0;
+const LAUNCH_OFFER_DISCOUNT = 100;
 const DEFAULT_STOCK = 10;
 const SIZES = ["M", "L", "XL", "XXL"];
 
@@ -435,6 +437,44 @@ const updateLaunchSettings = async () => {
   return settings;
 };
 
+const upsertLaunchOffer = async () => {
+  let offer =
+    (await Offer.findOne({ slug: "launch-offer" })) ||
+    (await Offer.findOne({ title: "Launch Offer" }));
+
+  if (!offer) {
+    offer = new Offer();
+  }
+
+  offer.title = "Launch Offer";
+  offer.slug = "launch-offer";
+  offer.description = "Launch pricing: 100 EGP off each product.";
+  offer.translations = {
+    ar: {
+      title: "عرض الافتتاح",
+      description: "خصم 100 جنيه على كل منتج خلال عرض الافتتاح.",
+    },
+  };
+  offer.discountType = "fixedPerItem";
+  offer.discountValue = LAUNCH_OFFER_DISCOUNT;
+  offer.maxDiscountAmount = 0;
+  offer.scope = "all";
+  offer.categories = [];
+  offer.products = [];
+  offer.minSubtotal = 0;
+  offer.minQuantity = 0;
+  offer.priority = 10;
+  offer.stackable = false;
+  offer.startsAt = null;
+  offer.endsAt = null;
+  offer.usageLimit = 0;
+  offer.status = "active";
+
+  await offer.save();
+  console.log("Launch offer ready: 100 EGP off each item.");
+  return offer;
+};
+
 const connectToDatabase = async () => {
   const mongoUri = normalizeText(process.env.MONGO_URI);
 
@@ -483,6 +523,7 @@ const run = async () => {
     await upsertBlankProducts(blanksCategory);
     await upsertArtProducts(artCategory);
     await updateLaunchSettings();
+    await upsertLaunchOffer();
 
     console.log("");
     console.log("Launch data seed completed successfully.");
