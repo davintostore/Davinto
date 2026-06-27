@@ -1,19 +1,27 @@
 require("dotenv").config();
 
-const fs = require("fs");
-const path = require("path");
 const mongoose = require("mongoose");
 
 const Category = require("../models/Category");
 const Product = require("../models/Product");
 const SiteSettings = require("../models/SiteSettings");
+const {
+  getArtProductImageUrl,
+  getBlankProductImageUrls,
+  getCategoryImageUrl,
+} = require("../config/launchImageMap");
 const { getDefaultDeliveryZones } = require("../utils/egyptGovernorates");
 
 const LAUNCH_PRICE = 650;
 const COMPARE_AT_PRICE = 0;
 const DEFAULT_STOCK = 10;
 const SIZES = ["M", "L", "XL", "XXL"];
-const PUBLIC_IMAGE_ROOT = path.resolve(__dirname, "../../../client/public/images");
+
+// Image workflow note:
+// This seed only writes image URLs when the seed command is run. Existing
+// MongoDB products/categories keep their saved URLs after local asset changes.
+// For image-only updates, run `npm run sync:images` from the server folder
+// instead of reseeding or resetting launch data.
 
 const normalizeText = (value = "") => String(value || "").trim();
 
@@ -27,84 +35,27 @@ const getExistingStock = (existingProduct, colorSlug, sizeLabel) => {
   return stock > 0 ? stock : DEFAULT_STOCK;
 };
 
-const findImageByBasename = (folderPath, basename) => {
-  if (!fs.existsSync(folderPath)) return "";
+const buildBlankImages = ({ productSlug, englishName, arabicName }) => {
+  return getBlankProductImageUrls(productSlug).map((url, urlIndex) => {
+    const index = urlIndex + 1;
 
-  const match = fs
-    .readdirSync(folderPath)
-    .find((file) => path.parse(file).name === String(basename));
-
-  return match || "";
-};
-
-const getBlankImagePath = (folder, index) => {
-  const imageFolder = path.join(PUBLIC_IMAGE_ROOT, "t-shirts", folder);
-  const match = findImageByBasename(imageFolder, index);
-
-  if (!match) {
-    throw new Error(`Missing blank product image ${index} in ${imageFolder}`);
-  }
-
-  return `/images/t-shirts/${folder}/${match}`;
-};
-
-const getArtImagePath = (index) => {
-  const candidates = [
-    {
-      folderPath: path.join(PUBLIC_IMAGE_ROOT, "art-and-history", String(index)),
-      publicPath: `/images/art-and-history/${index}`,
-      basename: "1",
-    },
-    {
-      folderPath: path.join(PUBLIC_IMAGE_ROOT, "art and history", String(index)),
-      publicPath: `/images/art%20and%20history/${index}`,
-      basename: "1",
-    },
-    {
-      folderPath: path.join(PUBLIC_IMAGE_ROOT, "art-and-history"),
-      publicPath: "/images/art-and-history",
-      basename: String(index),
-    },
-    {
-      folderPath: path.join(PUBLIC_IMAGE_ROOT, "art and history"),
-      publicPath: "/images/art%20and%20history",
-      basename: String(index),
-    },
-  ];
-
-  for (const candidate of candidates) {
-    const match = findImageByBasename(candidate.folderPath, candidate.basename);
-
-    if (match) {
-      return `${candidate.publicPath}/${match}`;
-    }
-  }
-
-  console.warn(
-    `Warning: missing Art and History image for product ${index}. Checked nested and flat art-and-history folders.`
-  );
-  return "";
-};
-
-const buildBlankImages = ({ folder, englishName, arabicName }) => {
-  return [1, 2, 3, 4].map((index) => ({
-    url: getBlankImagePath(folder, index),
-    publicId: "",
-    alt: `${englishName} view ${index}`,
-    translations: {
-      ar: {
+    return {
+      url,
+      publicId: "",
+      alt: `${englishName} view ${index}`,
+      translations: {
+        ar: {
         alt: `${arabicName} - صورة ${index}`,
       },
-    },
-    role: index === 1 ? "primary" : index === 2 ? "hover" : "gallery",
-    position: index,
-  }));
+      },
+      role: index === 1 ? "primary" : index === 2 ? "hover" : "gallery",
+      position: index,
+    };
+  });
 };
 
 const buildArtImages = ({ index, englishName, arabicName }) => {
-  const url = getArtImagePath(index);
-
-  if (!url) return [];
+  const url = getArtProductImageUrl(index);
 
   return [
     {
@@ -368,7 +319,7 @@ const upsertBlankProducts = async (category) => {
         slug: productData.colorSlug,
         hex: productData.hex,
         images: buildBlankImages({
-          folder: productData.folder,
+          productSlug: productData.slug,
           englishName: productData.name,
           arabicName: productData.arabicName,
         }),
@@ -510,7 +461,7 @@ const run = async () => {
       name: "Blanks",
       slug: "blanks",
       description: "Davinto blank essentials in clean everyday colors.",
-      imageUrl: "/images/t-shirts/black/1.jpg",
+      imageUrl: getCategoryImageUrl("blanks"),
       imageAlt: "Davinto Blanks",
       sortOrder: 1,
       arabicName: "أساسيات سادة",
@@ -522,7 +473,7 @@ const run = async () => {
       name: "Art and History",
       slug: "art-and-history",
       description: "Printed Davinto pieces inspired by art and history.",
-      imageUrl: getArtImagePath(1) || "",
+      imageUrl: getCategoryImageUrl("art-and-history"),
       imageAlt: "Davinto Art and History",
       sortOrder: 2,
       arabicName: "فن وتاريخ",

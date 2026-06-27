@@ -16,6 +16,12 @@ import Cart from "../pages/public/Cart";
 import Checkout from "../pages/public/Checkout";
 import OrderSuccess from "../pages/public/OrderSuccess";
 import TrackOrder from "../pages/public/TrackOrder";
+import {
+  PrivacyPolicy,
+  RefundPolicy,
+  ShippingPolicy,
+  TermsAndConditions,
+} from "../pages/public/Policies";
 import SignIn from "../pages/auth/SignIn";
 import SignUp from "../pages/auth/SignUp";
 import Account from "../pages/account/Account";
@@ -47,6 +53,10 @@ const AppRoutes = () => {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/order-success" element={<OrderSuccess />} />
           <Route path="/track-order" element={<TrackOrder />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/refund-policy" element={<RefundPolicy />} />
+          <Route path="/shipping-policy" element={<ShippingPolicy />} />
+          <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route

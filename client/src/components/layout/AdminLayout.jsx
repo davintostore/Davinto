@@ -3,6 +3,7 @@ import {
   Link,
   NavLink,
   Outlet,
+  useLocation,
   useNavigate,
 } from "react-router-dom";
 import { Menu, X } from "lucide-react";
@@ -22,6 +23,7 @@ const adminLinks = [
 ];
 
 const AdminLayout = () => {
+  const location = useLocation();
   const navigate = useNavigate();
   const { admin, logout } = useAdminAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -143,7 +145,7 @@ const AdminLayout = () => {
               id="admin-mobile-navigation"
               className="mt-4 grid rounded-2xl border border-[#f5f0e8]/10 bg-[#110f0e] px-2 py-2"
             >
-              {adminLinks.map((link, index) => (
+              {adminLinks.map((link) => (
                 <NavLink
                   key={link.path}
                   to={link.path}
@@ -158,9 +160,6 @@ const AdminLayout = () => {
                   }
                 >
                   <span>{link.label}</span>
-                  <span className="text-[0.62rem] text-[#8b8075]">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
                 </NavLink>
               ))}
 
@@ -177,7 +176,9 @@ const AdminLayout = () => {
         </header>
 
         <main className="p-5 sm:p-8 lg:p-10">
-          <Outlet />
+          <div key={location.pathname} className="davinto-route-transition">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

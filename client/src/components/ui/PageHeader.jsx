@@ -9,6 +9,7 @@ const PageHeader = ({
   description,
   children,
   className = "",
+  backgroundImage = "",
   showMeta = null,
 }) => {
   const { t } = useTranslation("navigation");
@@ -19,13 +20,23 @@ const PageHeader = ({
   return (
     <section
       className={`relative overflow-hidden border-b border-[#c7a852]/25 bg-[#882c30] pt-16 pb-10 sm:pt-20 sm:pb-14 ${className}`}
+      style={
+        backgroundImage
+          ? {
+              backgroundColor: "#050505",
+              backgroundImage: `url("${backgroundImage}")`,
+              backgroundPosition: "center",
+              backgroundSize: "cover",
+            }
+          : undefined
+      }
     >
       <div
-        className="pointer-events-none absolute inset-0 opacity-35"
+        className="pointer-events-none absolute inset-0 opacity-80"
         aria-hidden="true"
         style={{
           background:
-            "linear-gradient(120deg, rgba(17,15,14,.82), transparent 58%), repeating-linear-gradient(90deg, transparent 0, transparent 79px, rgba(245,240,232,.06) 80px)",
+            "linear-gradient(120deg, rgba(17,15,14,.84), rgba(17,15,14,.34) 58%, transparent), radial-gradient(circle at 78% 18%, rgba(199,168,82,.12), transparent 24rem)",
         }}
       />
 

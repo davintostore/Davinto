@@ -13,7 +13,9 @@ import useSeo from "../../hooks/useSeo";
 import { socialLinks } from "../../constants/socialLinks";
 import { getPublicCategoriesRequest } from "../../services/categoryService";
 import { getPublicProductsRequest } from "../../services/productService";
+import { getCategoryVisual } from "../../utils/categoryVisuals";
 import { getLocalizedCategory } from "../../utils/localizedContent";
+import { hideBrokenImage } from "../../utils/imageFallback";
 
 const HERO_VIDEO_SOURCES = {
   desktop: {
@@ -217,31 +219,48 @@ const Home = () => {
               </p>
             </div>
 
-            <div className="grid gap-3 sm:gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               {visibleCategories.map((category) => {
+                const visual = getCategoryVisual(category);
+                const categoryPath = category.slug
+                  ? `/category/${category.slug}`
+                  : "/shop";
                 const content = (
-                  <div className="flex items-center justify-between gap-5 border border-[#f5f0e8]/20 bg-[#f5f0e8]/6 px-5 py-4 transition duration-200 group-hover:-translate-y-0.5 group-hover:border-[#c7a852]/70 group-hover:bg-[#f5f0e8]/10 group-focus-visible:border-[#c7a852] sm:px-6 sm:py-5">
-                    <span className="font-serif text-3xl text-[#f5f0e8] transition group-hover:text-[#c7a852] sm:text-5xl">
-                      {category.name}
-                    </span>
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center border border-[#f5f0e8]/18 text-[#f5f0e8]/60 transition group-hover:border-[#c7a852] group-hover:text-[#c7a852]">
-                      <ArrowUpRight size={20} />
-                    </span>
+                  <div className="relative min-h-[22rem] overflow-hidden border border-[#f5f0e8]/16 bg-[#110f0e] transition duration-300 group-hover:-translate-y-1 group-hover:border-[#c7a852]/70 group-focus-visible:border-[#c7a852]">
+                    {visual.image ? (
+                      <img
+                        src={visual.image}
+                        alt={visual.alt}
+                        onError={hideBrokenImage}
+                        className="absolute inset-0 h-full w-full object-cover opacity-82 transition duration-700 group-hover:scale-[1.035]"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-[#28231f]" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/44 to-transparent" />
+                    <div className="relative flex min-h-[22rem] flex-col justify-end p-5 sm:p-6">
+                      <p className="text-[0.58rem] font-black uppercase tracking-[0.24em] text-[#c7a852]">
+                        Collection
+                      </p>
+                      <h3 className="mt-3 font-serif text-4xl text-[#f5f0e8] transition group-hover:text-[#c7a852] sm:text-5xl">
+                        {category.name}
+                      </h3>
+                      <p className="mt-3 max-w-xs text-sm leading-6 text-[#f5f0e8]/68">
+                        {visual.subtitle}
+                      </p>
+                      <span className="mt-6 inline-flex w-fit items-center gap-2 border border-[#f5f0e8]/18 px-4 py-3 text-[0.62rem] font-black uppercase tracking-[0.18em] text-[#f5f0e8] transition group-hover:border-[#c7a852] group-hover:text-[#c7a852]">
+                        Shop Collection
+                        <ArrowUpRight size={15} />
+                      </span>
+                    </div>
                   </div>
                 );
 
-                return category.slug ? (
+                return (
                   <Link
                     key={category._id}
-                    to={`/category/${category.slug}`}
-                    className="group block focus-visible:outline-offset-4"
-                  >
-                    {content}
-                  </Link>
-                ) : (
-                  <Link
-                    key={category._id}
-                    to="/shop"
+                    to={categoryPath}
                     className="group block focus-visible:outline-offset-4"
                   >
                     {content}

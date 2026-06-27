@@ -31,6 +31,8 @@ import {
   getLocalizedOrderItem,
   getLocalizedPaymentSnapshot,
 } from "../../utils/localizedContent";
+import { hideBrokenImage } from "../../utils/imageFallback";
+import { getOrderItemImage } from "../../utils/resolveLocalImages";
 
 const orderStatusOptions = [
   "",
@@ -151,6 +153,7 @@ const OrderDetail = ({ orderId }) => {
             <div className="divide-y divide-[#f5f0e8]/10 border-y border-[#f5f0e8]/10">
               {order.items?.map((rawItem) => {
                 const item = getLocalizedOrderItem(rawItem, language);
+                const displayImage = getOrderItemImage(rawItem);
 
                 return (
                   <div
@@ -161,10 +164,11 @@ const OrderDetail = ({ orderId }) => {
                     className="flex gap-4 py-5"
                   >
                     <div className="h-28 w-20 shrink-0 overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f]">
-                      {item.image ? (
+                      {displayImage ? (
                         <img
-                          src={item.image}
+                          src={displayImage}
                           alt={item.imageAlt || item.name}
+                          onError={hideBrokenImage}
                           className="h-full w-full object-cover"
                         />
                       ) : (
@@ -607,6 +611,7 @@ const MyOrders = () => {
                                 rawItem,
                                 language
                               );
+                              const displayImage = getOrderItemImage(rawItem);
 
                               return (
                                 <div
@@ -614,10 +619,11 @@ const MyOrders = () => {
                                   className="flex w-full gap-3 border border-[#f5f0e8]/10 bg-[#1c1917]/45 p-3 sm:w-auto sm:min-w-64"
                                 >
                                   <div className="h-16 w-12 shrink-0 overflow-hidden bg-[#1c1917]">
-                                    {item.image ? (
+                                    {displayImage ? (
                                       <img
-                                        src={item.image}
+                                        src={displayImage}
                                         alt={item.imageAlt || item.name}
+                                        onError={hideBrokenImage}
                                         className="h-full w-full object-cover"
                                       />
                                     ) : (

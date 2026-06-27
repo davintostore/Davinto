@@ -84,7 +84,7 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   background: var(--davinto-ink);
   font-family: var(--davinto-sans);
 }
@@ -94,11 +94,9 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background:
-    linear-gradient(rgba(245, 240, 232, 0.018) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(245, 240, 232, 0.018) 1px, transparent 1px),
-    radial-gradient(circle at 88% 8%, rgba(136, 44, 48, 0.2), transparent 31rem),
+    radial-gradient(circle at 86% 6%, rgba(136, 44, 48, 0.16), transparent 34rem),
+    linear-gradient(145deg, rgba(199, 168, 82, 0.035), transparent 36rem),
     var(--davinto-ink);
-  background-size: 56px 56px, 56px 56px, auto, auto;
   color: var(--davinto-paper);
   font-family: var(--davinto-sans);
 }
@@ -239,8 +237,62 @@ img {
   min-height: 100vh;
   overflow: clip;
   background:
-    linear-gradient(115deg, rgba(136, 44, 48, 0.055), transparent 32%),
+    linear-gradient(115deg, rgba(136, 44, 48, 0.04), transparent 34%),
     transparent;
+}
+
+.davinto-route-transition {
+  animation: davintoPageEnter 320ms ease-out both;
+}
+
+.davinto-route-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 120;
+  height: 2px;
+  width: 100%;
+  pointer-events: none;
+  transform-origin: left center;
+  background: linear-gradient(
+    90deg,
+    rgba(199, 168, 82, 0),
+    var(--davinto-gold),
+    rgba(245, 240, 232, 0.86)
+  );
+  box-shadow: 0 0 18px rgba(199, 168, 82, 0.34);
+  animation: davintoRouteProgress 420ms ease-out both;
+}
+
+@keyframes davintoPageEnter {
+  from {
+    opacity: 0.28;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes davintoRouteProgress {
+  0% {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+
+  12% {
+    opacity: 1;
+  }
+
+  72% {
+    opacity: 1;
+    transform: scaleX(0.82);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scaleX(1);
+  }
 }
 
 .editorial-heading {
@@ -362,8 +414,58 @@ html[lang="ar"] .page-shell label {
   padding-block: clamp(4rem, 8vw, 8rem);
 }
 
+.cart-page-section {
+  padding-block: clamp(1.75rem, 4vw, 3.25rem);
+  min-height: calc(100vh - 4rem);
+  background: #050505;
+}
+
+.checkout-section {
+  padding-block: clamp(1.25rem, 3vw, 2.5rem);
+  min-height: calc(100vh - 4rem);
+  background: #050505;
+}
+
+.cart-drawer-panel {
+  animation: davintoDrawerEnter 260ms ease-out both;
+}
+
+.quick-product-panel {
+  animation: davintoQuickProductEnter 240ms ease-out both;
+}
+
+@keyframes davintoDrawerEnter {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes davintoQuickProductEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (min-width: 40rem) {
+  .quick-product-panel {
+    animation-name: davintoQuickProductEnter;
+  }
+}
+
 .catalog-section {
   padding-block: clamp(2.5rem, 5vw, 4.75rem);
+  min-height: calc(100vh - 6.5rem);
+  background: #050505;
 }
 
 .product-grid {
@@ -501,6 +603,14 @@ select:-webkit-autofill {
   }
 
   .davinto-hero-video {
+    display: none !important;
+  }
+
+  .davinto-route-transition {
+    animation: none !important;
+  }
+
+  .davinto-route-progress {
     display: none !important;
   }
 }

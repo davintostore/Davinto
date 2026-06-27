@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
+import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import Input from "../../components/ui/Input";
 import PageHeader from "../../components/ui/PageHeader";
 import Select from "../../components/ui/Select";
@@ -179,6 +180,7 @@ const AdminProducts = () => {
     type: "",
     message: "",
   });
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [filters, setFilters] = useState({
     search: "",
     status: "",
@@ -626,13 +628,15 @@ const AdminProducts = () => {
   };
 
   const handleDelete = (product) => {
-    const confirmed = window.confirm(
-      `Delete "${product.name}"? If orders use this product later, archive is safer.`
-    );
+    setDeleteConfirm(product);
+  };
 
-    if (!confirmed) return;
+  const confirmDelete = () => {
+    if (!deleteConfirm?._id) return;
 
-    deleteMutation.mutate(product._id);
+    deleteMutation.mutate(deleteConfirm._id, {
+      onSettled: () => setDeleteConfirm(null),
+    });
   };
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
@@ -1483,6 +1487,19 @@ const AdminProducts = () => {
           )}
         </Card>
       </div>
+
+      <ConfirmDialog
+        isOpen={Boolean(deleteConfirm)}
+        eyebrow="Delete Product"
+        title={
+          deleteConfirm ? `Delete ${deleteConfirm.name}?` : "Delete product?"
+        }
+        message="If orders use this product later, archive is safer."
+        confirmLabel="Delete"
+        isPending={deleteMutation.isPending}
+        onCancel={() => setDeleteConfirm(null)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 };

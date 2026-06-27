@@ -7,11 +7,11 @@ import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
 import Container from "../../components/ui/Container";
 import Input from "../../components/ui/Input";
-import PageHeader from "../../components/ui/PageHeader";
 import SectionLabel from "../../components/ui/SectionLabel";
 import Select from "../../components/ui/Select";
 import Textarea from "../../components/ui/Textarea";
 import useSeo from "../../hooks/useSeo";
+import useStableQuote from "../../hooks/useStableQuote";
 
 import { useCart } from "../../context/cartContext";
 import { useCustomerAuth } from "../../context/customerAuthContext";
@@ -29,7 +29,14 @@ import {
   getLocalizedOffer,
   getLocalizedSettings,
 } from "../../utils/localizedContent";
+import {
+  buildCartQuoteSignature,
+  buildQuoteItems,
+  buildQuoteItemsByKey,
+} from "../../utils/cartQuote";
 import { egyptGovernorates } from "../../utils/governorates";
+import { hideBrokenImage } from "../../utils/imageFallback";
+import { getCartItemImage } from "../../utils/resolveLocalImages";
 
 const ORDER_HANDOFF_KEY = "davinto_order_handoff";
 const LEGACY_LAST_ORDER_KEY = "davinto_last_order";
@@ -45,24 +52,6 @@ const initialCustomerInfo = {
 };
 
 const paymentMethodsOrder = ["cod", "instapay", "vodafoneCash", "paymobCard"];
-
-const buildQuoteItems = (items) => {
-  return items.map((item) => ({
-    productId: item.productId,
-    color: {
-      id: item.color?.id || "",
-      key: item.color?.key || "",
-      name: item.color?.name || "",
-      slug: item.color?.slug || "",
-    },
-    size: {
-      id: item.size?.id || "",
-      label: item.size?.label || "",
-      sku: item.size?.sku || "",
-    },
-    quantity: Number(item.quantity || 1),
-  }));
-};
 
 const Checkout = () => {
   const { t, i18n } = useTranslation(["checkout", "common", "navigation"]);
@@ -86,9 +75,8 @@ const Checkout = () => {
   const {
     items,
     cartCount,
-    subtotal: localSubtotal,
-    savings: localSavings,
     clearCart,
+    rememberCheckoutQuote,
   } = useCart();
 
   const [customerInfo, setCustomerInfo] = useState(() => ({
@@ -107,6 +95,15 @@ const Checkout = () => {
 
   const quoteItems = useMemo(() => buildQuoteItems(items), [items]);
   const deliveryZone = customerInfo.city;
+  const quoteSignature = useMemo(
+    () =>
+      buildCartQuoteSignature({
+        items: quoteItems,
+        discountCode: appliedDiscountCode,
+        deliveryZone,
+      }),
+    [appliedDiscountCode, deliveryZone, quoteItems]
+  );
 
   const {
     data: settingsData,
@@ -128,17 +125,17 @@ const Checkout = () => {
   });
 
   const {
-    data: quoteData,
     isLoading: isLoadingQuote,
+    isFetching: isFetchingQuote,
     isError: isQuoteError,
     error: quoteError,
-    refetch: refetchQuote,
-  } = useQuery({
+    quote,
+    isQuoteCalculating,
+    hasCurrentQuote,
+  } = useStableQuote({
     queryKey: [
       "checkout-quote",
-      quoteItems,
-      appliedDiscountCode,
-      deliveryZone,
+      quoteSignature,
     ],
     queryFn: () =>
       createQuoteRequest({
@@ -147,10 +144,11 @@ const Checkout = () => {
         deliveryZone,
       }),
     enabled: items.length > 0,
+    signature: quoteSignature,
     retry: 1,
+    scope: "checkout",
   });
 
-  const quote = quoteData?.quote;
   const settings = settingsData?.settings;
   const localizedSettings = useMemo(
     () => getLocalizedSettings(settings, language),
@@ -193,14 +191,14 @@ const Checkout = () => {
     manualPayment.requireTransactionReference !== false;
 
   const summary = {
-    subtotal: quote?.subtotal ?? localSubtotal,
-    productSavings: quote?.productSavings ?? localSavings,
-    bundleDiscountTotal: quote?.bundleDiscountTotal ?? 0,
-    offerDiscountTotal: quote?.offerDiscountTotal ?? 0,
-    discountTotal: quote?.discountTotal ?? 0,
-    totalDiscount: quote?.totalDiscount ?? 0,
-    deliveryFee: quote?.deliveryFee ?? 0,
-    total: quote?.total ?? localSubtotal,
+    subtotal: quote?.subtotal || 0,
+    productSavings: quote?.productSavings || 0,
+    bundleDiscountTotal: quote?.bundleDiscountTotal || 0,
+    offerDiscountTotal: quote?.offerDiscountTotal || 0,
+    discountTotal: quote?.discountTotal || 0,
+    totalDiscount: quote?.totalDiscount || 0,
+    deliveryFee: quote?.deliveryFee || 0,
+    total: quote?.total || 0,
     appliedBundles: (quote?.appliedBundles || []).map((bundle) =>
       getLocalizedBundle(bundle, language)
     ),
@@ -219,8 +217,23 @@ const Checkout = () => {
       : null,
   };
 
+  const quoteItemsByKey = useMemo(
+    () => buildQuoteItemsByKey(quote),
+    [quote]
+  );
+  const isQuotePending =
+    !hasCurrentQuote && (isQuoteCalculating || isFetchingQuote || isLoadingQuote);
+  const quoteStatusText = isQuotePending
+    ? t("common:updatingTotals", { defaultValue: "Updating totals..." })
+    : t("common:totalsUnavailable", { defaultValue: "Totals unavailable" });
+  const isQuoteRefreshing = hasCurrentQuote && isFetchingQuote;
+  const formatQuotedMoney = (value) =>
+    hasCurrentQuote ? formatMoney(value) : quoteStatusText;
+
   useEffect(() => {
-    if (!items.length || initiateCheckoutTrackedRef.current) return;
+    if (!items.length || !hasCurrentQuote || initiateCheckoutTrackedRef.current) {
+      return;
+    }
 
     initiateCheckoutTrackedRef.current = true;
 
@@ -228,7 +241,7 @@ const Checkout = () => {
       items,
       value: summary.total,
     });
-  }, [items, summary.total]);
+  }, [hasCurrentQuote, items, summary.total]);
 
   const createOrderMutation = useMutation({
     mutationFn: createOrderRequest,
@@ -288,6 +301,14 @@ const Checkout = () => {
         return;
       }
 
+      rememberCheckoutQuote(
+        nextQuote,
+        buildCartQuoteSignature({
+          items: quoteItems,
+          discountCode: code,
+          deliveryZone,
+        })
+      );
       setAppliedDiscountCode(code);
       setDiscountCode(code);
       setDiscountError("");
@@ -326,6 +347,10 @@ const Checkout = () => {
         quoteError?.message ||
         t("checkout:errors.quote")
       );
+    }
+
+    if (isFetchingQuote || !hasCurrentQuote) {
+      return t("checkout:errors.quoteLoading");
     }
 
     if (!quote) {
@@ -417,7 +442,6 @@ const Checkout = () => {
     setDiscountCode("");
     setAppliedDiscountCode("");
     setDiscountError("");
-    refetchQuote();
   };
 
   const handleSubmit = (event) => {
@@ -454,13 +478,29 @@ const Checkout = () => {
 
   return (
     <>
-      <PageHeader
-        label={t("checkout:headerLabel")}
-        title={t("checkout:headerTitle")}
-        description={t("checkout:headerDescription")}
-      />
+      <div className="border-b border-[#c7a852]/20 bg-[#050505]">
+        <Container className="flex h-16 items-center justify-between gap-4">
+          <Link
+            to="/"
+            aria-label="Davinto home"
+            className="flex h-11 w-28 items-center"
+          >
+            <img
+              src="/images/logo/logo-3.webp"
+              alt="Davinto"
+              className="max-h-10 w-full object-contain"
+            />
+          </Link>
+          <Link
+            to="/cart"
+            className="text-[0.62rem] font-black uppercase tracking-[0.2em] text-[#f5f0e8]/62 transition hover:text-[#c7a852]"
+          >
+            Back to cart
+          </Link>
+        </Container>
+      </div>
 
-      <section className="fashion-section">
+      <section className="checkout-section">
         <Container>
           {items.length === 0 ? (
             <Card className="py-14 text-center">
@@ -485,9 +525,9 @@ const Checkout = () => {
           ) : (
             <form
               onSubmit={handleSubmit}
-              className="grid gap-8 lg:grid-cols-[1fr_430px] lg:items-start"
+              className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_390px] lg:items-start"
             >
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {formError && (
                   <div className="border border-[#b8585d]/45 bg-[#882c30]/18 px-4 py-3 text-sm text-[#f5d7d8]">
                     {formError}
@@ -510,14 +550,14 @@ const Checkout = () => {
                   </div>
                 )}
 
-                <Card className="p-6 sm:p-8">
+                <section className="border border-[#f5f0e8]/12 bg-[#0f0d0c] p-4 sm:p-5">
                   <SectionLabel>{t("checkout:customer")}</SectionLabel>
 
-                  <h2 className="mb-7 font-serif text-3xl font-semibold">
+                  <h2 className="mb-5 font-serif text-2xl font-semibold">
                     {t("checkout:deliveryDetails")}
                   </h2>
 
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-3 md:grid-cols-2">
                     <Input
                       label={t("checkout:fullName")}
                       name="fullName"
@@ -587,12 +627,12 @@ const Checkout = () => {
                       />
                     </div>
                   </div>
-                </Card>
+                </section>
 
-                <Card className="p-6 sm:p-8">
+                <section className="border border-[#f5f0e8]/12 bg-[#0f0d0c] p-4 sm:p-5">
                   <SectionLabel>{t("checkout:payment")}</SectionLabel>
 
-                  <h2 className="mb-7 font-serif text-3xl font-semibold">
+                  <h2 className="mb-5 font-serif text-2xl font-semibold">
                     {t("checkout:paymentMethod")}
                   </h2>
 
@@ -624,7 +664,7 @@ const Checkout = () => {
                           disabled={isPaymobDisabled}
                           onClick={() => handlePaymentChange(payment.method)}
                           aria-pressed={isSelected}
-                          className={`min-h-32 border p-5 text-left transition disabled:cursor-not-allowed disabled:opacity-45 ${
+                          className={`min-h-24 border p-4 text-left transition disabled:cursor-not-allowed disabled:opacity-45 ${
                             isSelected
                               ? "border-[#c7a852] bg-[#882c30]/22"
                               : "border-[#f5f0e8]/12 bg-[#f5f0e8]/3 hover:border-[#f5f0e8]/30"
@@ -632,7 +672,7 @@ const Checkout = () => {
                         >
                           <div className="flex items-start justify-between gap-4">
                             <div>
-                              <p className="font-serif text-xl font-semibold text-[#f5f0e8]">
+                              <p className="font-serif text-lg font-semibold text-[#f5f0e8]">
                                 {payment.label}
                               </p>
 
@@ -679,7 +719,7 @@ const Checkout = () => {
                   </div>
 
                   {effectivePaymentMethod === "instapay" && (
-                    <div className="mt-5 border border-[#c7a852]/25 bg-[#c7a852]/6 p-5">
+                    <div className="mt-4 border border-[#c7a852]/25 bg-[#c7a852]/6 p-4">
                       <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
                         {manualPayment.detailLabels?.instapay ||
                           t("checkout:instapayDetails")}
@@ -691,7 +731,7 @@ const Checkout = () => {
                         </p>
                       )}
 
-                      <p className="mt-3 font-serif text-2xl font-semibold text-[#f5f0e8]">
+                      <p className="mt-3 font-serif text-xl font-semibold text-[#f5f0e8]">
                         {manualPayment.instapayHandle ||
                           t("checkout:instapayMissing")}
                       </p>
@@ -712,7 +752,7 @@ const Checkout = () => {
                   )}
 
                   {effectivePaymentMethod === "vodafoneCash" && (
-                    <div className="mt-5 border border-[#c7a852]/25 bg-[#c7a852]/6 p-5">
+                    <div className="mt-4 border border-[#c7a852]/25 bg-[#c7a852]/6 p-4">
                       <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
                         {manualPayment.detailLabels?.vodafoneCash ||
                           t("checkout:vodafoneDetails")}
@@ -724,7 +764,7 @@ const Checkout = () => {
                         </p>
                       )}
 
-                      <p className="mt-3 font-serif text-2xl font-semibold text-[#f5f0e8]">
+                      <p className="mt-3 font-serif text-xl font-semibold text-[#f5f0e8]">
                         {manualPayment.vodafoneCashNumber ||
                           t("checkout:vodafoneMissing")}
                       </p>
@@ -746,7 +786,7 @@ const Checkout = () => {
 
                   {effectivePaymentMethod === "paymobCard" &&
                     isPaymobReady && (
-                    <div className="mt-5 border border-[#c7a852]/30 bg-[#c7a852]/10 p-5">
+                    <div className="mt-4 border border-[#c7a852]/30 bg-[#c7a852]/10 p-4">
                       <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
                         {t("checkout:secureCard")}
                       </p>
@@ -756,30 +796,78 @@ const Checkout = () => {
                       </p>
                     </div>
                   )}
-                </Card>
+                </section>
               </div>
 
-              <div className="lg:sticky lg:top-28">
-                <Card className="border-[#c7a852]/30 bg-[#110f0e] p-6">
-                  <SectionLabel>{t("checkout:summary")}</SectionLabel>
+              <div className="lg:sticky lg:top-24">
+                <aside className="border border-[#f5f0e8]/12 bg-[#110f0e]/72 p-4 sm:p-5">
+                  <div className="mb-4 flex items-center justify-between gap-4">
+                    <h2 className="text-[0.64rem] font-black uppercase tracking-[0.24em] text-[#c7a852]">
+                      {t("checkout:summary")}
+                    </h2>
+                    <span className="text-xs font-bold text-[#f5f0e8]/48">
+                      {cartCount} {t("common:items")}
+                    </span>
+                  </div>
 
-                  {isLoadingQuote && (
-                    <div className="mb-4 border border-[#f5f0e8]/12 bg-[#f5f0e8]/4 px-4 py-3 text-xs text-[#f5f0e8]/45">
-                      {t("checkout:calculating")}
+                  {(isQuotePending || isQuoteRefreshing) && (
+                    <div className="mb-4 border border-[#f5f0e8]/12 bg-[#f5f0e8]/4 px-3 py-2 text-xs text-[#f5f0e8]/45">
+                      {t("common:updatingTotals", {
+                        defaultValue: isQuotePending
+                          ? "Updating totals..."
+                          : "Refreshing totals...",
+                      })}
                     </div>
                   )}
 
-                  <div className="space-y-4">
-                    {items.map((item) => (
+                  <div className="space-y-3">
+                    {items.map((item, index) => {
+                      const quoteLookupKey = `${item.productId}__${
+                        item.color?.key || item.color?.name
+                      }__${item.size?.label}`;
+                      const quoteItem =
+                        quoteItemsByKey.get(quoteLookupKey) ||
+                        quote?.items?.[index];
+                      const quantity = Number(item.quantity || 0);
+                      const hasQuoteItem = Boolean(quoteItem);
+                      const itemOfferDiscountTotal = Number(
+                        quoteItem?.itemOfferDiscountTotal || 0
+                      );
+                      const originalUnitPrice = Number(
+                        quoteItem?.originalUnitPrice || item.price || 0
+                      );
+                      const finalUnitPrice = Number(
+                        quoteItem?.finalUnitPrice || item.price || 0
+                      );
+                      const itemOfferDiscount = Number(
+                        quoteItem?.itemOfferDiscount ||
+                          Math.max(originalUnitPrice - finalUnitPrice, 0)
+                      );
+                      const hasItemOffer =
+                        hasQuoteItem &&
+                        (itemOfferDiscountTotal > 0 ||
+                          itemOfferDiscount > 0 ||
+                          originalUnitPrice > finalUnitPrice ||
+                          Boolean(quoteItem?.appliedOfferTitle));
+                      const finalLineTotal = hasQuoteItem
+                        ? finalUnitPrice * quantity
+                        : 0;
+                      const itemQuoteStatus = isQuotePending
+                        ? t("common:updating", { defaultValue: "Updating..." })
+                        : t("common:unavailable", { defaultValue: "Unavailable" });
+                      const displayImage = getCartItemImage(item);
+
+                      return (
                       <div
                         key={`${item.productId}-${item.color?.key}-${item.size?.label}`}
-                        className="flex gap-3 border-b border-[#f5f0e8]/10 pb-4"
+                        className="flex gap-3 border-b border-[#f5f0e8]/10 pb-3"
                       >
-                        <div className="h-20 w-16 shrink-0 overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f]">
-                          {item.image ? (
+                        <div className="h-16 w-12 shrink-0 overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f]">
+                          {displayImage ? (
                             <img
-                              src={item.image}
+                              src={displayImage}
                               alt={item.name}
+                              onError={hideBrokenImage}
                               className="h-full w-full object-cover"
                             />
                           ) : (
@@ -788,57 +876,59 @@ const Checkout = () => {
                         </div>
 
                         <div className="min-w-0 flex-1">
-                          <p className="truncate font-serif text-base font-semibold text-[#f5f0e8]">
+                          <p className="truncate font-serif text-sm font-semibold text-[#f5f0e8]">
                             {item.name}
                           </p>
 
-                          <p className="mt-1 text-xs text-[#f5f0e8]/40">
-                            {item.color?.name} / {item.size?.label} ×{" "}
+                          <p className="mt-1 text-[0.72rem] text-[#f5f0e8]/40">
+                            {item.color?.name} / {item.size?.label} x{" "}
                             {item.quantity}
                           </p>
 
-                          <p className="mt-2 text-sm font-bold text-[#c7a852]">
-                            {formatMoney(
-                              Number(item.price || 0) *
-                                Number(item.quantity || 0)
-                            )}
+                          <p className="mt-1 text-sm font-bold text-[#c7a852]">
+                            {hasQuoteItem
+                              ? formatMoney(finalLineTotal)
+                              : itemQuoteStatus}
                           </p>
+                          {hasItemOffer && (
+                            <>
+                              <p className="mt-1 text-[0.68rem] text-[#8b8075] line-through">
+                                {formatMoney(originalUnitPrice * quantity)}
+                              </p>
+                              <p className="mt-2 text-[0.58rem] font-black uppercase tracking-[0.14em] text-[#c7a852]">
+                                {quoteItem?.appliedOfferTitle ||
+                                  t("common:offer")}
+                              </p>
+                            </>
+                          )}
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
-                  <div className="mt-5 space-y-4 text-sm">
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="text-white/45">
-                        {t("common:items")}
-                      </span>
-                      <span className="font-bold">
-                        {quote?.cartQuantity || cartCount}
-                      </span>
-                    </div>
-
+                  <div className="mt-4 space-y-3 text-sm">
                     <div className="flex items-center justify-between gap-4">
                       <span className="text-white/45">
                         {t("common:subtotal")}
                       </span>
                       <span className="font-bold">
-                        {formatMoney(summary.subtotal)}
+                        {formatQuotedMoney(summary.subtotal)}
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="text-white/45">
-                        {t("common:productSavings")}
-                      </span>
-                      <span className="font-bold text-emerald-100">
-                        {summary.productSavings > 0
-                          ? `-${formatMoney(summary.productSavings)}`
-                          : formatMoney(0)}
-                      </span>
-                    </div>
+                    {hasCurrentQuote && summary.productSavings > 0 && (
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="text-white/45">
+                          {t("common:productSavings")}
+                        </span>
+                        <span className="font-bold text-emerald-100">
+                          -{formatQuotedMoney(summary.productSavings)}
+                        </span>
+                      </div>
+                    )}
 
-                    {summary.appliedBundles.length > 0 && (
+                    {hasCurrentQuote && summary.appliedBundles.length > 0 && (
                       <div className="border-l-2 border-[#c7a852] bg-[#c7a852]/7 p-3">
                         <p className="text-xs font-black uppercase tracking-[0.2em] text-[#c7a852]">
                           {t("checkout:bundlesApplied")}
@@ -858,18 +948,18 @@ const Checkout = () => {
                       </div>
                     )}
 
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="text-white/45">
-                        {t("common:bundleDiscount")}
-                      </span>
-                      <span className="font-bold text-emerald-100">
-                        {summary.bundleDiscountTotal > 0
-                          ? `-${formatMoney(summary.bundleDiscountTotal)}`
-                          : formatMoney(0)}
-                      </span>
-                    </div>
+                    {hasCurrentQuote && summary.bundleDiscountTotal > 0 && (
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="text-white/45">
+                          {t("common:bundleDiscount")}
+                        </span>
+                        <span className="font-bold text-emerald-100">
+                          -{formatQuotedMoney(summary.bundleDiscountTotal)}
+                        </span>
+                      </div>
+                    )}
 
-                    {summary.appliedOffers.length > 0 && (
+                    {hasCurrentQuote && summary.appliedOffers.length > 0 && (
                       <div className="border-l-2 border-[#c7a852] bg-[#c7a852]/7 p-3">
                         <p className="text-xs font-black uppercase tracking-[0.2em] text-[#c7a852]">
                           {t("checkout:offersApplied")}
@@ -893,18 +983,18 @@ const Checkout = () => {
                       </div>
                     )}
 
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="text-white/45">
-                        {t("common:offerDiscount")}
-                      </span>
-                      <span className="font-bold text-emerald-100">
-                        {summary.offerDiscountTotal > 0
-                          ? `-${formatMoney(summary.offerDiscountTotal)}`
-                          : formatMoney(0)}
-                      </span>
-                    </div>
+                    {hasCurrentQuote && summary.offerDiscountTotal > 0 && (
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="text-white/45">
+                          {t("common:offerDiscount")}
+                        </span>
+                        <span className="font-bold text-emerald-100">
+                          -{formatQuotedMoney(summary.offerDiscountTotal)}
+                        </span>
+                      </div>
+                    )}
 
-                    <div className="border border-[#c7a852]/22 bg-[#c7a852]/5 p-4">
+                    <div className="border border-[#c7a852]/22 bg-[#c7a852]/5 p-3">
                       <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
                         {t("common:discountCode")}
                       </p>
@@ -931,6 +1021,7 @@ const Checkout = () => {
                             variant="secondary"
                             onClick={handleApplyDiscount}
                             disabled={validateDiscountMutation.isPending}
+                            className="min-h-11 px-4"
                           >
                             {validateDiscountMutation.isPending
                               ? t("common:checking")
@@ -942,6 +1033,7 @@ const Checkout = () => {
                               type="button"
                               variant="ghost"
                               onClick={handleRemoveDiscount}
+                              className="min-h-11 px-4"
                             >
                               {t("common:remove")}
                             </Button>
@@ -955,26 +1047,26 @@ const Checkout = () => {
                         </p>
                       )}
 
-                      {appliedDiscountCode && (
+                      {appliedDiscountCode && hasCurrentQuote && (
                         <p className="mt-3 text-xs leading-6 text-emerald-100">
                           {t("checkout:applied", {
                             code: appliedDiscountCode,
-                            amount: formatMoney(summary.discountTotal),
+                            amount: formatQuotedMoney(summary.discountTotal),
                           })}
                         </p>
                       )}
                     </div>
 
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="text-white/45">
-                        {t("common:discountCode")}
-                      </span>
-                      <span className="font-bold text-emerald-100">
-                        {summary.discountTotal > 0
-                          ? `-${formatMoney(summary.discountTotal)}`
-                          : formatMoney(0)}
-                      </span>
-                    </div>
+                    {hasCurrentQuote && summary.discountTotal > 0 && (
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="text-white/45">
+                          {t("common:discountCode")}
+                        </span>
+                        <span className="font-bold text-emerald-100">
+                          -{formatQuotedMoney(summary.discountTotal)}
+                        </span>
+                      </div>
+                    )}
 
                     <div className="flex items-center justify-between gap-4">
                       <span className="text-white/45">
@@ -987,23 +1079,17 @@ const Checkout = () => {
                       </span>
 
                       <span className="font-bold">
-                        {formatMoney(summary.deliveryFee)}
+                        {formatQuotedMoney(summary.deliveryFee)}
                       </span>
                     </div>
 
-                    {summary.deliverySnapshot?.notes && (
-                      <p className="border border-[#f5f0e8]/10 bg-[#f5f0e8]/3 p-3 text-xs leading-6 text-[#f5f0e8]/45">
-                        {summary.deliverySnapshot.notes}
-                      </p>
-                    )}
-
-                    <div className="border-t border-[#c7a852]/25 pt-5">
+                    <div className="border-t border-[#c7a852]/25 pt-4">
                       <div className="flex items-center justify-between gap-4">
                         <span className="text-[0.65rem] font-black uppercase tracking-[0.22em] text-[#8b8075]">
                           {t("common:total")}
                         </span>
-                        <span className="font-serif text-3xl font-semibold">
-                          {formatMoney(summary.total)}
+                        <span className="font-serif text-2xl font-semibold">
+                          {formatQuotedMoney(summary.total)}
                         </span>
                       </div>
                     </div>
@@ -1011,11 +1097,12 @@ const Checkout = () => {
 
                   <Button
                     type="submit"
-                    className="mt-7 w-full"
+                    className="mt-5 w-full"
                     disabled={
                       createOrderMutation.isPending ||
                       isLoadingSettings ||
-                      isLoadingQuote ||
+                      !hasCurrentQuote ||
+                      isFetchingQuote ||
                       availablePayments.length === 0 ||
                       (effectivePaymentMethod === "paymobCard" &&
                         !isPaymobReady)
@@ -1030,10 +1117,10 @@ const Checkout = () => {
                         : t("checkout:placeOrder")}
                   </Button>
 
-                  <p className="mt-5 border-t border-[#f5f0e8]/10 pt-5 text-xs leading-6 text-[#f5f0e8]/35">
+                  <p className="mt-4 border-t border-[#f5f0e8]/10 pt-4 text-xs leading-6 text-[#f5f0e8]/35">
                     {t("checkout:verificationNote")}
                   </p>
-                </Card>
+                </aside>
               </div>
             </form>
           )}

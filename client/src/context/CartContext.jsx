@@ -45,6 +45,9 @@ const normalizeQuantity = (quantity, maxStock) => {
 
 export const CartProvider = ({ children }) => {
   const [items, setItems] = useState(readStoredCart);
+  const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
+  const [lastCartQuote, setLastCartQuote] = useState(null);
+  const [lastCheckoutQuote, setLastCheckoutQuote] = useState(null);
 
   const updateCart = useCallback((updater) => {
     setItems((currentItems) => {
@@ -179,6 +182,26 @@ export const CartProvider = ({ children }) => {
     updateCart([]);
   }, [updateCart]);
 
+  const openCartDrawer = useCallback(() => {
+    setIsCartDrawerOpen(true);
+  }, []);
+
+  const closeCartDrawer = useCallback(() => {
+    setIsCartDrawerOpen(false);
+  }, []);
+
+  const rememberCartQuote = useCallback((quote, signature) => {
+    if (quote && signature) {
+      setLastCartQuote({ quote, signature });
+    }
+  }, []);
+
+  const rememberCheckoutQuote = useCallback((quote, signature) => {
+    if (quote && signature) {
+      setLastCheckoutQuote({ quote, signature });
+    }
+  }, []);
+
   const cartCount = useMemo(() => {
     return items.reduce((total, item) => total + Number(item.quantity || 0), 0);
   }, [items]);
@@ -219,6 +242,13 @@ export const CartProvider = ({ children }) => {
       decreaseQuantity,
       removeItem,
       clearCart,
+      isCartDrawerOpen,
+      openCartDrawer,
+      closeCartDrawer,
+      lastCartQuote,
+      lastCheckoutQuote,
+      rememberCartQuote,
+      rememberCheckoutQuote,
       getCartItemKey,
     }),
     [
@@ -233,6 +263,13 @@ export const CartProvider = ({ children }) => {
       decreaseQuantity,
       removeItem,
       clearCart,
+      isCartDrawerOpen,
+      openCartDrawer,
+      closeCartDrawer,
+      lastCartQuote,
+      lastCheckoutQuote,
+      rememberCartQuote,
+      rememberCheckoutQuote,
     ]
   );
 

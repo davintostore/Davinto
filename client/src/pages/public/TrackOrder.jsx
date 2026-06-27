@@ -26,6 +26,8 @@ import {
   getLocalizedOrderItem,
   getLocalizedPaymentSnapshot,
 } from "../../utils/localizedContent";
+import { hideBrokenImage } from "../../utils/imageFallback";
+import { getOrderItemImage } from "../../utils/resolveLocalImages";
 
 const TrackOrder = () => {
   const { t, i18n } = useTranslation(["orders", "common", "checkout"]);
@@ -146,6 +148,8 @@ const TrackOrder = () => {
         label={t("orders:track.headerLabel")}
         title={t("orders:track.headerTitle")}
         description={t("orders:track.headerDescription")}
+        backgroundImage="/images/bg/tracking-order.webp"
+        className="bg-[#050505]"
       />
 
       <section className="fashion-section">
@@ -488,6 +492,7 @@ const TrackOrder = () => {
                   <div className="space-y-4">
                     {trackedOrder.items?.map((rawItem) => {
                       const item = getLocalizedOrderItem(rawItem, language);
+                      const displayImage = getOrderItemImage(rawItem);
 
                       return (
                         <div
@@ -498,10 +503,11 @@ const TrackOrder = () => {
                           className="flex gap-3 border-b border-[#f5f0e8]/10 pb-4 last:border-b-0 last:pb-0"
                         >
                           <div className="h-20 w-16 shrink-0 overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f]">
-                            {item.image ? (
+                            {displayImage ? (
                               <img
-                                src={item.image}
+                                src={displayImage}
                                 alt={item.imageAlt || item.name}
+                                onError={hideBrokenImage}
                                 className="h-full w-full object-cover"
                               />
                             ) : (

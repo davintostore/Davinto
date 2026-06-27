@@ -1,17 +1,29 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Minus, Plus, ShoppingBag } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Minus,
+  Plus,
+  Share2,
+  ShoppingBag,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
 import Container from "../../components/ui/Container";
+import ProductCard from "../../components/product/ProductCard";
 import SectionLabel from "../../components/ui/SectionLabel";
 import useSeo from "../../hooks/useSeo";
 
 import { useCart } from "../../context/cartContext";
-import { getPublicProductBySlugRequest } from "../../services/productService";
+import {
+  getPublicProductBySlugRequest,
+  getPublicProductsRequest,
+} from "../../services/productService";
 import { trackViewContent } from "../../utils/metaPixel";
 import { formatCurrency } from "../../utils/translatedLabels";
 import {
@@ -20,6 +32,8 @@ import {
   getLocalizedImageAlt,
   getLocalizedProduct,
 } from "../../utils/localizedContent";
+import { hideBrokenImage } from "../../utils/imageFallback";
+import { getProductGalleryImages } from "../../utils/resolveLocalImages";
 
 const getActiveColors = (product) => {
   if (!Array.isArray(product?.colors)) return [];
@@ -46,12 +60,46 @@ const getSimpleBadge = (badge = "", t) => {
   return badge;
 };
 
+const ProductInfoAccordion = ({ title, children, isOpen, onToggle }) => {
+  return (
+    <section className="border-b border-[#f5f0e8]/12">
+      <button
+        type="button"
+        className="flex w-full items-center justify-between gap-4 py-5 text-left text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#f5f0e8]"
+        aria-expanded={isOpen}
+        onClick={onToggle}
+      >
+        <span>{title}</span>
+        <ChevronDown
+          size={17}
+          className={`shrink-0 text-[#c7a852] transition-transform duration-200 ${
+            isOpen ? "rotate-180" : ""
+          }`}
+          aria-hidden="true"
+        />
+      </button>
+
+      <div
+        className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out ${
+          isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        }`}
+      >
+        <div className="overflow-hidden">
+          <div className="pb-5 text-sm leading-7 text-[#f5f0e8]/62">
+            {children}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const ProductDetails = () => {
   const { t, i18n } = useTranslation(["catalog", "common"]);
   const language = i18n.resolvedLanguage === "ar" ? "ar" : "en";
   const formatMoney = (value) => formatCurrency(value, language);
   const { slug } = useParams();
-  const { addItem } = useCart();
+  const { addItem, openCartDrawer } = useCart();
   const viewedProductRef = useRef("");
 
   const { data, isLoading, isError, error } = useQuery({
@@ -111,6 +159,8 @@ const ProductDetails = () => {
   const [touchStartY, setTouchStartY] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [cartMessage, setCartMessage] = useState("");
+  const [openInfoSection, setOpenInfoSection] = useState("");
+  const [shareMessage, setShareMessage] = useState("");
 
   const selectedColor = useMemo(() => {
     return (
@@ -139,12 +189,8 @@ const ProductDetails = () => {
   }, [selectedColor, selectedSizes, selectedSizeLabel]);
 
   const images = useMemo(() => {
-    if (!Array.isArray(selectedColor?.images)) return [];
-
-    return selectedColor.images
-      .filter((image) => image.url)
-      .sort((a, b) => Number(a.position || 0) - Number(b.position || 0));
-  }, [selectedColor]);
+    return getProductGalleryImages(product, selectedColor);
+  }, [product, selectedColor]);
 
   const selectedImage = images[selectedImageIndex] || images[0] || null;
   const hasMultipleImages = images.length > 1;
@@ -168,6 +214,44 @@ const ProductDetails = () => {
         .map((badge) => getSimpleBadge(badge, t))
         .filter(Boolean)
         .slice(0, 1);
+  const productDescription =
+    localizedProduct?.description ||
+    localizedProduct?.shortDescription ||
+    "A Davinto piece designed for everyday rotation with a clean, premium finish.";
+  const materialsText = localizedProduct?.fabric || "Premium cotton blend.";
+  const careText =
+    localizedProduct?.care ||
+    localizedProduct?.careInstructions ||
+    "Wash gently with similar colors. Avoid bleach and high heat to preserve the print and fabric.";
+  const detailBullets = [
+    localizedProduct?.category?.name
+      ? `Collection: ${localizedProduct.category.name}`
+      : "",
+    localizedSelectedColor?.name ? `Selected color: ${localizedSelectedColor.name}` : "",
+    selectedSize?.label ? `Selected size: ${selectedSize.label}` : "",
+    isInStock
+      ? `${selectedStock} pieces available in the selected option`
+      : t("catalog:product.outOfStock"),
+  ].filter(Boolean);
+
+  const { data: relatedData } = useQuery({
+    queryKey: ["related-products", product?.category?.slug, product?._id],
+    queryFn: () =>
+      getPublicProductsRequest({
+        category: product.category.slug,
+        limit: 5,
+        sort: "newest",
+      }),
+    enabled: Boolean(product?.category?.slug),
+  });
+
+  const relatedProducts = useMemo(
+    () =>
+      (relatedData?.products || [])
+        .filter((relatedProduct) => relatedProduct._id !== product?._id)
+        .slice(0, 4),
+    [relatedData, product?._id]
+  );
 
   useEffect(() => {
     if (!product?._id || viewedProductRef.current === product._id) return;
@@ -299,6 +383,32 @@ const ProductDetails = () => {
     });
 
     setCartMessage(t("catalog:product.addedToCart"));
+    openCartDrawer();
+  };
+
+  const toggleInfoSection = (section) => {
+    setOpenInfoSection((current) => (current === section ? "" : section));
+  };
+
+  const handleShare = async () => {
+    const shareUrl = window.location.href;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: localizedProduct.name,
+          url: shareUrl,
+        });
+        return;
+      }
+
+      await navigator.clipboard.writeText(shareUrl);
+      setShareMessage("Link copied.");
+      window.setTimeout(() => setShareMessage(""), 2200);
+    } catch {
+      setShareMessage("Share link is ready in your browser bar.");
+      window.setTimeout(() => setShareMessage(""), 2200);
+    }
   };
 
   if (isLoading) {
@@ -387,6 +497,7 @@ const ProductDetails = () => {
                           localizedProduct.name,
                           language
                         )}
+                        onError={hideBrokenImage}
                         className="aspect-[3/4] w-full object-cover"
                       />
                     </button>
@@ -407,6 +518,7 @@ const ProductDetails = () => {
                       localizedProduct.name,
                       language
                     )}
+                    onError={hideBrokenImage}
                     className="aspect-[4/5] w-full object-contain bg-[#1c1917]"
                   />
                 ) : (
@@ -465,16 +577,16 @@ const ProductDetails = () => {
                     t("common:davintoPiece")}
                 </SectionLabel>
 
-                <h1 className="editorial-heading text-6xl sm:text-8xl">
+                <h1 className="editorial-heading mt-3 text-5xl sm:text-6xl lg:text-7xl">
                   {localizedProduct.name}
                 </h1>
 
                 <div className="mt-7 flex flex-wrap items-center gap-4 border-y border-[#f5f0e8]/12 py-5">
-                  <p className="font-serif text-3xl font-semibold">
+                  <p className="font-serif text-4xl font-semibold text-[#f5f0e8] sm:text-5xl">
                     {formatMoney(displayPrice)}
                   </p>
                   {isOnSale && (
-                    <p className="text-sm text-[#8b8075] line-through">
+                    <p className="text-sm text-[#8b8075] line-through sm:text-base">
                       {formatMoney(
                         hasOfferPrice ? product.price : product.compareAtPrice
                       )}
@@ -650,52 +762,97 @@ const ProductDetails = () => {
 
       <section className="fashion-section bg-[#110f0e]">
         <Container>
-          <div className="mb-10">
-            <SectionLabel>{t("catalog:product.notes")}</SectionLabel>
-            <h2 className="editorial-heading text-6xl sm:text-8xl">
-              {t("catalog:product.detailsTitle")}
-            </h2>
-          </div>
+          <div className="grid gap-10 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
+            <div>
+              <SectionLabel>{t("catalog:product.notes")}</SectionLabel>
+              <h2 className="editorial-heading mt-4 text-5xl sm:text-7xl">
+                {t("catalog:product.detailsTitle")}
+              </h2>
+            </div>
 
-          <div className="grid border-t border-[#f5f0e8]/12 lg:grid-cols-3">
-            {[
-              [
-                t("catalog:product.fabric"),
-                localizedProduct.fabric || t("catalog:product.toBeAdded"),
-              ],
-              [
-                t("catalog:product.fit"),
-                localizedProduct.fit || t("catalog:product.toBeAdded"),
-              ],
-              [
-                t("catalog:product.care"),
-                localizedProduct.care ||
-                  localizedProduct.careInstructions ||
-                  t("catalog:product.careFallback"),
-              ],
-            ].map(([label, value]) => (
-              <div
-                key={label}
-                className="border-b border-[#f5f0e8]/12 py-7 lg:border-r lg:px-7 lg:first:pl-0 lg:last:border-r-0"
+            <div className="border-t border-[#f5f0e8]/12">
+              <p className="py-6 text-base leading-8 text-[#f5f0e8]/70">
+                {productDescription}
+              </p>
+
+              {detailBullets.length > 0 && (
+                <ul className="mb-2 grid gap-3 border-y border-[#f5f0e8]/12 py-5 text-sm text-[#f5f0e8]/62 sm:grid-cols-2">
+                  {detailBullets.map((detail) => (
+                    <li key={detail} className="flex gap-3">
+                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#c7a852]" />
+                      <span>{detail}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <ProductInfoAccordion
+                title="Materials"
+                isOpen={openInfoSection === "materials"}
+                onToggle={() => toggleInfoSection("materials")}
               >
-                <p className="text-[0.62rem] font-black uppercase tracking-[0.25em] text-[#c7a852]">
-                  {label}
-                </p>
-                <p className="mt-4 text-base leading-8 text-[#f5f0e8]/68">
-                  {value}
-                </p>
+                {materialsText}
+                {localizedProduct.fit ? ` Fit: ${localizedProduct.fit}` : ""}
+              </ProductInfoAccordion>
+
+              <ProductInfoAccordion
+                title="Shipping & Returns"
+                isOpen={openInfoSection === "shipping"}
+                onToggle={() => toggleInfoSection("shipping")}
+              >
+                Delivery is available across Egypt. Cairo and Giza delivery is 70 EGP;
+                other governorates are 120 EGP. Returns and exchanges are reviewed
+                based on item condition and order details.
+              </ProductInfoAccordion>
+
+              <ProductInfoAccordion
+                title="Care Instructions"
+                isOpen={openInfoSection === "care"}
+                onToggle={() => toggleInfoSection("care")}
+              >
+                {careText}
+              </ProductInfoAccordion>
+
+              <div className="flex flex-wrap items-center gap-3 border-b border-[#f5f0e8]/12 py-5">
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  className="inline-flex items-center gap-2 text-[0.64rem] font-black uppercase tracking-[0.2em] text-[#c7a852] transition hover:text-[#f5f0e8]"
+                >
+                  <Share2 size={15} />
+                  Share
+                </button>
+                {shareMessage && (
+                  <span className="text-xs text-[#f5f0e8]/45">
+                    {shareMessage}
+                  </span>
+                )}
               </div>
-            ))}
+            </div>
           </div>
 
-          {localizedProduct.description && (
-            <div className="mt-12 grid gap-5 border-l-2 border-[#882c30] pl-6 lg:grid-cols-[220px_1fr]">
-              <p className="text-[0.62rem] font-black uppercase tracking-[0.25em] text-[#c7a852]">
-                {t("catalog:product.fullDescription")}
-              </p>
-              <p className="max-w-3xl text-base leading-9 text-[#f5f0e8]/62">
-                {localizedProduct.description}
-              </p>
+          {relatedProducts.length > 0 && (
+            <div className="mt-16 border-t border-[#c7a852]/20 pt-10">
+              <div className="mb-8 flex items-end justify-between gap-5">
+                <div>
+                  <SectionLabel>You may also like</SectionLabel>
+                  <h2 className="editorial-heading mt-3 text-5xl sm:text-6xl">
+                    More from Davinto
+                  </h2>
+                </div>
+                <Link
+                  to="/shop"
+                  className="hidden text-[0.62rem] font-black uppercase tracking-[0.2em] text-[#c7a852] transition hover:text-[#f5f0e8] sm:block"
+                >
+                  Shop all
+                </Link>
+              </div>
+
+              <div className="product-grid">
+                {relatedProducts.map((relatedProduct) => (
+                  <ProductCard key={relatedProduct._id} product={relatedProduct} />
+                ))}
+              </div>
             </div>
           )}
         </Container>

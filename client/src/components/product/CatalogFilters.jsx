@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLocation } from "react-router-dom";
 import { SlidersHorizontal, X } from "lucide-react";
 
@@ -200,6 +201,30 @@ const CatalogFilters = ({
     };
   }, [isSortMenuOpen]);
 
+  useEffect(() => {
+    if (!isFilterOpen) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setIsFilterOpen(false);
+        setOpenFilterSection(null);
+      }
+    };
+
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isFilterOpen]);
+
   const toggleSortMenu = () => {
     if (isSortMenuOpen) {
       setIsSortOpen(false);
@@ -228,6 +253,209 @@ const CatalogFilters = ({
     onApplyPrice(priceDraft);
     closeFilterDrawer();
   };
+
+  const filterDrawer =
+    isFilterOpen && typeof document !== "undefined"
+      ? createPortal(
+          <div
+            className="fixed inset-0 z-[150]"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="catalog-filter-title"
+          >
+            <button
+              type="button"
+              className="fixed inset-0 bg-[#050505]/58"
+              aria-label={t("filters.close")}
+              onClick={closeFilterDrawer}
+            />
+
+            <aside className="fixed bottom-0 right-0 top-0 flex w-full max-w-md flex-col overflow-hidden border-l border-[#c7a852]/30 bg-[#1c1917] shadow-2xl">
+              <div className="flex shrink-0 items-center justify-between border-b border-[#f5f0e8]/12 p-5">
+                <div>
+                  <p
+                    id="catalog-filter-title"
+                    className="text-[0.64rem] font-black uppercase tracking-[0.22em] text-[#c7a852]"
+                  >
+                    {t("filters.title")}
+                  </p>
+                  <p className="mt-1 text-xs text-[#f5f0e8]/45">
+                    {activeFilterCount > 0
+                      ? t("filters.activeCount", { count: activeFilterCount })
+                      : t("filters.description")}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  className="flex h-10 w-10 items-center justify-center border border-[#f5f0e8]/18 text-[#f5f0e8]"
+                  aria-label={t("filters.close")}
+                  onClick={closeFilterDrawer}
+                >
+                  <X size={17} />
+                </button>
+              </div>
+
+              <div className="min-h-0 flex-1 overflow-y-auto px-5">
+                <AccordionSection
+                  title={t("filters.availability")}
+                  isOpen={openFilterSection === "availability"}
+                  onToggle={() => toggleFilterSection("availability")}
+                >
+                  <div className="grid gap-2">
+                    {["all", "inStock", "outOfStock"].map((value) => (
+                      <label
+                        key={value}
+                        className="flex cursor-pointer items-center gap-3 text-sm text-[#f5f0e8]/72"
+                      >
+                        <input
+                          type="radio"
+                          name="availability"
+                          value={value}
+                          checked={filters.availability === value}
+                          onChange={() => onAvailabilityChange(value)}
+                        />
+                        <span>{t(`filters.${value}`)}</span>
+                      </label>
+                    ))}
+                  </div>
+                </AccordionSection>
+
+                <AccordionSection
+                  title={t("filters.priceRange")}
+                  isOpen={openFilterSection === "price"}
+                  onToggle={() => toggleFilterSection("price")}
+                >
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Input
+                      label={t("filters.minPrice")}
+                      type="number"
+                      min="0"
+                      inputMode="numeric"
+                      value={priceDraft.minPrice}
+                      onChange={(event) =>
+                        setPriceDraft((current) => ({
+                          ...current,
+                          minPrice: event.target.value,
+                        }))
+                      }
+                      placeholder={String(metadata?.price?.min || 0)}
+                    />
+                    <Input
+                      label={t("filters.maxPrice")}
+                      type="number"
+                      min="0"
+                      inputMode="numeric"
+                      value={priceDraft.maxPrice}
+                      onChange={(event) =>
+                        setPriceDraft((current) => ({
+                          ...current,
+                          maxPrice: event.target.value,
+                        }))
+                      }
+                      placeholder={String(metadata?.price?.max || 0)}
+                    />
+                  </div>
+                </AccordionSection>
+
+                <AccordionSection
+                  title={t("filters.productType")}
+                  isOpen={openFilterSection === "productType"}
+                  onToggle={() => toggleFilterSection("productType")}
+                >
+                  {currentCategory ? (
+                    <p className="text-sm text-[#f5f0e8]/62">
+                      {currentCategory.name}
+                    </p>
+                  ) : (
+                    <div className="grid gap-2">
+                      <label className="flex cursor-pointer items-center gap-3 text-sm text-[#f5f0e8]/72">
+                        <input
+                          type="radio"
+                          name="category"
+                          value=""
+                          checked={!filters.category}
+                          onChange={() => onCategoryChange?.("")}
+                        />
+                        <span>{t("filters.all")}</span>
+                      </label>
+
+                      {localizedCategories.map((category) => (
+                        <label
+                          key={category._id || category.slug}
+                          className="flex cursor-pointer items-center gap-3 text-sm text-[#f5f0e8]/72"
+                        >
+                          <input
+                            type="radio"
+                            name="category"
+                            value={category.slug}
+                            checked={filters.category === category.slug}
+                            onChange={() => onCategoryChange?.(category.slug)}
+                          />
+                          <span>{category.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </AccordionSection>
+
+                <AccordionSection
+                  title={t("filters.color")}
+                  isOpen={openFilterSection === "color"}
+                  onToggle={() => toggleFilterSection("color")}
+                >
+                  <div className="flex flex-wrap gap-2">
+                    {colors.map((color) => {
+                      const label = getColorLabel(color, language, t);
+                      const isSelected = selectedColors.includes(color.slug);
+
+                      return (
+                        <label
+                          key={color.slug}
+                          className={`inline-flex cursor-pointer items-center gap-2 border px-3 py-2 text-xs transition focus-within:border-[#c7a852] ${
+                            isSelected
+                              ? "border-[#c7a852] bg-[#c7a852]/14 text-[#f5f0e8]"
+                              : "border-[#f5f0e8]/14 bg-[#f5f0e8]/5 text-[#f5f0e8]/70 hover:border-[#f5f0e8]/28"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            className="sr-only"
+                            checked={isSelected}
+                            onChange={() => onToggleColor(color.slug)}
+                            aria-label={label}
+                          />
+                          <span
+                            className="h-3.5 w-3.5 rounded-full border border-[#f5f0e8]/40 ring-1 ring-[#1c1917]"
+                            style={{ backgroundColor: color.hex || "#777" }}
+                            aria-hidden="true"
+                          />
+                          <span>{label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </AccordionSection>
+              </div>
+
+              <div className="grid shrink-0 gap-3 border-t border-[#f5f0e8]/12 p-5 sm:grid-cols-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={onClearFilters}
+                  disabled={!hasActiveFilters}
+                >
+                  {t("filters.clearAll")}
+                </Button>
+                <Button type="button" onClick={applyDrawer}>
+                  {t("filters.viewResults")}
+                </Button>
+              </div>
+            </aside>
+          </div>,
+          document.body
+        )
+      : null;
 
   return (
     <div className="mb-7">
@@ -299,196 +527,7 @@ const CatalogFilters = ({
         </div>
       </div>
 
-      {isFilterOpen && (
-        <div className="fixed inset-0 z-[80]">
-          <button
-            type="button"
-            className="absolute inset-0 bg-[#110f0e]/72"
-            aria-label={t("filters.close")}
-            onClick={closeFilterDrawer}
-          />
-
-          <aside className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col border-l border-[#c7a852]/30 bg-[#1c1917] shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[#f5f0e8]/12 p-5">
-              <div>
-                <p className="text-[0.64rem] font-black uppercase tracking-[0.22em] text-[#c7a852]">
-                  {t("filters.title")}
-                </p>
-                <p className="mt-1 text-xs text-[#f5f0e8]/45">
-                  {activeFilterCount > 0
-                    ? t("filters.activeCount", { count: activeFilterCount })
-                    : t("filters.description")}
-                </p>
-              </div>
-
-              <button
-                type="button"
-                className="flex h-10 w-10 items-center justify-center border border-[#f5f0e8]/18 text-[#f5f0e8]"
-                aria-label={t("filters.close")}
-                onClick={closeFilterDrawer}
-              >
-                <X size={17} />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto px-5">
-              <AccordionSection
-                title={t("filters.availability")}
-                isOpen={openFilterSection === "availability"}
-                onToggle={() => toggleFilterSection("availability")}
-              >
-                <div className="grid gap-2">
-                  {["all", "inStock", "outOfStock"].map((value) => (
-                    <label
-                      key={value}
-                      className="flex cursor-pointer items-center gap-3 text-sm text-[#f5f0e8]/72"
-                    >
-                      <input
-                        type="radio"
-                        name="availability"
-                        value={value}
-                        checked={filters.availability === value}
-                        onChange={() => onAvailabilityChange(value)}
-                      />
-                      <span>{t(`filters.${value}`)}</span>
-                    </label>
-                  ))}
-                </div>
-              </AccordionSection>
-
-              <AccordionSection
-                title={t("filters.priceRange")}
-                isOpen={openFilterSection === "price"}
-                onToggle={() => toggleFilterSection("price")}
-              >
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Input
-                    label={t("filters.minPrice")}
-                    type="number"
-                    min="0"
-                    inputMode="numeric"
-                    value={priceDraft.minPrice}
-                    onChange={(event) =>
-                      setPriceDraft((current) => ({
-                        ...current,
-                        minPrice: event.target.value,
-                      }))
-                    }
-                    placeholder={String(metadata?.price?.min || 0)}
-                  />
-                  <Input
-                    label={t("filters.maxPrice")}
-                    type="number"
-                    min="0"
-                    inputMode="numeric"
-                    value={priceDraft.maxPrice}
-                    onChange={(event) =>
-                      setPriceDraft((current) => ({
-                        ...current,
-                        maxPrice: event.target.value,
-                      }))
-                    }
-                    placeholder={String(metadata?.price?.max || 0)}
-                  />
-                </div>
-              </AccordionSection>
-
-              <AccordionSection
-                title={t("filters.productType")}
-                isOpen={openFilterSection === "productType"}
-                onToggle={() => toggleFilterSection("productType")}
-              >
-                {currentCategory ? (
-                  <p className="text-sm text-[#f5f0e8]/62">
-                    {currentCategory.name}
-                  </p>
-                ) : (
-                  <div className="grid gap-2">
-                    <label className="flex cursor-pointer items-center gap-3 text-sm text-[#f5f0e8]/72">
-                      <input
-                        type="radio"
-                        name="category"
-                        value=""
-                        checked={!filters.category}
-                        onChange={() => onCategoryChange?.("")}
-                      />
-                      <span>{t("filters.all")}</span>
-                    </label>
-
-                    {localizedCategories.map((category) => (
-                      <label
-                        key={category._id || category.slug}
-                        className="flex cursor-pointer items-center gap-3 text-sm text-[#f5f0e8]/72"
-                      >
-                        <input
-                          type="radio"
-                          name="category"
-                          value={category.slug}
-                          checked={filters.category === category.slug}
-                          onChange={() => onCategoryChange?.(category.slug)}
-                        />
-                        <span>{category.name}</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
-              </AccordionSection>
-
-              <AccordionSection
-                title={t("filters.color")}
-                isOpen={openFilterSection === "color"}
-                onToggle={() => toggleFilterSection("color")}
-              >
-                <div className="flex flex-wrap gap-2">
-                  {colors.map((color) => {
-                    const label = getColorLabel(color, language, t);
-                    const isSelected = selectedColors.includes(color.slug);
-
-                    return (
-                      <label
-                        key={color.slug}
-                        className={`inline-flex cursor-pointer items-center gap-2 border px-3 py-2 text-xs transition focus-within:border-[#c7a852] ${
-                          isSelected
-                            ? "border-[#c7a852] bg-[#c7a852]/14 text-[#f5f0e8]"
-                            : "border-[#f5f0e8]/14 bg-[#f5f0e8]/5 text-[#f5f0e8]/70 hover:border-[#f5f0e8]/28"
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          className="sr-only"
-                          checked={isSelected}
-                          onChange={() => onToggleColor(color.slug)}
-                          aria-label={label}
-                        />
-                        <span
-                          className="h-3.5 w-3.5 rounded-full border border-[#f5f0e8]/40 ring-1 ring-[#1c1917]"
-                          style={{ backgroundColor: color.hex || "#777" }}
-                          aria-hidden="true"
-                        />
-                        <span>{label}</span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </AccordionSection>
-            </div>
-
-            <div className="grid gap-3 border-t border-[#f5f0e8]/12 p-5 sm:grid-cols-2">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={onClearFilters}
-                disabled={!hasActiveFilters}
-              >
-                {t("filters.clearAll")}
-              </Button>
-              <Button type="button" onClick={applyDrawer}>
-                {t("filters.viewResults")}
-              </Button>
-            </div>
-          </aside>
-        </div>
-      )}
+      {filterDrawer}
     </div>
   );
 };

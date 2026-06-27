@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
+import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import Input from "../../components/ui/Input";
 import PageHeader from "../../components/ui/PageHeader";
 import Select from "../../components/ui/Select";
@@ -129,6 +130,7 @@ const AdminBundles = () => {
     type: "",
     message: "",
   });
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   const {
     data: bundlesData,
@@ -507,13 +509,15 @@ const AdminBundles = () => {
   };
 
   const handleDelete = (bundle) => {
-    const confirmed = window.confirm(
-      `Delete "${bundle.title}"? If it has usage history, it will be archived instead.`
-    );
+    setDeleteConfirm(bundle);
+  };
 
-    if (!confirmed) return;
+  const confirmDelete = () => {
+    if (!deleteConfirm?._id) return;
 
-    deleteMutation.mutate(bundle._id);
+    deleteMutation.mutate(deleteConfirm._id, {
+      onSettled: () => setDeleteConfirm(null),
+    });
   };
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
@@ -1081,6 +1085,19 @@ const AdminBundles = () => {
           )}
         </Card>
       </div>
+
+      <ConfirmDialog
+        isOpen={Boolean(deleteConfirm)}
+        eyebrow="Delete Bundle"
+        title={
+          deleteConfirm ? `Delete ${deleteConfirm.title}?` : "Delete bundle?"
+        }
+        message="If it has usage history, it will be archived instead."
+        confirmLabel="Delete"
+        isPending={deleteMutation.isPending}
+        onCancel={() => setDeleteConfirm(null)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 };

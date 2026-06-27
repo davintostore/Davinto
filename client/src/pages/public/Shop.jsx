@@ -7,7 +7,6 @@ import CatalogFilters from "../../components/product/CatalogFilters";
 import ProductCard from "../../components/product/ProductCard";
 import Button from "../../components/ui/Button";
 import Container from "../../components/ui/Container";
-import PageHeader from "../../components/ui/PageHeader";
 import useSeo from "../../hooks/useSeo";
 
 import { getPublicCategoriesRequest } from "../../services/categoryService";
@@ -87,7 +86,10 @@ const Shop = () => {
     [productsData]
   );
   const filterMetadata = productsData?.filters;
-  const categories = categoriesData?.categories || [];
+  const categories = useMemo(
+    () => categoriesData?.categories || [],
+    [categoriesData]
+  );
   const totalProducts = productsData?.total ?? products.length;
   const totalPages = Math.max(Number(productsData?.pages || 0), 0);
   const currentPage = Number(productsData?.page || filters.page);
@@ -137,7 +139,7 @@ const Shop = () => {
     if (scrollToResults) {
       window.setTimeout(() => {
         resultsRef.current?.scrollIntoView({
-          behavior: "smooth",
+          behavior: "auto",
           block: "start",
         });
       }, 0);
@@ -200,16 +202,10 @@ const Shop = () => {
   );
 
   return (
-    <>
-      <PageHeader
-        title={t("catalog:shop.title")}
-        description={t("catalog:shop.description")}
-        className="pt-12 pb-10 sm:pt-16 sm:pb-14"
-        showMeta={false}
-      />
+    <section className="catalog-section bg-[#050505]" ref={resultsRef}>
+      <Container>
+        <h1 className="sr-only">{t("catalog:shop.title")}</h1>
 
-      <section className="fashion-section catalog-section" ref={resultsRef}>
-        <Container>
           <CatalogFilters
             key={`${filters.minPrice}:${filters.maxPrice}:${language}`}
             filters={filters}
@@ -320,9 +316,8 @@ const Shop = () => {
               )}
             </>
           )}
-        </Container>
-      </section>
-    </>
+      </Container>
+    </section>
   );
 };
 

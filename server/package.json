@@ -14,7 +14,8 @@
     "smtp": "npm run smtp:test",
     "smtp:test": "node --use-system-ca src/scripts/testSmtp.js",
     "seed:data": "node src/scripts/seedDevData.js",
-    "seed:launch": "node src/scripts/seedLaunchData.js"
+    "seed:launch": "node src/scripts/seedLaunchData.js",
+    "sync:images": "node src/scripts/sync-image-paths.js"
   },
   "keywords": [],
   "author": "",

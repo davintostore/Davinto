@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
+import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import Input from "../../components/ui/Input";
 import PageHeader from "../../components/ui/PageHeader";
 import Select from "../../components/ui/Select";
@@ -118,6 +119,7 @@ const AdminOffers = () => {
     type: "",
     message: "",
   });
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   const {
     data: offersData,
@@ -426,13 +428,15 @@ const AdminOffers = () => {
   };
 
   const handleDelete = (offer) => {
-    const confirmed = window.confirm(
-      `Delete "${offer.title}"? If it has usage history, it will be archived instead.`
-    );
+    setDeleteConfirm(offer);
+  };
 
-    if (!confirmed) return;
+  const confirmDelete = () => {
+    if (!deleteConfirm?._id) return;
 
-    deleteMutation.mutate(offer._id);
+    deleteMutation.mutate(deleteConfirm._id, {
+      onSettled: () => setDeleteConfirm(null),
+    });
   };
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
@@ -959,6 +963,17 @@ const AdminOffers = () => {
           )}
         </Card>
       </div>
+
+      <ConfirmDialog
+        isOpen={Boolean(deleteConfirm)}
+        eyebrow="Delete Offer"
+        title={deleteConfirm ? `Delete ${deleteConfirm.title}?` : "Delete offer?"}
+        message="If it has usage history, it will be archived instead."
+        confirmLabel="Delete"
+        isPending={deleteMutation.isPending}
+        onCancel={() => setDeleteConfirm(null)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 };

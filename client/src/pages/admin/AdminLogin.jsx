@@ -82,7 +82,7 @@ const AdminLogin = () => {
       dir="ltr"
       className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#1c1917] px-5 text-[#f5f0e8]"
     >
-      <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(136,44,48,0.42),transparent_46%),repeating-linear-gradient(90deg,transparent_0,transparent_79px,rgba(245,240,232,0.025)_80px)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_12%,rgba(136,44,48,0.32),transparent_34rem),linear-gradient(135deg,rgba(199,168,82,0.06),transparent_32rem)]" />
 
       <Card className="relative z-10 w-full max-w-md">
         <p className="mb-3 text-xs font-black uppercase tracking-[0.3em] text-[#c7a852]">

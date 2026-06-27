@@ -1,8 +1,11 @@
-import { ArrowUpRight } from "lucide-react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import QuickProductModal from "./QuickProductModal";
 import { formatCurrency } from "../../utils/translatedLabels";
 import { getLocalizedProduct } from "../../utils/localizedContent";
+import { hideBrokenImage } from "../../utils/imageFallback";
+import { getProductGalleryImages } from "../../utils/resolveLocalImages";
 
 const getSimpleBadge = (badge = "", t) => {
   const normalizedBadge = String(badge || "").toLowerCase();
@@ -16,19 +19,25 @@ const getSimpleBadge = (badge = "", t) => {
 
 const ProductCard = ({ product }) => {
   const { t, i18n } = useTranslation(["common", "catalog"]);
+  const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const language = i18n.resolvedLanguage === "ar" ? "ar" : "en";
   const formatMoney = (value) => formatCurrency(value, language);
   const localizedProduct = getLocalizedProduct(product, language);
-  const primaryImage = product?.primaryImage || "";
-  const hoverImage = product?.hoverImage || "";
+  const galleryImages = getProductGalleryImages(product);
+  const primaryGalleryImage = galleryImages[0] || null;
+  const hoverGalleryImage = galleryImages[1] || null;
+  const primaryImage = primaryGalleryImage?.url || product?.primaryImage || "";
+  const hoverImage = hoverGalleryImage?.url || product?.hoverImage || "";
   const localizedImages = localizedProduct.colors?.flatMap(
     (color) => color.images || []
   );
   const primaryImageAlt =
     localizedImages?.find((image) => image.url === primaryImage)?.alt ||
+    primaryGalleryImage?.alt ||
     localizedProduct.name;
   const hoverImageAlt =
     localizedImages?.find((image) => image.url === hoverImage)?.alt ||
+    hoverGalleryImage?.alt ||
     t("catalog:product.alternateView", {
       name: localizedProduct.name,
     });
@@ -48,16 +57,19 @@ const ProductCard = ({ product }) => {
         .slice(0, 1);
 
   return (
-    <Link
-      to={`/product/${product.slug}`}
-      className="group block focus-visible:outline-offset-4"
-    >
-      <article>
+      <article className="group">
+        <div className="relative">
+          <Link
+            to={`/product/${product.slug}`}
+            className="block focus-visible:outline-offset-4"
+            aria-label={localizedProduct.name}
+          >
         <div className="relative aspect-[3/4] overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f]">
           {primaryImage ? (
             <img
               src={primaryImage}
               alt={primaryImageAlt}
+              onError={hideBrokenImage}
               className={`h-full w-full object-cover transition duration-700 ease-out ${
                 hasHoverImage
                   ? "md:group-hover:scale-[1.025] md:group-hover:opacity-0"
@@ -80,6 +92,7 @@ const ProductCard = ({ product }) => {
             <img
               src={hoverImage}
               alt={hoverImageAlt}
+              onError={hideBrokenImage}
               className="pointer-events-none absolute inset-0 hidden h-full w-full scale-[1.025] object-cover opacity-0 transition duration-700 ease-out group-hover:scale-100 group-hover:opacity-100 md:block"
               loading="lazy"
             />
@@ -101,18 +114,28 @@ const ProductCard = ({ product }) => {
                 </span>
               ))}
           </div>
+        </div>
+          </Link>
 
-          <div className="absolute bottom-0 right-0 flex h-12 w-12 translate-y-full items-center justify-center bg-[#f5f0e8] text-[#1c1917] transition-transform duration-300 group-hover:translate-y-0">
-            <ArrowUpRight size={18} />
-          </div>
+          <button
+            type="button"
+            onClick={() => setIsQuickViewOpen(true)}
+            className="absolute inset-x-3 bottom-3 z-10 hidden min-h-11 items-center justify-center border border-[#c7a852]/55 bg-[#110f0e]/92 px-4 py-3 text-[0.6rem] font-black uppercase tracking-[0.18em] text-[#f5f0e8] opacity-0 shadow-xl transition duration-300 hover:border-[#c7a852] hover:bg-[#882c30]/88 focus-visible:outline-offset-2 md:flex md:translate-y-4 md:group-hover:translate-y-0 md:group-hover:opacity-100 md:group-focus-within:translate-y-0 md:group-focus-within:opacity-100"
+          >
+            {t("catalog:product.chooseOptions", {
+              defaultValue: "Choose Options",
+            })}
+          </button>
         </div>
 
         <div className="border-b border-[#f5f0e8]/12 py-3 sm:py-4">
           <div className="flex items-start justify-between gap-2 sm:gap-5">
             <div className="min-w-0">
-              <h3 className="truncate font-serif text-base font-semibold text-[#f5f0e8] transition group-hover:text-[#c7a852] sm:text-xl">
-                {localizedProduct.name}
-              </h3>
+              <Link to={`/product/${product.slug}`}>
+                <h3 className="truncate font-serif text-base font-semibold text-[#f5f0e8] transition hover:text-[#c7a852] sm:text-xl">
+                  {localizedProduct.name}
+                </h3>
+              </Link>
             </div>
 
             <div className="shrink-0 text-right">
@@ -150,9 +173,17 @@ const ProductCard = ({ product }) => {
 
             </div>
           )}
+
         </div>
+
+        {isQuickViewOpen && (
+          <QuickProductModal
+            product={product}
+            isOpen={isQuickViewOpen}
+            onClose={() => setIsQuickViewOpen(false)}
+          />
+        )}
       </article>
-    </Link>
   );
 };
 

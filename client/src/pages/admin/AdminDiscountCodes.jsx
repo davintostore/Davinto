@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
+import ConfirmDialog from "../../components/ui/ConfirmDialog";
 import Input from "../../components/ui/Input";
 import PageHeader from "../../components/ui/PageHeader";
 import Select from "../../components/ui/Select";
@@ -82,6 +83,7 @@ const AdminDiscountCodes = () => {
     type: "",
     message: "",
   });
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   const {
     data,
@@ -268,13 +270,15 @@ const AdminDiscountCodes = () => {
   };
 
   const handleDelete = (discountCode) => {
-    const confirmed = window.confirm(
-      `Delete "${discountCode.code}"? If it has been used before, it will be archived instead.`
-    );
+    setDeleteConfirm(discountCode);
+  };
 
-    if (!confirmed) return;
+  const confirmDelete = () => {
+    if (!deleteConfirm?._id) return;
 
-    deleteMutation.mutate(discountCode._id);
+    deleteMutation.mutate(deleteConfirm._id, {
+      onSettled: () => setDeleteConfirm(null),
+    });
   };
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
@@ -599,6 +603,19 @@ const AdminDiscountCodes = () => {
           )}
         </Card>
       </div>
+
+      <ConfirmDialog
+        isOpen={Boolean(deleteConfirm)}
+        eyebrow="Delete Discount"
+        title={
+          deleteConfirm ? `Delete ${deleteConfirm.code}?` : "Delete discount?"
+        }
+        message="If it has been used before, it will be archived instead."
+        confirmLabel="Delete"
+        isPending={deleteMutation.isPending}
+        onCancel={() => setDeleteConfirm(null)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 };
