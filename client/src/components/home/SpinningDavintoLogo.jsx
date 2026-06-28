@@ -1,5 +1,51 @@
+import { useEffect, useState } from "react";
+
 const LOGO_SRC = "/images/logo/davinto-spinning-logo.webp";
 const LAYER_COUNT = 28;
+let logoDecodePromise = null;
+let isLogoDecoded = false;
+
+const waitForImageLoad = (image) =>
+  new Promise((resolve, reject) => {
+    if (image.complete && image.naturalWidth > 0) {
+      resolve();
+      return;
+    }
+
+    image.onload = () => resolve();
+    image.onerror = () => reject(new Error("Davinto spinning logo failed to load"));
+  });
+
+const preloadSpinningLogo = () => {
+  if (isLogoDecoded || typeof window === "undefined") {
+    return Promise.resolve();
+  }
+
+  if (logoDecodePromise) return logoDecodePromise;
+
+  const image = new Image();
+  image.decoding = "async";
+  image.fetchPriority = "high";
+  image.src = LOGO_SRC;
+
+  logoDecodePromise = (image.decode
+    ? image.decode().catch(() => waitForImageLoad(image))
+    : waitForImageLoad(image)
+  )
+    .then(() => {
+      isLogoDecoded = true;
+    })
+    .catch((error) => {
+      logoDecodePromise = null;
+      throw error;
+    });
+
+  return logoDecodePromise;
+};
+
+if (typeof window !== "undefined") {
+  preloadSpinningLogo().catch(() => {});
+}
 
 const getLayerTransform = (index) => {
   const offset = LAYER_COUNT === 1 ? 0 : index / (LAYER_COUNT - 1) - 0.5;
@@ -34,8 +80,30 @@ const layers = Array.from({ length: LAYER_COUNT }, (_, index) => {
 });
 
 const SpinningDavintoLogo = () => {
+  const [isReady, setIsReady] = useState(isLogoDecoded);
+
+  useEffect(() => {
+    if (isReady) return undefined;
+
+    let isMounted = true;
+
+    preloadSpinningLogo()
+      .catch(() => {})
+      .finally(() => {
+        if (isMounted) setIsReady(true);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isReady]);
+
   return (
-    <div className="davinto-spin-logo" aria-hidden="true">
+    <div
+      className="davinto-spin-logo"
+      aria-hidden="true"
+      data-ready={isReady ? "true" : "false"}
+    >
       <div className="davinto-spin-logo__stage">
         {layers.map((layer) => (
           <img
@@ -45,6 +113,8 @@ const SpinningDavintoLogo = () => {
             className="davinto-spin-logo__layer"
             draggable="false"
             decoding="async"
+            fetchPriority={layer.index === 0 ? "high" : "auto"}
+            loading="eager"
             style={layer.style}
           />
         ))}

@@ -393,6 +393,7 @@ html[lang="ar"] .page-shell label {
 }
 
 .davinto-spin-logo {
+  aspect-ratio: 1 / 1;
   display: inline-flex;
   filter: drop-shadow(0 1.4rem 2.4rem rgba(0, 0, 0, 0.42));
   height: clamp(4.5rem, 10vw, 8.75rem);
@@ -405,10 +406,15 @@ html[lang="ar"] .page-shell label {
 
 .davinto-spin-logo__stage {
   animation: davintoSpinLogo3d 7s linear infinite;
+  animation-play-state: paused;
   height: 100%;
   position: relative;
   transform-style: preserve-3d;
   width: 100%;
+}
+
+.davinto-spin-logo[data-ready="true"] .davinto-spin-logo__stage {
+  animation-play-state: running;
 }
 
 .davinto-spin-logo__layer {
