@@ -1,6 +1,5 @@
-import { useEffect } from "react";
-
 import Button from "./Button";
+import useFocusTrap from "../../hooks/useFocusTrap";
 
 const ConfirmDialog = ({
   isOpen,
@@ -14,39 +13,34 @@ const ConfirmDialog = ({
   onCancel,
   onConfirm,
 }) => {
-  useEffect(() => {
-    if (!isOpen) return undefined;
-
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape" && !isPending) {
+  const dialogRef = useFocusTrap({
+    isActive: isOpen,
+    onEscape: () => {
+      if (!isPending) {
         onCancel?.();
       }
-    };
-
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = originalOverflow;
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isOpen, isPending, onCancel]);
+    },
+    lockScroll: true,
+  });
 
   if (!isOpen) return null;
 
   return (
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-[140] grid place-items-center bg-[#050505]/78 p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-dialog-title"
+      aria-describedby={message ? "confirm-dialog-message" : undefined}
+      tabIndex={-1}
     >
       <button
         type="button"
         className="absolute inset-0"
         aria-label={cancelLabel}
         disabled={isPending}
+        tabIndex={-1}
         onClick={onCancel}
       />
 
@@ -65,7 +59,10 @@ const ConfirmDialog = ({
         </h2>
 
         {message && (
-          <p className="mt-3 text-sm leading-7 text-[#f5f0e8]/58">
+          <p
+            id="confirm-dialog-message"
+            className="mt-3 text-sm leading-7 text-[#f5f0e8]/58"
+          >
             {message}
           </p>
         )}
@@ -76,6 +73,7 @@ const ConfirmDialog = ({
             variant="secondary"
             disabled={isPending}
             onClick={onCancel}
+            data-autofocus
           >
             {cancelLabel}
           </Button>

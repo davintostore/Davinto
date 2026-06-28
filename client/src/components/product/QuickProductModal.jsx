@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import { Minus, Plus, ShoppingBag, X } from "lucide-react";
@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 
 import Button from "../ui/Button";
 import { useCart } from "../../context/cartContext";
+import useFocusTrap from "../../hooks/useFocusTrap";
 import { getPublicProductBySlugRequest } from "../../services/productService";
 import { formatCurrency } from "../../utils/translatedLabels";
 import {
@@ -106,25 +107,11 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
     offerPrice > 0 && offerPrice < Number(product?.price || 0);
   const displayPrice = hasOfferPrice ? offerPrice : product?.price;
   const isOnSale = product?.compareAtPrice > product?.price || hasOfferPrice;
-
-  useEffect(() => {
-    if (!isOpen) return undefined;
-
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    };
-
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = originalOverflow;
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isOpen, onClose]);
+  const dialogRef = useFocusTrap({
+    isActive: isOpen && Boolean(product),
+    onEscape: onClose,
+    lockScroll: true,
+  });
 
   const handleColorChange = (color) => {
     const availableSizes = getAvailableSizes(color);
@@ -202,14 +189,20 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
 
   const modal = (
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-[95] flex items-center justify-center p-3 sm:p-6"
       role="dialog"
       aria-modal="true"
+      aria-label={t("catalog:product.quickView", {
+        defaultValue: "Quick product view",
+      })}
+      tabIndex={-1}
     >
       <button
         type="button"
         className="absolute inset-0 bg-[#050505]/52"
         aria-label="Close quick product view"
+        tabIndex={-1}
         onClick={onClose}
       />
 
@@ -219,6 +212,7 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
           onClick={onClose}
           className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center border border-[#f5f0e8]/14 bg-[#110f0e]/80 text-[#f5f0e8]/70 transition hover:border-[#c7a852] hover:text-[#f5f0e8]"
           aria-label="Close quick product view"
+          data-autofocus
         >
           <X size={18} />
         </button>
@@ -358,6 +352,10 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
                           type="button"
                           onClick={() => handleColorChange(color)}
                           aria-pressed={isSelected}
+                          aria-label={t("catalog:product.selectColorName", {
+                            color: localizedColor.name,
+                            defaultValue: `Select ${localizedColor.name}`,
+                          })}
                           className={`flex min-h-10 items-center gap-2 border px-3 text-xs font-bold transition ${
                             isSelected
                               ? "border-[#c7a852] bg-[#c7a852]/12 text-[#f5f0e8]"
@@ -367,6 +365,7 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
                           <span
                             className="h-3.5 w-3.5 rounded-full border border-[#f5f0e8]/35"
                             style={{ backgroundColor: color.hex || "#777" }}
+                            aria-hidden="true"
                           />
                           {localizedColor.name}
                         </button>
@@ -407,6 +406,10 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
                           type="button"
                           disabled={disabled}
                           aria-pressed={isSelected}
+                          aria-label={t("catalog:product.selectSizeName", {
+                            size: size.label,
+                            defaultValue: `Select size ${size.label}`,
+                          })}
                           onClick={() => {
                             setSelectedSizeLabel(size.label);
                             setQuantity(1);

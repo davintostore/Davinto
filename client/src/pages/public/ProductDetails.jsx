@@ -642,6 +642,13 @@ const ProductDetails = () => {
                             type="button"
                             onClick={() => handleColorChange(color)}
                             aria-pressed={isSelected}
+                            aria-label={t(
+                              "catalog:product.selectColorName",
+                              {
+                                color: localizedColor.name,
+                                defaultValue: `Select ${localizedColor.name}`,
+                              }
+                            )}
                             className={`flex min-h-11 items-center gap-2.5 border px-4 text-xs font-bold transition ${
                               isSelected
                                 ? "border-[#c7a852] bg-[#c7a852]/12 text-[#f5f0e8]"
@@ -651,6 +658,7 @@ const ProductDetails = () => {
                             <span
                               className="h-4 w-4 rounded-full border border-[#f5f0e8]/35"
                               style={{ backgroundColor: color.hex || "#777" }}
+                              aria-hidden="true"
                             />
                             {localizedColor.name}
                           </button>
@@ -683,6 +691,10 @@ const ProductDetails = () => {
                             type="button"
                             disabled={disabled}
                             aria-pressed={isSelected}
+                            aria-label={t("catalog:product.selectSizeName", {
+                              size: size.label,
+                              defaultValue: `Select size ${size.label}`,
+                            })}
                             onClick={() => {
                               setSelectedSizeLabel(size.label);
                               setQuantity(1);

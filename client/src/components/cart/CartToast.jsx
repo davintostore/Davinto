@@ -14,7 +14,10 @@ const CartToast = () => {
       role="status"
       aria-live="polite"
     >
-      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[#c7a852]/35 bg-[#c7a852]/10 text-[#c7a852]">
+      <span
+        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[#c7a852]/35 bg-[#c7a852]/10 text-[#c7a852]"
+        aria-hidden="true"
+      >
         <Check size={13} strokeWidth={2.5} />
       </span>
       <span className="text-sm font-bold leading-none text-[#f5f0e8]">

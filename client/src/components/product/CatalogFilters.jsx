@@ -5,6 +5,7 @@ import { SlidersHorizontal, X } from "lucide-react";
 
 import Button from "../ui/Button";
 import Input from "../ui/Input";
+import useFocusTrap from "../../hooks/useFocusTrap";
 import { getLocalizedCategory } from "../../utils/localizedContent";
 
 const fallbackColors = [
@@ -201,30 +202,6 @@ const CatalogFilters = ({
     };
   }, [isSortMenuOpen]);
 
-  useEffect(() => {
-    if (!isFilterOpen) return undefined;
-
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape") {
-        setIsFilterOpen(false);
-        setOpenFilterSection(null);
-      }
-    };
-
-    const originalBodyOverflow = document.body.style.overflow;
-    const originalHtmlOverflow = document.documentElement.style.overflow;
-
-    document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = originalBodyOverflow;
-      document.documentElement.style.overflow = originalHtmlOverflow;
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isFilterOpen]);
-
   const toggleSortMenu = () => {
     if (isSortMenuOpen) {
       setIsSortOpen(false);
@@ -245,6 +222,13 @@ const CatalogFilters = ({
     setOpenFilterSection(null);
   };
 
+  const filterDrawerRef = useFocusTrap({
+    isActive: isFilterOpen,
+    onEscape: closeFilterDrawer,
+    lockScroll: true,
+    lockHtmlScroll: true,
+  });
+
   const toggleFilterSection = (section) => {
     setOpenFilterSection((current) => (current === section ? null : section));
   };
@@ -258,15 +242,19 @@ const CatalogFilters = ({
     isFilterOpen && typeof document !== "undefined"
       ? createPortal(
           <div
+            ref={filterDrawerRef}
+            id="catalog-filter-drawer"
             className="fixed inset-0 z-[150]"
             role="dialog"
             aria-modal="true"
             aria-labelledby="catalog-filter-title"
+            tabIndex={-1}
           >
             <button
               type="button"
               className="fixed inset-0 bg-[#050505]/58"
               aria-label={t("filters.close")}
+              tabIndex={-1}
               onClick={closeFilterDrawer}
             />
 
@@ -291,6 +279,7 @@ const CatalogFilters = ({
                   className="flex h-10 w-10 items-center justify-center border border-[#f5f0e8]/18 text-[#f5f0e8]"
                   aria-label={t("filters.close")}
                   onClick={closeFilterDrawer}
+                  data-autofocus
                 >
                   <X size={17} />
                 </button>
@@ -423,7 +412,10 @@ const CatalogFilters = ({
                             className="sr-only"
                             checked={isSelected}
                             onChange={() => onToggleColor(color.slug)}
-                            aria-label={label}
+                            aria-label={t("filters.colorFilterLabel", {
+                              color: label,
+                              defaultValue: `Filter by ${label}`,
+                            })}
                           />
                           <span
                             className="h-3.5 w-3.5 rounded-full border border-[#f5f0e8]/40 ring-1 ring-[#1c1917]"
@@ -483,6 +475,8 @@ const CatalogFilters = ({
               type="button"
               className="inline-flex h-11 items-center gap-2 border border-[#f5f0e8]/18 px-4 text-[0.66rem] font-black uppercase tracking-[0.18em] text-[#f5f0e8] transition hover:border-[#c7a852]"
               onClick={openFilterDrawer}
+              aria-expanded={isFilterOpen}
+              aria-controls="catalog-filter-drawer"
             >
               <SlidersHorizontal size={16} />
               {t("filters.title")}
@@ -495,6 +489,8 @@ const CatalogFilters = ({
               <button
                 type="button"
                 aria-expanded={isSortMenuOpen}
+                aria-haspopup="menu"
+                aria-controls="catalog-sort-menu"
                 className="inline-flex h-11 items-center border border-[#f5f0e8]/18 px-4 text-[0.66rem] font-black uppercase tracking-[0.18em] text-[#f5f0e8] transition hover:border-[#c7a852]"
                 onClick={toggleSortMenu}
               >
@@ -502,7 +498,10 @@ const CatalogFilters = ({
               </button>
 
               {isSortMenuOpen && (
-                <div className="absolute right-0 z-30 mt-2 w-56 border border-[#c7a852]/30 bg-[#110f0e] p-2 shadow-2xl">
+                <div
+                  id="catalog-sort-menu"
+                  className="absolute right-0 z-30 mt-2 w-56 border border-[#c7a852]/30 bg-[#110f0e] p-2 shadow-2xl"
+                >
                   {sortOptions.map((option) => (
                     <button
                       key={option.value}

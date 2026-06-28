@@ -20,6 +20,7 @@ import { socialLinks } from "../../constants/socialLinks";
 import { useAdminAuth } from "../../context/adminAuthContext";
 import { useCart } from "../../context/cartContext";
 import { useCustomerAuth } from "../../context/customerAuthContext";
+import useFocusTrap from "../../hooks/useFocusTrap";
 import { getPublicSettingsRequest } from "../../services/settingsService";
 import { getLocalizedSettings } from "../../utils/localizedContent";
 
@@ -109,6 +110,10 @@ const PublicLayout = () => {
     { label: t("shop"), path: "/shop" },
     { label: t("trackOrder"), path: "/track-order" },
   ];
+  const mobileMenuRef = useFocusTrap({
+    isActive: isMenuOpen && !isFocusedRoute,
+    onEscape: () => setIsMenuOpen(false),
+  });
 
   useEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
@@ -324,11 +329,18 @@ const PublicLayout = () => {
 
         {isMenuOpen && (
           <div
+            ref={mobileMenuRef}
             id="public-mobile-navigation"
             className="border-t border-[#f5f0e8]/10 bg-[#050505] lg:hidden"
+            tabIndex={-1}
           >
             <Container className="py-5">
-              <nav className="grid">
+              <nav
+                className="grid"
+                aria-label={t("mobileNavigation", {
+                  defaultValue: "Mobile navigation",
+                })}
+              >
                 {navLinks.map((link) => (
                   <NavLink
                     key={link.path}

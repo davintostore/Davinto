@@ -8,6 +8,7 @@ import PageHeader from "../../components/ui/PageHeader";
 import Select from "../../components/ui/Select";
 import SectionLabel from "../../components/ui/SectionLabel";
 import Textarea from "../../components/ui/Textarea";
+import useFocusTrap from "../../hooks/useFocusTrap";
 import useSeo from "../../hooks/useSeo";
 
 import {
@@ -383,6 +384,11 @@ const AdminOrders = () => {
 
     setConfirmationModal(null);
   };
+  const confirmationModalRef = useFocusTrap({
+    isActive: Boolean(confirmationModal),
+    onEscape: closeConfirmationModal,
+    lockScroll: true,
+  });
 
   const confirmPendingAction = () => {
     if (!confirmationModal?.order) return;
@@ -453,7 +459,15 @@ const AdminOrders = () => {
       )}
 
       {confirmationModal && (
-        <div className="fixed inset-0 z-[90] grid place-items-center bg-black/72 px-4">
+        <div
+          ref={confirmationModalRef}
+          className="fixed inset-0 z-[90] grid place-items-center bg-black/72 px-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="admin-order-confirm-title"
+          aria-describedby="admin-order-confirm-message"
+          tabIndex={-1}
+        >
           <div className="w-full max-w-lg rounded-3xl border border-[#c7a852]/30 bg-[#110f0e] p-6 shadow-2xl">
             <p className="text-xs font-black uppercase tracking-[0.3em] text-[#c7a852]">
               {confirmationModal.type === "deleteOrder"
@@ -462,10 +476,16 @@ const AdminOrders = () => {
                   ? "Confirm Cancellation"
                   : "Confirm Change"}
             </p>
-            <h2 className="mt-3 text-2xl font-black uppercase text-white">
+            <h2
+              id="admin-order-confirm-title"
+              className="mt-3 text-2xl font-black uppercase text-white"
+            >
               {confirmationModal.order.orderNumber}
             </h2>
-            <p className="mt-3 text-sm leading-7 text-white/55">
+            <p
+              id="admin-order-confirm-message"
+              className="mt-3 text-sm leading-7 text-white/55"
+            >
               {confirmationModal.type === "paymobRetry" &&
                 "Generate a new card payment link for this order."}
               {confirmationModal.type === "cancelOrder" &&
@@ -508,6 +528,7 @@ const AdminOrders = () => {
                 type="button"
                 variant="secondary"
                 onClick={closeConfirmationModal}
+                data-autofocus
               >
                 Cancel
               </Button>

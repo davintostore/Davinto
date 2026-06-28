@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 
 import Button from "../../components/ui/Button";
 import Container from "../../components/ui/Container";
+import useFocusTrap from "../../hooks/useFocusTrap";
 import useSeo from "../../hooks/useSeo";
 
 import { useCart } from "../../context/cartContext";
@@ -113,6 +114,11 @@ const Cart = () => {
     clearCart();
     setIsClearConfirmOpen(false);
   };
+  const clearConfirmRef = useFocusTrap({
+    isActive: isClearConfirmOpen,
+    onEscape: () => setIsClearConfirmOpen(false),
+    lockScroll: true,
+  });
 
   return (
     <>
@@ -521,12 +527,26 @@ const Cart = () => {
       </section>
 
       {isClearConfirmOpen && (
-        <div className="fixed inset-0 z-[90] grid place-items-center bg-[#050505]/78 p-4">
+        <div
+          ref={clearConfirmRef}
+          className="fixed inset-0 z-[90] grid place-items-center bg-[#050505]/78 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="clear-cart-dialog-title"
+          aria-describedby="clear-cart-dialog-message"
+          tabIndex={-1}
+        >
           <div className="w-full max-w-md border border-[#c7a852]/28 bg-[#110f0e] p-6 shadow-2xl">
-            <p className="font-serif text-3xl font-semibold text-[#f5f0e8]">
+            <p
+              id="clear-cart-dialog-title"
+              className="font-serif text-3xl font-semibold text-[#f5f0e8]"
+            >
               Clear cart?
             </p>
-            <p className="mt-3 text-sm leading-7 text-[#f5f0e8]/58">
+            <p
+              id="clear-cart-dialog-message"
+              className="mt-3 text-sm leading-7 text-[#f5f0e8]/58"
+            >
               This will remove all items from your cart.
             </p>
             <div className="mt-7 grid gap-3 sm:grid-cols-2">
@@ -534,6 +554,7 @@ const Cart = () => {
                 type="button"
                 variant="secondary"
                 onClick={() => setIsClearConfirmOpen(false)}
+                data-autofocus
               >
                 Cancel
               </Button>

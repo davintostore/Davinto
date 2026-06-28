@@ -121,6 +121,7 @@ const ProductCard = ({ product }) => {
             type="button"
             onClick={() => setIsQuickViewOpen(true)}
             className="absolute inset-x-3 bottom-3 z-10 hidden min-h-11 items-center justify-center border border-[#c7a852]/55 bg-[#110f0e]/92 px-4 py-3 text-[0.6rem] font-black uppercase tracking-[0.18em] text-[#f5f0e8] opacity-0 shadow-xl transition duration-300 hover:border-[#c7a852] hover:bg-[#882c30]/88 focus-visible:outline-offset-2 md:flex md:translate-y-4 md:group-hover:translate-y-0 md:group-hover:opacity-100 md:group-focus-within:translate-y-0 md:group-focus-within:opacity-100"
+            aria-haspopup="dialog"
           >
             {t("catalog:product.chooseOptions", {
               defaultValue: "Choose Options",

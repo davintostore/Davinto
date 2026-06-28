@@ -1,10 +1,11 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Minus, Plus, Trash2, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import Button from "../ui/Button";
 import { useCart } from "../../context/cartContext";
+import useFocusTrap from "../../hooks/useFocusTrap";
 import useStableQuote from "../../hooks/useStableQuote";
 import { createQuoteRequest } from "../../services/quoteService";
 import {
@@ -95,34 +96,28 @@ const CartDrawer = () => {
   const isQuoteRefreshing = hasCurrentQuote && isFetchingQuote;
   const formatQuotedMoney = (value) =>
     hasCurrentQuote ? formatMoney(value) : quoteStatusText;
-
-  useEffect(() => {
-    if (!isCartDrawerOpen) return undefined;
-
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape") {
-        closeCartDrawer();
-      }
-    };
-
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = originalOverflow;
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [closeCartDrawer, isCartDrawerOpen]);
+  const drawerRef = useFocusTrap({
+    isActive: isCartDrawerOpen,
+    onEscape: closeCartDrawer,
+    lockScroll: true,
+  });
 
   if (!isCartDrawerOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[80]" role="dialog" aria-modal="true">
+    <div
+      ref={drawerRef}
+      className="fixed inset-0 z-[80]"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="cart-drawer-title"
+      tabIndex={-1}
+    >
       <button
         type="button"
         className="absolute inset-0 bg-[#050505]/45"
         aria-label="Close cart drawer"
+        tabIndex={-1}
         onClick={closeCartDrawer}
       />
 
@@ -132,7 +127,10 @@ const CartDrawer = () => {
             <p className="text-[0.56rem] font-black uppercase tracking-[0.26em] text-[#c7a852]">
               {t("cart:totalItems", { count: cartCount })}
             </p>
-            <h2 className="mt-1 font-serif text-2xl font-semibold text-[#f5f0e8]">
+            <h2
+              id="cart-drawer-title"
+              className="mt-1 font-serif text-2xl font-semibold text-[#f5f0e8]"
+            >
               CART
             </h2>
           </div>
@@ -142,6 +140,7 @@ const CartDrawer = () => {
             onClick={closeCartDrawer}
             className="flex h-11 w-11 items-center justify-center border border-[#f5f0e8]/14 text-[#f5f0e8]/70 transition hover:border-[#c7a852] hover:text-[#f5f0e8]"
             aria-label="Close cart drawer"
+            data-autofocus
           >
             <X size={18} />
           </button>
@@ -219,6 +218,10 @@ const CartDrawer = () => {
                         to={`/product/${item.slug}`}
                         onClick={closeCartDrawer}
                         className="overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f]"
+                        aria-label={t("cart:viewItem", {
+                          name: item.name,
+                          defaultValue: `View ${item.name}`,
+                        })}
                       >
                         {displayImage ? (
                           <img
@@ -303,6 +306,10 @@ const CartDrawer = () => {
                             type="button"
                             onClick={() => removeItem(itemKey)}
                             className="flex items-center gap-1.5 text-[0.55rem] font-black uppercase tracking-[0.16em] text-[#e8a3a6] transition hover:text-[#f5d7d8]"
+                            aria-label={t("cart:removeItem", {
+                              name: item.name,
+                              defaultValue: `Remove ${item.name}`,
+                            })}
                           >
                             <Trash2 size={12} />
                             {t("common:remove")}
