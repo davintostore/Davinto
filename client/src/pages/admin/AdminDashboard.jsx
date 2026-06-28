@@ -369,6 +369,7 @@ const AdminDashboard = () => {
                             src={item.image}
                             alt={item.productName}
                             className="h-full w-full object-cover"
+                            loading="lazy"
                           />
                         ) : (
                           <div className="h-full w-full bg-white/5" />

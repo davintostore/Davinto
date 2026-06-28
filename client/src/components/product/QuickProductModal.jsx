@@ -127,25 +127,17 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
 
   const handleAddToCart = () => {
     if (!product?._id) {
-      setErrorMessage(
-        t("catalog:product.chooseVariant", {
-          defaultValue: "Please choose an available color and size.",
-        })
-      );
+      setErrorMessage(t("catalog:product.chooseVariant"));
       return;
     }
 
     if (!selectedColor) {
-      setErrorMessage(
-        t("catalog:product.selectColor", { defaultValue: "Select color" })
-      );
+      setErrorMessage(t("catalog:product.selectColor"));
       return;
     }
 
     if (!selectedSize) {
-      setErrorMessage(
-        t("catalog:product.selectSize", { defaultValue: "Select size" })
-      );
+      setErrorMessage(t("catalog:product.selectSize"));
       return;
     }
 
@@ -193,15 +185,13 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
       className="fixed inset-0 z-[95] flex items-center justify-center p-3 sm:p-6"
       role="dialog"
       aria-modal="true"
-      aria-label={t("catalog:product.quickView", {
-        defaultValue: "Quick product view",
-      })}
+      aria-label={t("catalog:product.quickView")}
       tabIndex={-1}
     >
       <button
         type="button"
         className="absolute inset-0 bg-[#050505]/52"
-        aria-label="Close quick product view"
+        aria-label={t("catalog:product.closeQuickView")}
         tabIndex={-1}
         onClick={onClose}
       />
@@ -211,7 +201,7 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
           type="button"
           onClick={onClose}
           className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center border border-[#f5f0e8]/14 bg-[#110f0e]/80 text-[#f5f0e8]/70 transition hover:border-[#c7a852] hover:text-[#f5f0e8]"
-          aria-label="Close quick product view"
+          aria-label={t("catalog:product.closeQuickView")}
           data-autofocus
         >
           <X size={18} />
@@ -289,6 +279,7 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
                         )}
                         onError={hideBrokenImage}
                         className="aspect-[3/4] w-full object-cover"
+                        loading="lazy"
                       />
                     </button>
                   ))}
@@ -354,7 +345,6 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
                           aria-pressed={isSelected}
                           aria-label={t("catalog:product.selectColorName", {
                             color: localizedColor.name,
-                            defaultValue: `Select ${localizedColor.name}`,
                           })}
                           className={`flex min-h-10 items-center gap-2 border px-3 text-xs font-bold transition ${
                             isSelected
@@ -389,9 +379,7 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
                   <div className="flex flex-wrap gap-2">
                     {!selectedColor && (
                       <p className="text-sm text-[#f5f0e8]/48">
-                        {t("catalog:product.selectColor", {
-                          defaultValue: "Select color",
-                        })}
+                        {t("catalog:product.selectColor")}
                       </p>
                     )}
 
@@ -408,7 +396,6 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
                           aria-pressed={isSelected}
                           aria-label={t("catalog:product.selectSizeName", {
                             size: size.label,
-                            defaultValue: `Select size ${size.label}`,
                           })}
                           onClick={() => {
                             setSelectedSizeLabel(size.label);

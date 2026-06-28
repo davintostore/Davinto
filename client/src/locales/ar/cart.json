@@ -1,21 +1,32 @@
 {
+  "seo": {
+    "title": "سلتك | متجر دافينتو",
+    "description": "راجع سلة دافينتو قبل إتمام الطلب."
+  },
   "label": "القطع المختارة",
   "title": "سلة التسوق",
+  "closeDrawer": "إغلاق درج السلة",
   "description": "راجع لون ومقاس وكمية كل قطعة قبل الانتقال إلى بيانات التوصيل والدفع.",
   "emptyLabel": "لا توجد اختيارات",
   "emptyTitle": "السلة فارغة.",
   "emptyDescription": "ابدأ من المجموعة الحالية، واختر اللون والمقاس، وستنتظرك قطعك هنا.",
   "explore": "استكشف المجموعة",
+  "backToShop": "العودة للمتجر",
   "totalItems": "إجمالي القطع: {{count}}",
   "currentSelection": "اختياراتك الحالية",
   "clear": "إفراغ السلة",
   "max": "الحد الأقصى {{count}}",
   "decreaseItem": "تقليل كمية {{name}}",
   "increaseItem": "زيادة كمية {{name}}",
+  "viewItem": "عرض {{name}}",
+  "removeItem": "إزالة {{name}}",
   "summary": "ملخص الطلب",
   "calculatedLater": "يُحسب لاحقًا",
   "estimatedTotal": "الإجمالي المتوقع",
   "checkout": "المتابعة لإتمام الطلب",
   "keepShopping": "متابعة التسوق",
+  "clearConfirmTitle": "إفراغ السلة؟",
+  "clearConfirmMessage": "سيتم حذف كل القطع من سلة التسوق.",
+  "clearConfirmAction": "إفراغ السلة",
   "secureNote": "تتم إعادة احتساب العروض والباقات وأكواد الخصم ورسوم التوصيل بأمان أثناء إتمام الطلب."
 }

@@ -1,4 +1,8 @@
 {
+  "seo": {
+    "shopTitle": "Shop Davinto | Premium T-Shirts & Artwear",
+    "shopDescription": "Shop Davinto clothing, blanks, and art-inspired pieces with simple checkout and delivery across Egypt."
+  },
   "shop": {
     "label": "Shop",
     "title": "Shop",
@@ -36,6 +40,7 @@
     "apply": "Apply",
     "viewResults": "View Results",
     "close": "Close filters",
+    "colorFilterLabel": "Filter by {{color}}",
     "activeCount": "{{count}} active",
     "noMatchesTitle": "No Matches",
     "noMatchesDescription": "No products match these filters. Clear filters or widen the price range.",
@@ -70,8 +75,14 @@
     "breadcrumbProduct": "Product",
     "viewImage": "View product image {{number}}",
     "alternateView": "{{name}} alternate view",
+    "quickView": "Quick product view",
+    "closeQuickView": "Close quick product view",
+    "loadingQuickView": "Loading quick product view",
+    "loadingOptions": "Loading options...",
     "selectColor": "Select color",
+    "selectColorName": "Select {{color}}",
     "selectSize": "Select size",
+    "selectSizeName": "Select size {{size}}",
     "availability": "Availability",
     "stockAvailable": "{{count}} pieces available",
     "outOfStock": "Out of stock",
@@ -80,6 +91,7 @@
     "chooseVariant": "Please choose an available color and size.",
     "addedToCart": "Item added to cart.",
     "addToCart": "Add To Cart",
+    "chooseOptions": "Choose Options",
     "viewCart": "View Cart",
     "notes": "Details",
     "detailsTitle": "Product details",
@@ -88,6 +100,7 @@
     "care": "Care",
     "toBeAdded": "To be added",
     "careFallback": "Care instructions will be added.",
-    "fullDescription": "Description"
+    "fullDescription": "Description",
+    "relatedLabel": "You may also like"
   }
 }

@@ -1,11 +1,28 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import QuickProductModal from "./QuickProductModal";
 import { formatCurrency } from "../../utils/translatedLabels";
 import { getLocalizedProduct } from "../../utils/localizedContent";
 import { hideBrokenImage } from "../../utils/imageFallback";
 import { getProductGalleryImages } from "../../utils/resolveLocalImages";
+
+const QuickProductModal = lazy(() => import("./QuickProductModal"));
+
+const QuickProductModalFallback = ({ label, message }) => (
+  <div
+    className="fixed inset-0 z-[95] flex items-center justify-center bg-[#050505]/52 p-3 text-center text-[#f5f0e8] sm:p-6"
+    role="dialog"
+    aria-modal="true"
+    aria-label={label}
+  >
+    <div className="border border-[#c7a852]/25 bg-[#110f0e] px-6 py-5 shadow-2xl">
+      <p className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-[#c7a852]">
+        Davinto
+      </p>
+      <p className="mt-3 text-sm text-[#f5f0e8]/65">{message}</p>
+    </div>
+  </div>
+);
 
 const getSimpleBadge = (badge = "", t) => {
   const normalizedBadge = String(badge || "").toLowerCase();
@@ -123,9 +140,7 @@ const ProductCard = ({ product }) => {
             className="absolute inset-x-3 bottom-3 z-10 hidden min-h-11 items-center justify-center border border-[#c7a852]/55 bg-[#110f0e]/92 px-4 py-3 text-[0.6rem] font-black uppercase tracking-[0.18em] text-[#f5f0e8] opacity-0 shadow-xl transition duration-300 hover:border-[#c7a852] hover:bg-[#882c30]/88 focus-visible:outline-offset-2 md:flex md:translate-y-4 md:group-hover:translate-y-0 md:group-hover:opacity-100 md:group-focus-within:translate-y-0 md:group-focus-within:opacity-100"
             aria-haspopup="dialog"
           >
-            {t("catalog:product.chooseOptions", {
-              defaultValue: "Choose Options",
-            })}
+            {t("catalog:product.chooseOptions")}
           </button>
         </div>
 
@@ -178,11 +193,20 @@ const ProductCard = ({ product }) => {
         </div>
 
         {isQuickViewOpen && (
-          <QuickProductModal
-            product={product}
-            isOpen={isQuickViewOpen}
-            onClose={() => setIsQuickViewOpen(false)}
-          />
+          <Suspense
+            fallback={
+              <QuickProductModalFallback
+                label={t("catalog:product.loadingQuickView")}
+                message={t("catalog:product.loadingOptions")}
+              />
+            }
+          >
+            <QuickProductModal
+              product={product}
+              isOpen={isQuickViewOpen}
+              onClose={() => setIsQuickViewOpen(false)}
+            />
+          </Suspense>
         )}
       </article>
   );

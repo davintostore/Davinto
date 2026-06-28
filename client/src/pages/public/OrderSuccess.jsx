@@ -54,12 +54,8 @@ const OrderSuccess = () => {
 
   // SEO
   useSeo({
-    title: language === "ar" 
-      ? "تم تأكيد الطلب | متجر دافينتو" 
-      : "Order Confirmed | Davinto Store",
-    description: language === "ar"
-      ? "شكراً لطلبك! يمكنك تتبع طلبك على متجر دافينتو."
-      : "Thank you for your order! You can track it on Davinto Store.",
+    title: t("orders:success.seoTitle"),
+    description: t("orders:success.seoDescription"),
     robots: "noindex,nofollow",
   });
 
@@ -400,6 +396,7 @@ const OrderSuccess = () => {
                                 alt={item.imageAlt || item.name}
                                 onError={hideBrokenImage}
                                 className="h-full w-full object-cover"
+                                loading="lazy"
                               />
                             ) : (
                               <div className="h-full w-full bg-white/5" />

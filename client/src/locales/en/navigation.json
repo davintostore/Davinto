@@ -15,10 +15,22 @@
   "dashboard": "Dashboard",
   "openNavigation": "Open navigation",
   "closeNavigation": "Close navigation",
+  "mobileNavigation": "Mobile navigation",
+  "homeAria": "Davinto home",
+  "cartCloseLabel": "Close cart drawer",
+  "cartLoadingLabel": "Loading cart",
+  "cartLoadingMessage": "Loading cart...",
   "seasonalCatalogue": "Davinto essentials",
   "footer": {
     "statement": "Clean everyday T-shirts in essential colors.",
     "navigate": "Navigate",
+    "policies": "Policies",
+    "policyLinks": {
+      "privacy": "Privacy Policy",
+      "refund": "Refund Policy",
+      "shipping": "Shipping Policy",
+      "terms": "Terms & Conditions"
+    },
     "social": "Social",
     "logoAlt": "Davinto logo",
     "location": "Davinto / Cairo, Egypt",

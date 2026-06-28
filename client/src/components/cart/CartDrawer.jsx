@@ -91,8 +91,8 @@ const CartDrawer = () => {
   const isQuotePending =
     !hasCurrentQuote && (isQuoteCalculating || isFetchingQuote || isLoadingQuote);
   const quoteStatusText = isQuotePending
-    ? t("common:updatingTotals", { defaultValue: "Updating totals..." })
-    : t("common:totalsUnavailable", { defaultValue: "Totals unavailable" });
+    ? t("common:updatingTotals")
+    : t("common:totalsUnavailable");
   const isQuoteRefreshing = hasCurrentQuote && isFetchingQuote;
   const formatQuotedMoney = (value) =>
     hasCurrentQuote ? formatMoney(value) : quoteStatusText;
@@ -116,7 +116,7 @@ const CartDrawer = () => {
       <button
         type="button"
         className="absolute inset-0 bg-[#050505]/45"
-        aria-label="Close cart drawer"
+        aria-label={t("cart:closeDrawer")}
         tabIndex={-1}
         onClick={closeCartDrawer}
       />
@@ -131,7 +131,7 @@ const CartDrawer = () => {
               id="cart-drawer-title"
               className="mt-1 font-serif text-2xl font-semibold text-[#f5f0e8]"
             >
-              CART
+              {t("cart:title")}
             </h2>
           </div>
 
@@ -139,7 +139,7 @@ const CartDrawer = () => {
             type="button"
             onClick={closeCartDrawer}
             className="flex h-11 w-11 items-center justify-center border border-[#f5f0e8]/14 text-[#f5f0e8]/70 transition hover:border-[#c7a852] hover:text-[#f5f0e8]"
-            aria-label="Close cart drawer"
+            aria-label={t("cart:closeDrawer")}
             data-autofocus
           >
             <X size={18} />
@@ -200,11 +200,11 @@ const CartDrawer = () => {
                       Boolean(quoteItem?.appliedOfferTitle));
                   const finalLineTotal = hasQuoteItem ? finalUnitPrice * quantity : 0;
                   const itemQuoteStatus = isQuotePending
-                    ? t("common:updating", { defaultValue: "Updating..." })
-                    : t("common:unavailable", { defaultValue: "Unavailable" });
+                    ? t("common:updating")
+                    : t("common:unavailable");
                   const appliedOfferTitle =
                     quoteItem?.appliedOfferTitle ||
-                    t("common:offer", { defaultValue: "Offer" });
+                    t("common:offer");
                   const maxStock = Number(item.maxStock || 1);
                   const canIncrease = quantity < maxStock;
                   const displayImage = getCartItemImage(item);
@@ -220,7 +220,6 @@ const CartDrawer = () => {
                         className="overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f]"
                         aria-label={t("cart:viewItem", {
                           name: item.name,
-                          defaultValue: `View ${item.name}`,
                         })}
                       >
                         {displayImage ? (
@@ -308,7 +307,6 @@ const CartDrawer = () => {
                             className="flex items-center gap-1.5 text-[0.55rem] font-black uppercase tracking-[0.16em] text-[#e8a3a6] transition hover:text-[#f5d7d8]"
                             aria-label={t("cart:removeItem", {
                               name: item.name,
-                              defaultValue: `Remove ${item.name}`,
                             })}
                           >
                             <Trash2 size={12} />
@@ -325,11 +323,9 @@ const CartDrawer = () => {
             <div className="border-t border-[#c7a852]/20 bg-[#110f0e] px-5 py-5 sm:px-6">
               {(isQuotePending || isQuoteRefreshing) && (
                 <p className="mb-3 text-xs text-[#f5f0e8]/45">
-                  {t("common:updatingTotals", {
-                    defaultValue: isQuotePending
-                      ? "Updating totals..."
-                      : "Refreshing totals...",
-                  })}
+                  {isQuotePending
+                    ? t("common:updatingTotals")
+                    : t("common:refreshingTotals")}
                 </p>
               )}
 
@@ -419,9 +415,7 @@ const CartDrawer = () => {
               <div className="mt-5 grid gap-3">
                 {isQuotePending ? (
                   <Button className="w-full" disabled>
-                    {t("common:updatingTotals", {
-                      defaultValue: "Updating totals...",
-                    })}
+                    {t("common:updatingTotals")}
                   </Button>
                 ) : (
                   <Link to="/checkout" onClick={closeCartDrawer}>
@@ -434,7 +428,7 @@ const CartDrawer = () => {
                     onClick={() => refetchQuote()}
                     className="text-[0.58rem] font-black uppercase tracking-[0.18em] text-[#c7a852] transition hover:text-[#f5f0e8]"
                   >
-                    {t("common:tryAgain", { defaultValue: "Try again" })}
+                    {t("common:tryAgain")}
                   </button>
                 )}
                 <button

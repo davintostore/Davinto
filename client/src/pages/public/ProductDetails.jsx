@@ -646,7 +646,6 @@ const ProductDetails = () => {
                               "catalog:product.selectColorName",
                               {
                                 color: localizedColor.name,
-                                defaultValue: `Select ${localizedColor.name}`,
                               }
                             )}
                             className={`flex min-h-11 items-center gap-2.5 border px-4 text-xs font-bold transition ${
@@ -693,7 +692,6 @@ const ProductDetails = () => {
                             aria-pressed={isSelected}
                             aria-label={t("catalog:product.selectSizeName", {
                               size: size.label,
-                              defaultValue: `Select size ${size.label}`,
                             })}
                             onClick={() => {
                               setSelectedSizeLabel(size.label);
@@ -859,7 +857,7 @@ const ProductDetails = () => {
             <div className="mt-16 border-t border-[#c7a852]/20 pt-10">
               <div className="mb-8 flex items-end justify-between gap-5">
                 <div>
-                  <SectionLabel>You may also like</SectionLabel>
+                  <SectionLabel>{t("catalog:product.relatedLabel")}</SectionLabel>
                   <h2 className="editorial-heading mt-3 text-5xl sm:text-6xl">
                     More from Davinto
                   </h2>

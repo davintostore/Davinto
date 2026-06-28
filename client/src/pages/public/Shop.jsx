@@ -24,12 +24,8 @@ const Shop = () => {
 
   // SEO
   useSeo({
-    title: language === "ar"
-      ? "تصفح متجر دافينتو | ملابس وتصاميم فنية عالية الجودة"
-      : "Shop Davinto | Premium T-Shirts & Artwear",
-    description: language === "ar"
-      ? "تصفح مجموعة دافينتو من الملابس والتصاميم الفنية مع خيارات شحن بسيطة عبر جميع أنحاء مصر."
-      : "Shop Davinto clothing, blanks, and art-inspired pieces with simple checkout and delivery across Egypt.",
+    title: t("catalog:seo.shopTitle"),
+    description: t("catalog:seo.shopDescription"),
     robots: "index,follow",
     canonical: `${window.location.origin}/shop`,
   });

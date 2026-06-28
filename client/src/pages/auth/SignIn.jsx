@@ -21,8 +21,7 @@ const getIntendedDestination = (location) => {
 };
 
 const SignIn = () => {
-  const { t, i18n } = useTranslation("auth");
-  const language = i18n.resolvedLanguage === "ar" ? "ar" : "en";
+  const { t } = useTranslation("auth");
   const navigate = useNavigate();
   const location = useLocation();
   const { signin, isCustomerAuthenticated, isCustomerLoading } =
@@ -30,12 +29,8 @@ const SignIn = () => {
 
   // SEO
   useSeo({
-    title: language === "ar" 
-      ? "تسجيل الدخول | متجر دافينتو" 
-      : "Sign In | Davinto Store",
-    description: language === "ar"
-      ? "تسجيل الدخول إلى حسابك في متجر دافينتو."
-      : "Sign in to your Davinto Store account.",
+    title: t("signin.seoTitle"),
+    description: t("signin.seoDescription"),
     robots: "noindex,nofollow",
   });
 

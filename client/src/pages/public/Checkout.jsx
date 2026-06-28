@@ -63,12 +63,8 @@ const Checkout = () => {
 
   // SEO
   useSeo({
-    title: language === "ar" 
-      ? "الدفع | متجر دافينتو" 
-      : "Checkout | Davinto Store",
-    description: language === "ar"
-      ? "أكمل طلبك من متجر دافينتو مع خيارات التوصيل عبر جميع أنحاء مصر."
-      : "Complete your Davinto order with delivery across Egypt.",
+    title: t("checkout:seo.title"),
+    description: t("checkout:seo.description"),
     robots: "noindex,nofollow",
   });
 
@@ -224,8 +220,8 @@ const Checkout = () => {
   const isQuotePending =
     !hasCurrentQuote && (isQuoteCalculating || isFetchingQuote || isLoadingQuote);
   const quoteStatusText = isQuotePending
-    ? t("common:updatingTotals", { defaultValue: "Updating totals..." })
-    : t("common:totalsUnavailable", { defaultValue: "Totals unavailable" });
+    ? t("common:updatingTotals")
+    : t("common:totalsUnavailable");
   const isQuoteRefreshing = hasCurrentQuote && isFetchingQuote;
   const formatQuotedMoney = (value) =>
     hasCurrentQuote ? formatMoney(value) : quoteStatusText;
@@ -482,7 +478,7 @@ const Checkout = () => {
         <Container className="flex h-16 items-center justify-between gap-4">
           <Link
             to="/"
-            aria-label="Davinto home"
+            aria-label={t("common:homeAria")}
             className="flex h-11 w-28 items-center"
           >
             <img
@@ -495,7 +491,7 @@ const Checkout = () => {
             to="/cart"
             className="text-[0.62rem] font-black uppercase tracking-[0.2em] text-[#f5f0e8]/62 transition hover:text-[#c7a852]"
           >
-            Back to cart
+            {t("checkout:backToCart")}
           </Link>
         </Container>
       </div>
@@ -505,7 +501,7 @@ const Checkout = () => {
           {items.length === 0 ? (
             <Card className="py-14 text-center">
               <SectionLabel className="justify-center">
-                {t("navigation:checkout", { defaultValue: "Checkout" })}
+                {t("navigation:checkout")}
               </SectionLabel>
 
               <h2 className="editorial-heading text-6xl sm:text-8xl">
@@ -812,11 +808,9 @@ const Checkout = () => {
 
                   {(isQuotePending || isQuoteRefreshing) && (
                     <div className="mb-4 border border-[#f5f0e8]/12 bg-[#f5f0e8]/4 px-3 py-2 text-xs text-[#f5f0e8]/45">
-                      {t("common:updatingTotals", {
-                        defaultValue: isQuotePending
-                          ? "Updating totals..."
-                          : "Refreshing totals...",
-                      })}
+                      {isQuotePending
+                        ? t("common:updatingTotals")
+                        : t("common:refreshingTotals")}
                     </div>
                   )}
 
@@ -853,8 +847,8 @@ const Checkout = () => {
                         ? finalUnitPrice * quantity
                         : 0;
                       const itemQuoteStatus = isQuotePending
-                        ? t("common:updating", { defaultValue: "Updating..." })
-                        : t("common:unavailable", { defaultValue: "Unavailable" });
+                        ? t("common:updating")
+                        : t("common:unavailable");
                       const displayImage = getCartItemImage(item);
 
                       return (
@@ -869,6 +863,7 @@ const Checkout = () => {
                               alt={item.name}
                               onError={hideBrokenImage}
                               className="h-full w-full object-cover"
+                              loading="lazy"
                             />
                           ) : (
                             <div className="h-full w-full bg-white/5" />

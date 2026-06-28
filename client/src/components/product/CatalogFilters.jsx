@@ -414,7 +414,6 @@ const CatalogFilters = ({
                             onChange={() => onToggleColor(color.slug)}
                             aria-label={t("filters.colorFilterLabel", {
                               color: label,
-                              defaultValue: `Filter by ${label}`,
                             })}
                           />
                           <span

@@ -11,3 +11,5 @@ npm-debug.log*
 coverage/
 .vercel/
 .render/
+
+_owner-assets/

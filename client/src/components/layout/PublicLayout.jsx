@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -13,7 +13,6 @@ import { useQuery } from "@tanstack/react-query";
 
 import Container from "../ui/Container";
 import Button from "../ui/Button";
-import CartDrawer from "../cart/CartDrawer";
 import CartToast from "../cart/CartToast";
 import LanguageSwitcher from "../i18n/LanguageSwitcher";
 import { socialLinks } from "../../constants/socialLinks";
@@ -24,11 +23,41 @@ import useFocusTrap from "../../hooks/useFocusTrap";
 import { getPublicSettingsRequest } from "../../services/settingsService";
 import { getLocalizedSettings } from "../../utils/localizedContent";
 
+const CartDrawer = lazy(() => import("../cart/CartDrawer"));
+
+const CartDrawerFallback = ({ closeLabel, loadingLabel, loadingMessage, onClose }) => (
+  <div
+    className="fixed inset-0 z-[80]"
+    role="dialog"
+    aria-modal="true"
+    aria-label={loadingLabel}
+  >
+    <button
+      type="button"
+      className="absolute inset-0 bg-[#050505]/45"
+      aria-label={closeLabel}
+      onClick={onClose}
+    />
+    <aside className="absolute inset-y-0 right-0 flex w-full flex-col border-l border-[#c7a852]/28 bg-[#0b0a09] shadow-2xl sm:max-w-[28rem]">
+      <div className="flex flex-1 items-center justify-center px-6 text-center text-[#f5f0e8]">
+        <div>
+          <p className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-[#c7a852]">
+            Davinto
+          </p>
+          <p className="mt-3 text-sm text-[#f5f0e8]/65">
+            {loadingMessage}
+          </p>
+        </div>
+      </div>
+    </aside>
+  </div>
+);
+
 const policyLinks = [
-  { label: "Privacy Policy", path: "/privacy-policy" },
-  { label: "Refund Policy", path: "/refund-policy" },
-  { label: "Shipping Policy", path: "/shipping-policy" },
-  { label: "Terms & Conditions", path: "/terms-and-conditions" },
+  { key: "privacy", path: "/privacy-policy" },
+  { key: "refund", path: "/refund-policy" },
+  { key: "shipping", path: "/shipping-policy" },
+  { key: "terms", path: "/terms-and-conditions" },
 ];
 
 const SocialIcon = ({ label }) => {
@@ -73,7 +102,8 @@ const PublicLayout = () => {
   const { t, i18n } = useTranslation("navigation");
   const language = i18n.resolvedLanguage === "ar" ? "ar" : "en";
   const location = useLocation();
-  const { cartCount, openCartDrawer } = useCart();
+  const { cartCount, isCartDrawerOpen, openCartDrawer, closeCartDrawer } =
+    useCart();
   const {
     isAuthenticated: isAdminAuthenticated,
     isCheckingAuth: isCheckingAdminAuth,
@@ -337,9 +367,7 @@ const PublicLayout = () => {
             <Container className="py-5">
               <nav
                 className="grid"
-                aria-label={t("mobileNavigation", {
-                  defaultValue: "Mobile navigation",
-                })}
+                aria-label={t("mobileNavigation")}
               >
                 {navLinks.map((link) => (
                   <NavLink
@@ -440,7 +468,20 @@ const PublicLayout = () => {
         </div>
       </main>
 
-      <CartDrawer />
+      {isCartDrawerOpen && (
+        <Suspense
+          fallback={
+            <CartDrawerFallback
+              closeLabel={t("cartCloseLabel")}
+              loadingLabel={t("cartLoadingLabel")}
+              loadingMessage={t("cartLoadingMessage")}
+              onClose={closeCartDrawer}
+            />
+          }
+        >
+          <CartDrawer />
+        </Suspense>
+      )}
       <CartToast />
 
       {!hideFooter && (
@@ -448,7 +489,7 @@ const PublicLayout = () => {
         <Container className="py-16 sm:py-20">
           <div className="grid gap-12 lg:grid-cols-[1.2fr_0.8fr_0.8fr]">
             <div>
-              <Link to="/" aria-label="Davinto home" className="mb-6 block w-fit">
+              <Link to="/" aria-label={t("homeAria")} className="mb-6 block w-fit">
                 <img
                   src="/images/logo/logo-5.webp"
                   alt={t("footer.logoAlt")}
@@ -463,7 +504,7 @@ const PublicLayout = () => {
 
             <div>
               <p className="text-[0.64rem] font-black uppercase tracking-[0.28em] text-[#c7a852]">
-                Policies
+                {t("footer.policies")}
               </p>
               <div className="mt-5 grid gap-3 text-sm text-[#f5f0e8]/58">
                 {policyLinks.map((link) => (
@@ -472,7 +513,7 @@ const PublicLayout = () => {
                     to={link.path}
                     className="w-fit transition hover:text-[#f5f0e8]"
                   >
-                    {link.label}
+                    {t(`footer.policyLinks.${link.key}`)}
                   </Link>
                 ))}
               </div>

@@ -31,12 +31,8 @@ const Cart = () => {
 
   // SEO
   useSeo({
-    title: language === "ar" 
-      ? "سلتك | متجر دافينتو" 
-      : "Your Cart | Davinto Store",
-    description: language === "ar"
-      ? "راجع سلتك قبل الدفع في متجر دافينتو."
-      : "Review your Davinto cart before checkout.",
+    title: t("cart:seo.title"),
+    description: t("cart:seo.description"),
     robots: "noindex,nofollow",
   });
   const formatMoney = (value) => formatCurrency(value, language);
@@ -104,8 +100,8 @@ const Cart = () => {
   const isQuotePending =
     !hasCurrentQuote && (isQuoteCalculating || isFetchingQuote || isLoadingQuote);
   const quoteStatusText = isQuotePending
-    ? t("common:updatingTotals", { defaultValue: "Updating totals..." })
-    : t("common:totalsUnavailable", { defaultValue: "Totals unavailable" });
+    ? t("common:updatingTotals")
+    : t("common:totalsUnavailable");
   const isQuoteRefreshing = hasCurrentQuote && isFetchingQuote;
   const formatQuotedMoney = (value) =>
     hasCurrentQuote ? formatMoney(value) : quoteStatusText;
@@ -126,7 +122,7 @@ const Cart = () => {
         <Container className="flex h-16 items-center justify-between gap-4">
           <Link
             to="/"
-            aria-label="Davinto home"
+            aria-label={t("common:homeAria")}
             className="flex h-11 w-28 items-center"
           >
             <img
@@ -139,7 +135,7 @@ const Cart = () => {
             to="/shop"
             className="text-[0.62rem] font-black uppercase tracking-[0.2em] text-[#f5f0e8]/62 transition hover:text-[#c7a852]"
           >
-            Back to shop
+            {t("cart:backToShop")}
           </Link>
         </Container>
       </div>
@@ -221,11 +217,11 @@ const Cart = () => {
                       : 0;
                     const originalLineTotal = originalUnitPrice * quantity;
                     const itemQuoteStatus = isQuotePending
-                      ? t("common:updating", { defaultValue: "Updating..." })
-                      : t("common:unavailable", { defaultValue: "Unavailable" });
+                      ? t("common:updating")
+                      : t("common:unavailable");
                     const appliedOfferTitle =
                       quoteItem?.appliedOfferTitle ||
-                      t("common:offer", { defaultValue: "Offer" });
+                      t("common:offer");
                     const maxStock = Number(item.maxStock || 1);
                     const canIncrease = Number(item.quantity || 1) < maxStock;
                     const displayImage = getCartItemImage(item);
@@ -375,11 +371,9 @@ const Cart = () => {
 
                 {(isQuotePending || isQuoteRefreshing) && (
                   <div className="mt-4 border border-[#f5f0e8]/12 bg-[#f5f0e8]/4 px-3 py-2 text-xs text-[#f5f0e8]/45">
-                    {t("common:updatingTotals", {
-                      defaultValue: isQuotePending
-                        ? "Updating totals..."
-                        : "Refreshing totals...",
-                    })}
+                    {isQuotePending
+                      ? t("common:updatingTotals")
+                      : t("common:refreshingTotals")}
                   </div>
                 )}
 
@@ -492,9 +486,7 @@ const Cart = () => {
                 <div className="grid gap-3">
                   {isQuotePending ? (
                     <Button className="w-full" disabled>
-                      {t("common:updatingTotals", {
-                        defaultValue: "Updating totals...",
-                      })}
+                      {t("common:updatingTotals")}
                     </Button>
                   ) : (
                     <Link to="/checkout">
@@ -507,7 +499,7 @@ const Cart = () => {
                       onClick={() => refetchQuote()}
                       className="text-[0.58rem] font-black uppercase tracking-[0.18em] text-[#c7a852] transition hover:text-[#f5f0e8]"
                     >
-                      {t("common:tryAgain", { defaultValue: "Try again" })}
+                      {t("common:tryAgain")}
                     </button>
                   )}
                   <Link to="/shop">
@@ -541,13 +533,13 @@ const Cart = () => {
               id="clear-cart-dialog-title"
               className="font-serif text-3xl font-semibold text-[#f5f0e8]"
             >
-              Clear cart?
+              {t("cart:clearConfirmTitle")}
             </p>
             <p
               id="clear-cart-dialog-message"
               className="mt-3 text-sm leading-7 text-[#f5f0e8]/58"
             >
-              This will remove all items from your cart.
+              {t("cart:clearConfirmMessage")}
             </p>
             <div className="mt-7 grid gap-3 sm:grid-cols-2">
               <Button
@@ -556,10 +548,10 @@ const Cart = () => {
                 onClick={() => setIsClearConfirmOpen(false)}
                 data-autofocus
               >
-                Cancel
+                {t("common:cancel")}
               </Button>
               <Button type="button" variant="danger" onClick={handleClearCart}>
-                Clear Cart
+                {t("cart:clearConfirmAction")}
               </Button>
             </div>
           </div>

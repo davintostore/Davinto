@@ -1,5 +1,7 @@
 {
   "success": {
+    "seoTitle": "Order Confirmed | Davinto Store",
+    "seoDescription": "Thank you for your order! You can track it on Davinto Store.",
     "headerLabel": "Order confirmed",
     "headerTitle": "Your Order Is In",
     "headerDescription": "Your order has been received. You can track it anytime using your order number and email.",
@@ -24,6 +26,8 @@
     "title": "Order Success | Davinto"
   },
   "track": {
+    "seoTitle": "Track Your Order | Davinto Store",
+    "seoDescription": "Track your Davinto order using your order number and checkout email.",
     "headerLabel": "Order archive",
     "headerTitle": "Follow Your Order",
     "headerDescription": "Use your order number and checkout email to see the latest status.",
@@ -63,6 +67,8 @@
     "timeline": "Timeline"
   },
   "my": {
+    "seoTitle": "My Orders | Davinto Store",
+    "seoDescription": "View your orders and track their status on Davinto Store.",
     "headerLabel": "Customer archive",
     "headerTitle": "My Orders",
     "headerDescription": "Review every order placed while signed in, including delivery progress, payment state, and the pieces in each order.",

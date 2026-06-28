@@ -170,6 +170,7 @@ const OrderDetail = ({ orderId }) => {
                           alt={item.imageAlt || item.name}
                           onError={hideBrokenImage}
                           className="h-full w-full object-cover"
+                          loading="lazy"
                         />
                       ) : (
                         <div className="flex h-full items-center justify-center text-[0.52rem] font-black uppercase tracking-[0.18em] text-[#8b8075]">
@@ -423,12 +424,8 @@ const MyOrders = () => {
 
   // SEO
   useSeo({
-    title: language === "ar" 
-      ? "طلباتي | متجر دافينتو" 
-      : "My Orders | Davinto Store",
-    description: language === "ar"
-      ? "عرض طلباتك السابقة وتتبع حالتها على متجر دافينتو."
-      : "View your orders and track their status on Davinto Store.",
+    title: t("orders:my.seoTitle"),
+    description: t("orders:my.seoDescription"),
     robots: "noindex,nofollow",
   });
 
@@ -625,6 +622,7 @@ const MyOrders = () => {
                                         alt={item.imageAlt || item.name}
                                         onError={hideBrokenImage}
                                         className="h-full w-full object-cover"
+                                        loading="lazy"
                                       />
                                     ) : (
                                       <div className="h-full w-full bg-[#f5f0e8]/5" />

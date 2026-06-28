@@ -11,6 +11,7 @@ import enCheckout from "../locales/en/checkout.json";
 import enOrders from "../locales/en/orders.json";
 import enAuth from "../locales/en/auth.json";
 import enAccount from "../locales/en/account.json";
+import enPolicies from "../locales/en/policies.json";
 
 import arCommon from "../locales/ar/common.json";
 import arNavigation from "../locales/ar/navigation.json";
@@ -21,6 +22,7 @@ import arCheckout from "../locales/ar/checkout.json";
 import arOrders from "../locales/ar/orders.json";
 import arAuth from "../locales/ar/auth.json";
 import arAccount from "../locales/ar/account.json";
+import arPolicies from "../locales/ar/policies.json";
 
 const resources = {
   en: {
@@ -33,6 +35,7 @@ const resources = {
     orders: enOrders,
     auth: enAuth,
     account: enAccount,
+    policies: enPolicies,
   },
   ar: {
     common: arCommon,
@@ -44,6 +47,7 @@ const resources = {
     orders: arOrders,
     auth: arAuth,
     account: arAccount,
+    policies: arPolicies,
   },
 };
 

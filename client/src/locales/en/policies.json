@@ -1,0 +1,97 @@
+{
+  "supportLabel": "Davinto Support",
+  "pages": {
+    "privacy": {
+      "path": "/privacy-policy",
+      "title": "Privacy Policy",
+      "description": "How Davinto handles order, contact, and customer service information.",
+      "sections": [
+        {
+          "title": "Information we collect",
+          "body": "When you place an order, create an account, track an order, or contact Davinto, we collect the details needed to process and support your request. This may include your name, phone number, email, delivery address, selected items, payment method, and order notes."
+        },
+        {
+          "title": "How we use information",
+          "body": "We use customer information to confirm orders, arrange delivery, process payment-related steps, provide customer support, improve the store experience, prevent misuse, and keep accurate order records."
+        },
+        {
+          "title": "Sharing information",
+          "body": "We only share order details where needed to complete the service, such as courier handling, payment processing, or required operational support. Davinto does not sell customer contact information."
+        },
+        {
+          "title": "Data care",
+          "body": "We keep customer information only for legitimate store operations, service history, accounting, and support. If you need help with your information, contact Davinto with the relevant order number or account email."
+        }
+      ]
+    },
+    "refund": {
+      "path": "/refund-policy",
+      "title": "Refund Policy",
+      "description": "A clear overview of how Davinto reviews return, exchange, and refund requests.",
+      "sections": [
+        {
+          "title": "Request review",
+          "body": "Refund, exchange, or return requests are reviewed based on the order details, item condition, and the nature of the issue. Please contact Davinto with your order number as soon as possible if something is wrong."
+        },
+        {
+          "title": "Item condition",
+          "body": "Items should be unused, clean, and in their original condition when a return or exchange is requested. Davinto may be unable to support requests for items that show wear, damage, washing, alteration, or missing packaging."
+        },
+        {
+          "title": "Incorrect or damaged items",
+          "body": "If you receive an incorrect or damaged item, contact us with clear photos and your order number so the team can review the issue and propose the appropriate next step."
+        },
+        {
+          "title": "Refund handling",
+          "body": "Approved refunds are handled through the suitable available method after the request is reviewed. Timing may vary depending on the payment method and operational processing."
+        }
+      ]
+    },
+    "shipping": {
+      "path": "/shipping-policy",
+      "title": "Shipping Policy",
+      "description": "Delivery coverage, fees, and order confirmation details for Davinto orders across Egypt.",
+      "sections": [
+        {
+          "title": "Coverage",
+          "body": "Davinto delivers across Egypt. Delivery availability and timing may vary by address, order details, courier capacity, and local operating conditions."
+        },
+        {
+          "title": "Delivery fees",
+          "body": "Cairo and Giza delivery fee is 70 EGP. Other Egyptian governorates delivery fee is 120 EGP. Any qualifying free-delivery offer or discount is recalculated securely at checkout."
+        },
+        {
+          "title": "Order confirmation",
+          "body": "Please enter accurate phone and address details at checkout. The team may contact you to confirm details before dispatch, especially when information is incomplete or unclear."
+        },
+        {
+          "title": "Delivery updates",
+          "body": "You can track your order using the order number and checkout email. Delivery updates depend on order status, confirmation, and courier progress."
+        }
+      ]
+    },
+    "terms": {
+      "path": "/terms-and-conditions",
+      "title": "Terms & Conditions",
+      "description": "General terms for shopping through Davinto Store.",
+      "sections": [
+        {
+          "title": "Orders",
+          "body": "By placing an order, you confirm that the information provided is accurate and that you are authorized to use the selected payment method."
+        },
+        {
+          "title": "Products",
+          "body": "Davinto aims to present product information, colors, prices, offers, and availability clearly. Actual colors can vary slightly by screen, lighting, and photography."
+        },
+        {
+          "title": "Pricing and availability",
+          "body": "Prices, stock, offers, bundles, delivery fees, discounts, and checkout totals are calculated through the store systems and may be updated before an order is confirmed."
+        },
+        {
+          "title": "Customer support",
+          "body": "For order questions, delivery issues, payment concerns, or product requests, contact Davinto with the relevant order number so the team can assist."
+        }
+      ]
+    }
+  }
+}

@@ -1183,6 +1183,7 @@ const AdminOrders = () => {
                                     src={item.image}
                                     alt={item.name}
                                     className="h-full w-full object-cover"
+                                    loading="lazy"
                                   />
                                 ) : (
                                   <div className="h-full w-full bg-white/5" />

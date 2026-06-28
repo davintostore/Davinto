@@ -5,6 +5,7 @@ import { ArrowUpRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import ProductCard from "../../components/product/ProductCard";
+import SpinningDavintoLogo from "../../components/home/SpinningDavintoLogo";
 import Container from "../../components/ui/Container";
 import Button from "../../components/ui/Button";
 import SectionLabel from "../../components/ui/SectionLabel";
@@ -108,20 +109,12 @@ const Home = () => {
 
   // SEO
   useSeo({
-    title: language === "ar" 
-      ? "متجر دافينتو | ملابس يومية عالية الجودة" 
-      : "Davinto Store | Premium Everyday Clothing",
-    description: language === "ar"
-      ? "اكتشف متجر دافينتو - ملابس يومية عالية الجودة وقطع فنية وتصاميم مستوحاة من الفن."
-      : "Discover Davinto Store — premium everyday clothing, graphic pieces, blanks, and art-inspired designs made for effortless style.",
+    title: t("seo.title"),
+    description: t("seo.description"),
     robots: "index,follow",
     og: {
-      title: language === "ar" 
-        ? "متجر دافينتو | ملابس يومية عالية الجودة" 
-        : "Davinto Store | Premium Everyday Clothing",
-      description: language === "ar"
-        ? "اكتشف متجر دافينتو - ملابس يومية عالية الجودة وقطع فنية."
-        : "Discover premium everyday clothing and art-inspired designs at Davinto Store.",
+      title: t("seo.title"),
+      description: t("seo.ogDescription"),
       type: "website",
       url: window.location.origin,
     },
@@ -131,9 +124,7 @@ const Home = () => {
       name: "Davinto Store",
       url: window.location.origin,
       sameAs: socialLinks.map((link) => link.href),
-      description: language === "ar"
-        ? "متجر دافينتو للملابس العالية الجودة"
-        : "Premium everyday clothing store",
+      description: t("seo.jsonLdDescription"),
       address: {
         "@type": "PostalAddress",
         addressCountry: "EG",
@@ -175,20 +166,21 @@ const Home = () => {
         <HeroBackgroundVideo />
         <div className="absolute inset-0 bg-black/45" />
 
-        <Container className="relative flex min-h-[clamp(36rem,74svh,46rem)] items-end pb-14 pt-32 sm:pb-16 sm:pt-36 lg:items-center lg:py-24">
-          <div className="max-w-6xl">
-            <SectionLabel>{t("hero.label")}</SectionLabel>
+        <Container className="relative flex min-h-[clamp(36rem,74svh,46rem)] items-end justify-center pb-14 pt-32 text-center sm:pb-16 sm:pt-36 lg:items-center lg:py-24">
+          <div className="mx-auto flex max-w-6xl flex-col items-center">
+            <SpinningDavintoLogo />
 
-            <h1 className="editorial-heading display-heading hero-display-heading max-w-5xl text-[#f5f0e8]">
+            <SectionLabel className="justify-center pt-5">
+              {t("hero.label")}
+            </SectionLabel>
+
+            <h1 className="editorial-heading display-heading hero-display-heading mx-auto max-w-5xl text-[#f5f0e8]">
               {t("hero.title")}
             </h1>
 
-            <div className="mt-8 grid max-w-4xl gap-7 border-t border-[#f5f0e8]/24 pt-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-              <p className="max-w-xl text-base leading-8 text-[#f5f0e8]/68">
-                {t("hero.description")}
-              </p>
+            <div className="mt-8 flex w-full max-w-4xl justify-center border-t border-[#f5f0e8]/24 pt-6">
 
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap justify-center gap-3">
                 <Link to={primaryCategoryPath}>
                   <Button>{t("hero.shop")}</Button>
                 </Link>
@@ -241,7 +233,7 @@ const Home = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/44 to-transparent" />
                     <div className="relative flex min-h-[22rem] flex-col justify-end p-5 sm:p-6">
                       <p className="text-[0.58rem] font-black uppercase tracking-[0.24em] text-[#c7a852]">
-                        Collection
+                        {t("categories.cardLabel")}
                       </p>
                       <h3 className="mt-3 font-serif text-4xl text-[#f5f0e8] transition group-hover:text-[#c7a852] sm:text-5xl">
                         {category.name}
@@ -250,7 +242,7 @@ const Home = () => {
                         {visual.subtitle}
                       </p>
                       <span className="mt-6 inline-flex w-fit items-center gap-2 border border-[#f5f0e8]/18 px-4 py-3 text-[0.62rem] font-black uppercase tracking-[0.18em] text-[#f5f0e8] transition group-hover:border-[#c7a852] group-hover:text-[#c7a852]">
-                        Shop Collection
+                        {t("categories.cardCta")}
                         <ArrowUpRight size={15} />
                       </span>
                     </div>

@@ -1,5 +1,6 @@
 {
   "brand": "Davinto",
+  "homeAria": "Davinto home",
   "loading": "Loading...",
   "error": "Something went wrong.",
   "retry": "Retry",
@@ -9,6 +10,11 @@
   "remove": "Remove",
   "apply": "Apply",
   "checking": "Checking...",
+  "updating": "Updating...",
+  "updatingTotals": "Updating totals...",
+  "refreshingTotals": "Refreshing totals...",
+  "totalsUnavailable": "Totals unavailable",
+  "tryAgain": "Try again",
   "previous": "Previous",
   "next": "Next",
   "page": "Page {{page}} / {{pages}}",

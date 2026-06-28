@@ -35,12 +35,8 @@ const TrackOrder = () => {
 
   // SEO
   useSeo({
-    title: language === "ar" 
-      ? "تتبع طلبك | متجر دافينتو" 
-      : "Track Your Order | Davinto Store",
-    description: language === "ar"
-      ? "تتبع طلبك في متجر دافينتو باستخدام رقم الطلب والبريد الإلكتروني للخروج."
-      : "Track your Davinto order using your order number and checkout email.",
+    title: t("orders:track.seoTitle"),
+    description: t("orders:track.seoDescription"),
     robots: "noindex,nofollow",
   });
   const formatMoney = (value) => formatCurrency(value, language);
@@ -509,6 +505,7 @@ const TrackOrder = () => {
                                 alt={item.imageAlt || item.name}
                                 onError={hideBrokenImage}
                                 className="h-full w-full object-cover"
+                                loading="lazy"
                               />
                             ) : (
                               <div className="h-full w-full bg-white/5" />

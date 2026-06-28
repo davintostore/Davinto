@@ -1,9 +1,14 @@
 {
+  "seo": {
+    "title": "Checkout | Davinto Store",
+    "description": "Complete your Davinto order with delivery across Egypt."
+  },
   "headerLabel": "Final selection",
   "headerTitle": "Complete Your Order",
   "headerDescription": "Add delivery details, choose how you want to pay, and review the final edit before placing your order.",
   "emptyTitle": "Cart Is Empty",
   "emptyDescription": "Add products to your cart before starting checkout.",
+  "backToCart": "Back to cart",
   "shopNow": "Shop Now",
   "customer": "Customer",
   "deliveryDetails": "Delivery Details",

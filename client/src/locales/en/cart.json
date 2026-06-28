@@ -1,21 +1,32 @@
 {
+  "seo": {
+    "title": "Your Cart | Davinto Store",
+    "description": "Review your Davinto cart before checkout."
+  },
   "label": "Selected pieces",
   "title": "Your Cart",
+  "closeDrawer": "Close cart drawer",
   "description": "Review the color, size, and quantity of every piece before moving to delivery and payment.",
   "emptyLabel": "Empty selection",
   "emptyTitle": "The Rack Is Clear.",
   "emptyDescription": "Start with the current collection, choose a color and size, and your selected pieces will wait here.",
   "explore": "Explore The Collection",
+  "backToShop": "Back to shop",
   "totalItems": "{{count}} total items",
   "currentSelection": "Current selection",
   "clear": "Clear Cart",
   "max": "Max {{count}}",
   "decreaseItem": "Decrease {{name}} quantity",
   "increaseItem": "Increase {{name}} quantity",
+  "viewItem": "View {{name}}",
+  "removeItem": "Remove {{name}}",
   "summary": "Order summary",
   "calculatedLater": "Calculated later",
   "estimatedTotal": "Estimated total",
   "checkout": "Continue To Checkout",
   "keepShopping": "Keep Shopping",
+  "clearConfirmTitle": "Clear cart?",
+  "clearConfirmMessage": "This will remove all items from your cart.",
+  "clearConfirmAction": "Clear Cart",
   "secureNote": "Offers, bundles, discount codes, and delivery fees are recalculated securely during checkout."
 }

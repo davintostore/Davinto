@@ -25,12 +25,8 @@ const Account = () => {
 
   // SEO
   useSeo({
-    title: language === "ar" 
-      ? "حسابي | متجر دافينتو" 
-      : "My Account | Davinto Store",
-    description: language === "ar"
-      ? "إدارة حسابك الشخصي على متجر دافينتو."
-      : "Manage your Davinto Store account.",
+    title: t("account:seo.title"),
+    description: t("account:seo.description"),
     robots: "noindex,nofollow",
   });
 

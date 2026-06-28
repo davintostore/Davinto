@@ -21,8 +21,7 @@ const getIntendedDestination = (location) => {
 };
 
 const SignUp = () => {
-  const { t, i18n } = useTranslation("auth");
-  const language = i18n.resolvedLanguage === "ar" ? "ar" : "en";
+  const { t } = useTranslation("auth");
   const navigate = useNavigate();
   const location = useLocation();
   const { signup, isCustomerAuthenticated, isCustomerLoading } =
@@ -30,12 +29,8 @@ const SignUp = () => {
 
   // SEO
   useSeo({
-    title: language === "ar" 
-      ? "إنشاء حساب | متجر دافينتو" 
-      : "Create Account | Davinto Store",
-    description: language === "ar"
-      ? "أنشئ حسابًا جديدًا في متجر دافينتو لتتمكن من التسوق بسهولة."
-      : "Create a new account at Davinto Store.",
+    title: t("signup.seoTitle"),
+    description: t("signup.seoDescription"),
     robots: "noindex,nofollow",
   });
 

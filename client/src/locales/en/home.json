@@ -1,4 +1,10 @@
 {
+  "seo": {
+    "title": "Davinto Store | Premium Everyday Clothing",
+    "description": "Discover Davinto Store - premium everyday clothing, graphic pieces, blanks, and art-inspired designs made for effortless style.",
+    "ogDescription": "Discover premium everyday clothing and art-inspired designs at Davinto Store.",
+    "jsonLdDescription": "Premium everyday clothing store"
+  },
   "hero": {
     "label": "Davinto essentials",
     "title": "Clean essentials for everyday wear.",
@@ -20,7 +26,9 @@
   "categories": {
     "label": "Collection",
     "heading": "Shop by Category",
-    "description": "Explore Davinto edits by category."
+    "description": "Explore Davinto edits by category.",
+    "cardLabel": "Collection",
+    "cardCta": "Shop Collection"
   },
   "cta": {
     "label": "Davinto",
