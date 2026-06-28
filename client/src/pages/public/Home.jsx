@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowUpRight } from "lucide-react";
@@ -31,7 +31,19 @@ const HERO_VIDEO_SOURCES = {
   },
 };
 
+const prefersStaticHeroMotion = () => {
+  if (typeof window === "undefined") return false;
+
+  const reduceMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  ).matches;
+  const saveData = Boolean(window.navigator.connection?.saveData);
+
+  return reduceMotion || saveData;
+};
+
 const HeroBackgroundVideo = () => {
+  const videoRef = useRef(null);
   const [videoVariant, setVideoVariant] = useState(() => {
     if (typeof window === "undefined") return "desktop";
     return window.matchMedia("(max-width: 767px)").matches
@@ -40,29 +52,74 @@ const HeroBackgroundVideo = () => {
   });
   const [shouldRenderVideo, setShouldRenderVideo] = useState(() => {
     if (typeof window === "undefined") return true;
-    return !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    return !prefersStaticHeroMotion();
   });
   const [isVideoAvailable, setIsVideoAvailable] = useState(true);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
   useEffect(() => {
     const mobileQuery = window.matchMedia("(max-width: 767px)");
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const connection = window.navigator.connection;
 
     const syncVideoState = () => {
       setVideoVariant(mobileQuery.matches ? "mobile" : "desktop");
-      setShouldRenderVideo(!motionQuery.matches);
+      setShouldRenderVideo(!motionQuery.matches && !connection?.saveData);
       setIsVideoAvailable(true);
     };
 
     syncVideoState();
     mobileQuery.addEventListener("change", syncVideoState);
     motionQuery.addEventListener("change", syncVideoState);
+    connection?.addEventListener?.("change", syncVideoState);
 
     return () => {
       mobileQuery.removeEventListener("change", syncVideoState);
       motionQuery.removeEventListener("change", syncVideoState);
+      connection?.removeEventListener?.("change", syncVideoState);
     };
   }, []);
+
+  useEffect(() => {
+    if (!shouldRenderVideo || !isVideoAvailable) {
+      return undefined;
+    }
+
+    const video = videoRef.current;
+
+    if (!video) return undefined;
+
+    let isCancelled = false;
+
+    video.muted = true;
+    video.defaultMuted = true;
+    video.playsInline = true;
+
+    const playHeroVideo = async () => {
+      try {
+        const playPromise = video.play();
+
+        if (playPromise && typeof playPromise.then === "function") {
+          await playPromise;
+        }
+
+        if (!isCancelled) {
+          setIsVideoPlaying(true);
+        }
+      } catch {
+        if (!isCancelled) {
+          setIsVideoPlaying(false);
+          setIsVideoAvailable(false);
+        }
+      }
+    };
+
+    playHeroVideo();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isVideoAvailable, shouldRenderVideo, videoVariant]);
 
   if (!shouldRenderVideo || !isVideoAvailable) {
     const posterOnlySource = HERO_VIDEO_SOURCES[videoVariant];
@@ -84,16 +141,23 @@ const HeroBackgroundVideo = () => {
         style={{ backgroundImage: `url("${source.poster}")` }}
       />
       <video
+        ref={videoRef}
         key={videoVariant}
-        className="davinto-hero-video absolute inset-0 h-full w-full object-cover"
+        className={`davinto-hero-video absolute inset-0 h-full w-full object-cover ${
+          isVideoPlaying ? "davinto-hero-video--playing" : ""
+        }`}
         autoPlay
         muted
+        defaultMuted
         loop
         playsInline
+        disablePictureInPicture
         preload="metadata"
         poster={source.poster}
         aria-hidden="true"
         tabIndex={-1}
+        onLoadStart={() => setIsVideoPlaying(false)}
+        onPlaying={() => setIsVideoPlaying(true)}
         onError={() => setIsVideoAvailable(false)}
       >
         <source src={source.webm} type="video/webm" />

@@ -388,8 +388,13 @@ html[lang="ar"] .page-shell label {
 }
 
 .davinto-hero-video {
-  opacity: 1;
+  opacity: 0;
   pointer-events: none;
+  transition: opacity 420ms ease;
+}
+
+.davinto-hero-video--playing {
+  opacity: 1;
 }
 
 .davinto-spin-logo {
