@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
-const LOGO_SRC = "/images/logo/davinto-spinning-logo.webp";
-const LAYER_COUNT = 28;
+const LOGO_SRC = "/images/logo/davinto-spinning-logo.webp?v=4";
+const LAYER_COUNT = 30;
 let logoDecodePromise = null;
 let isLogoDecoded = false;
 
@@ -47,6 +47,14 @@ if (typeof window !== "undefined") {
   preloadSpinningLogo().catch(() => {});
 }
 
+const mixColor = (a, b, amount) => ({
+  r: Math.round(a.r * (1 - amount) + b.r * amount),
+  g: Math.round(a.g * (1 - amount) + b.g * amount),
+  b: Math.round(a.b * (1 - amount) + b.b * amount),
+});
+
+const toRgb = (color) => `rgb(${color.r}, ${color.g}, ${color.b})`;
+
 const getLayerTransform = (index) => {
   const offset = LAYER_COUNT === 1 ? 0 : index / (LAYER_COUNT - 1) - 0.5;
 
@@ -61,20 +69,20 @@ const getLayerTransform = (index) => {
   ).toFixed(4)}vw, ${(offset * 1.1).toFixed(4)}rem))`;
 };
 
+const glassDark = { r: 42, g: 47, b: 58 };
+const glassLight = mixColor(glassDark, { r: 255, g: 255, b: 255 }, 0.74);
+
 const layers = Array.from({ length: LAYER_COUNT }, (_, index) => {
   const t = LAYER_COUNT === 1 ? 0.5 : index / (LAYER_COUNT - 1);
-  const isFace = index === 0 || index === LAYER_COUNT - 1;
   const edge = 1 - Math.abs(t - 0.5) * 2;
-  const brightness = isFace ? 1 : 0.92 - edge * 0.62;
-  const saturation = isFace ? 1 : 1 - edge * 0.55;
+  const color = mixColor(glassLight, glassDark, edge);
 
   return {
     index,
     style: {
       transform: getLayerTransform(index),
-      filter: `brightness(${brightness.toFixed(3)}) saturate(${saturation.toFixed(
-        3
-      )})`,
+      "--layer-bg": toRgb(color),
+      "--layer-opacity": (0.55 + edge * 0.4).toFixed(3),
     },
   };
 });
@@ -103,21 +111,20 @@ const SpinningDavintoLogo = () => {
       className="davinto-spin-logo"
       aria-hidden="true"
       data-ready={isReady ? "true" : "false"}
+      style={{ "--davinto-logo-mask": `url("${LOGO_SRC}")` }}
     >
       <div className="davinto-spin-logo__stage">
         {layers.map((layer) => (
-          <img
+          <div
             key={layer.index}
-            src={LOGO_SRC}
-            alt=""
-            className="davinto-spin-logo__layer"
-            draggable="false"
-            decoding="async"
-            fetchPriority={layer.index === 0 ? "high" : "auto"}
-            loading="eager"
+            className="davinto-spin-logo__mask-layer"
             style={layer.style}
           />
         ))}
+        <div className="davinto-spin-logo__cap davinto-spin-logo__cap--back" />
+        <div className="davinto-spin-logo__cap davinto-spin-logo__cap--front" />
+        <div className="davinto-spin-logo__gloss" />
+        <div className="davinto-spin-logo__highlight" />
       </div>
     </div>
   );

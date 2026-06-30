@@ -258,6 +258,7 @@ const normalizeProductPayload = (body = {}, existingProduct = null) => {
           .filter(Boolean)
       : [],
     isFeatured: Boolean(body.isFeatured),
+    isBestSeller: Boolean(body.isBestSeller),
     status: ["draft", "active", "archived"].includes(body.status)
       ? body.status
       : "draft",
@@ -451,6 +452,52 @@ const attachActiveOfferPreviews = async (products = []) => {
   });
 };
 
+const getEffectiveProductDisplayPrice = (product = {}) => {
+  const offerPrice = Number(product.activeOfferPreview?.priceAfterOffer || 0);
+  const basePrice = Number(product.price || 0);
+
+  if (offerPrice > 0 && offerPrice < basePrice) {
+    return offerPrice;
+  }
+
+  return basePrice;
+};
+
+const compareDateDesc = (a, b) =>
+  new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+
+const sortProductObjects = (products = [], sort = "newest") => {
+  const sortedProducts = [...products];
+
+  if (sort === "price_asc") {
+    return sortedProducts.sort(
+      (a, b) =>
+        getEffectiveProductDisplayPrice(a) - getEffectiveProductDisplayPrice(b)
+    );
+  }
+
+  if (sort === "price_desc") {
+    return sortedProducts.sort(
+      (a, b) =>
+        getEffectiveProductDisplayPrice(b) - getEffectiveProductDisplayPrice(a)
+    );
+  }
+
+  if (sort === "name_asc") {
+    return sortedProducts.sort((a, b) =>
+      String(a.name || "").localeCompare(String(b.name || ""), "en")
+    );
+  }
+
+  if (sort === "name_desc") {
+    return sortedProducts.sort((a, b) =>
+      String(b.name || "").localeCompare(String(a.name || ""), "en")
+    );
+  }
+
+  return sortedProducts.sort(compareDateDesc);
+};
+
 const parsePrice = (value) => {
   if (value === undefined || value === null || value === "") return null;
 
@@ -459,6 +506,26 @@ const parsePrice = (value) => {
   if (!Number.isFinite(number) || number < 0) return null;
 
   return number;
+};
+
+const buildEffectivePriceRange = async (baseQuery) => {
+  const products = await Product.find(baseQuery).select("price category");
+  const productsWithOfferPreviews = await attachActiveOfferPreviews(products);
+  const prices = productsWithOfferPreviews
+    .map(getEffectiveProductDisplayPrice)
+    .filter((price) => Number.isFinite(price) && price >= 0);
+
+  if (!prices.length) {
+    return {
+      min: 0,
+      max: 0,
+    };
+  }
+
+  return {
+    min: Math.min(...prices),
+    max: Math.max(...prices),
+  };
 };
 
 const buildPublicFilterMetadata = async (baseQuery) => {
@@ -511,22 +578,7 @@ const buildPublicFilterMetadata = async (baseQuery) => {
         },
       },
     ]),
-    Product.aggregate([
-      {
-        $match: baseQuery,
-      },
-      {
-        $group: {
-          _id: null,
-          min: {
-            $min: "$price",
-          },
-          max: {
-            $max: "$price",
-          },
-        },
-      },
-    ]),
+    buildEffectivePriceRange(baseQuery),
   ]);
 
   return {
@@ -540,8 +592,8 @@ const buildPublicFilterMetadata = async (baseQuery) => {
       }))
       .filter((color) => color.slug && color.name),
     price: {
-      min: priceRange[0]?.min || 0,
-      max: priceRange[0]?.max || 0,
+      min: priceRange.min || 0,
+      max: priceRange.max || 0,
     },
   };
 };
@@ -551,6 +603,7 @@ const getPublicProducts = asyncHandler(async (req, res) => {
     category,
     search,
     featured,
+    bestSeller,
     color,
     minPrice,
     maxPrice,
@@ -566,6 +619,10 @@ const getPublicProducts = asyncHandler(async (req, res) => {
 
   if (featured === "true") {
     baseQuery.isFeatured = true;
+  }
+
+  if (bestSeller === "true") {
+    baseQuery.isBestSeller = true;
   }
 
   if (category) {
@@ -612,18 +669,7 @@ const getPublicProducts = asyncHandler(async (req, res) => {
 
   const numericMinPrice = parsePrice(minPrice);
   const numericMaxPrice = parsePrice(maxPrice);
-
-  if (numericMinPrice !== null || numericMaxPrice !== null) {
-    query.price = {};
-
-    if (numericMinPrice !== null) {
-      query.price.$gte = numericMinPrice;
-    }
-
-    if (numericMaxPrice !== null) {
-      query.price.$lte = numericMaxPrice;
-    }
-  }
+  const hasPriceFilter = numericMinPrice !== null || numericMaxPrice !== null;
 
   const stockQuery = buildStockQuery();
 
@@ -652,6 +698,40 @@ const getPublicProducts = asyncHandler(async (req, res) => {
   };
 
   const sortOption = sortMap[sort] || sortMap.newest;
+
+  if (hasPriceFilter) {
+    const [products, filters] = await Promise.all([
+      Product.find(query).populate("category", "name slug translations"),
+      buildPublicFilterMetadata(baseQuery),
+    ]);
+
+    const productsWithOfferPreviews = await attachActiveOfferPreviews(products);
+    const priceFilteredProducts = productsWithOfferPreviews.filter((product) => {
+      const effectivePrice = getEffectiveProductDisplayPrice(product);
+
+      if (numericMinPrice !== null && effectivePrice < numericMinPrice) {
+        return false;
+      }
+
+      if (numericMaxPrice !== null && effectivePrice > numericMaxPrice) {
+        return false;
+      }
+
+      return true;
+    });
+    const sortedProducts = sortProductObjects(priceFilteredProducts, sort);
+    const pagedProducts = sortedProducts.slice(skip, skip + numericLimit);
+
+    return res.status(200).json({
+      success: true,
+      count: pagedProducts.length,
+      total: priceFilteredProducts.length,
+      page: numericPage,
+      pages: Math.ceil(priceFilteredProducts.length / numericLimit),
+      filters,
+      products: pagedProducts,
+    });
+  }
 
   const [products, total, filters] = await Promise.all([
     Product.find(query)
@@ -871,6 +951,7 @@ const updateProduct = asyncHandler(async (req, res) => {
   product.colors = payload.colors;
   product.badges = payload.badges;
   product.isFeatured = payload.isFeatured;
+  product.isBestSeller = payload.isBestSeller;
   product.status = payload.status;
   product.seo = payload.seo;
 

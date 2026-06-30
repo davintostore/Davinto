@@ -7,6 +7,7 @@
   "save": "Save",
   "saving": "Saving...",
   "cancel": "Cancel",
+  "close": "Close",
   "remove": "Remove",
   "apply": "Apply",
   "checking": "Checking...",
@@ -94,5 +95,19 @@
     "instapay": "Instapay",
     "vodafoneCash": "Vodafone Cash",
     "paymobCard": "Visa / Mastercard"
+  },
+  "search": {
+    "label": "Search",
+    "title": "Search",
+    "search": "Search",
+    "submit": "Submit search",
+    "placeholder": "Search products or categories",
+    "trending": "Trending",
+    "trendingTerms": ["blanks", "art", "black", "white", "oversized", "history"],
+    "products": "Products",
+    "categories": "Categories",
+    "typeToSearch": "Type at least two characters to search products.",
+    "noProducts": "No products matched this search.",
+    "noCategories": "No categories matched this search."
   }
 }

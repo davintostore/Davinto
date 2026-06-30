@@ -48,6 +48,9 @@ const sortOptions = [
   { value: "name_desc", key: "sortNameDesc" },
 ];
 
+const PRICE_RANGE_MIN = 0;
+const PRICE_RANGE_MAX = 3000;
+
 const hasArabicText = (value) => /[\u0600-\u06ff]/.test(String(value || ""));
 
 const getColorLabel = (color, language, t) => {
@@ -83,6 +86,14 @@ const sortColors = (colors) => {
     if (aRank !== bRank) return aRank - bRank;
     return aSlug.localeCompare(bSlug, "en");
   });
+};
+
+const clampNumber = (value, min, max) => {
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue)) return min;
+
+  return Math.min(Math.max(numericValue, min), max);
 };
 
 const AccordionSection = ({ title, children, isOpen, onToggle }) => {
@@ -135,7 +146,12 @@ const CatalogFilters = ({
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [sortRouteKey, setSortRouteKey] = useState("");
-  const [openFilterSection, setOpenFilterSection] = useState(null);
+  const [openFilterSections, setOpenFilterSections] = useState({
+    availability: false,
+    price: false,
+    productType: false,
+    color: false,
+  });
   const sortRef = useRef(null);
   const [priceDraft, setPriceDraft] = useState({
     minPrice: filters.minPrice || "",
@@ -157,7 +173,15 @@ const CatalogFilters = ({
 
     sourceColors.forEach((color) => {
       const slug = String(color?.slug || "").trim();
-      if (slug) colorsBySlug.set(slug, { ...color, slug });
+      if (!slug) return;
+
+      const normalizedColor = {
+        ...color,
+        slug,
+        count: Number(color?.count ?? 0),
+      };
+
+      colorsBySlug.set(slug, normalizedColor);
     });
 
     selectedColors.forEach((slug) => {
@@ -169,14 +193,78 @@ const CatalogFilters = ({
 
     return sortColors(Array.from(colorsBySlug.values()));
   }, [metadata, selectedColors]);
-  const localizedCategories = useMemo(
-    () => categories.map((category) => getLocalizedCategory(category, language)),
-    [categories, language]
-  );
+
+  const localizedCategories = useMemo(() => {
+    const categoriesByKey = new Map();
+
+    categories.forEach((category) => {
+      const localizedCategory = getLocalizedCategory(category, language);
+      const key = String(
+        localizedCategory.slug ||
+          localizedCategory._id ||
+          localizedCategory.name ||
+          ""
+      )
+        .trim()
+        .toLowerCase();
+
+      if (!key || categoriesByKey.has(key)) return;
+
+      categoriesByKey.set(key, localizedCategory);
+    });
+
+    return Array.from(categoriesByKey.values());
+  }, [categories, language]);
   const selectedSort =
     sortOptions.find((option) => option.value === filters.sort) ||
     sortOptions[0];
   const isSortMenuOpen = isSortOpen && sortRouteKey === currentRouteKey;
+  const sliderMinPrice = PRICE_RANGE_MIN;
+  const sliderMaxPrice = PRICE_RANGE_MAX;
+  const normalizedPriceDraft = useMemo(() => {
+    const minValue = clampNumber(
+      priceDraft.minPrice === "" ? sliderMinPrice : priceDraft.minPrice,
+      sliderMinPrice,
+      sliderMaxPrice
+    );
+    const maxValue = clampNumber(
+      priceDraft.maxPrice === "" ? sliderMaxPrice : priceDraft.maxPrice,
+      sliderMinPrice,
+      sliderMaxPrice
+    );
+
+    return {
+      minValue: Math.min(minValue, maxValue),
+      maxValue: Math.max(minValue, maxValue),
+    };
+  }, [priceDraft, sliderMinPrice, sliderMaxPrice]);
+  const rangeSize = Math.max(sliderMaxPrice - sliderMinPrice, 1);
+  const rangeMinPercent =
+    ((normalizedPriceDraft.minValue - sliderMinPrice) / rangeSize) * 100;
+  const rangeMaxPercent =
+    ((normalizedPriceDraft.maxValue - sliderMinPrice) / rangeSize) * 100;
+  const hasPriceDraft = Boolean(priceDraft.minPrice || priceDraft.maxPrice);
+  const priceInputValues = {
+    minPrice:
+      priceDraft.minPrice === ""
+        ? String(sliderMinPrice)
+        : String(normalizedPriceDraft.minValue),
+    maxPrice:
+      priceDraft.maxPrice === ""
+        ? String(sliderMaxPrice)
+        : String(normalizedPriceDraft.maxValue),
+  };
+
+  const buildPricePayload = () => ({
+    minPrice:
+      normalizedPriceDraft.minValue > sliderMinPrice
+        ? String(Math.round(normalizedPriceDraft.minValue))
+        : "",
+    maxPrice:
+      normalizedPriceDraft.maxValue < sliderMaxPrice
+        ? String(Math.round(normalizedPriceDraft.maxValue))
+        : "",
+  });
 
   useEffect(() => {
     if (!isSortMenuOpen) return undefined;
@@ -213,13 +301,21 @@ const CatalogFilters = ({
   };
 
   const openFilterDrawer = () => {
-    setOpenFilterSection(null);
+    setOpenFilterSections({
+      availability: false,
+      price: false,
+      productType: false,
+      color: false,
+    });
+    setPriceDraft({
+      minPrice: filters.minPrice || "",
+      maxPrice: filters.maxPrice || "",
+    });
     setIsFilterOpen(true);
   };
 
   const closeFilterDrawer = () => {
     setIsFilterOpen(false);
-    setOpenFilterSection(null);
   };
 
   const filterDrawerRef = useFocusTrap({
@@ -230,12 +326,58 @@ const CatalogFilters = ({
   });
 
   const toggleFilterSection = (section) => {
-    setOpenFilterSection((current) => (current === section ? null : section));
+    setOpenFilterSections((current) => ({
+      ...current,
+      [section]: !current[section],
+    }));
+  };
+
+  const applyPriceDraft = () => {
+    onApplyPrice(buildPricePayload());
   };
 
   const applyDrawer = () => {
-    onApplyPrice(priceDraft);
+    onApplyPrice(buildPricePayload());
     closeFilterDrawer();
+  };
+
+  const handleClearFilters = () => {
+    setPriceDraft({
+      minPrice: "",
+      maxPrice: "",
+    });
+    onClearFilters();
+  };
+
+  const updatePriceDraft = (field, value) => {
+    if (value === "") {
+      setPriceDraft((current) => ({
+        ...current,
+        [field]: "",
+      }));
+      return;
+    }
+
+    const numericValue = Number(value);
+
+    if (!Number.isFinite(numericValue)) return;
+
+    if (field === "minPrice") {
+      setPriceDraft((current) => ({
+        ...current,
+        minPrice: String(
+          clampNumber(numericValue, sliderMinPrice, normalizedPriceDraft.maxValue)
+        ),
+      }));
+      return;
+    }
+
+    setPriceDraft((current) => ({
+      ...current,
+      maxPrice: String(
+        clampNumber(numericValue, normalizedPriceDraft.minValue, sliderMaxPrice)
+      ),
+    }));
   };
 
   const filterDrawer =
@@ -258,12 +400,12 @@ const CatalogFilters = ({
               onClick={closeFilterDrawer}
             />
 
-            <aside className="fixed bottom-0 right-0 top-0 flex w-full max-w-md flex-col overflow-hidden border-l border-[#c7a852]/30 bg-[#1c1917] shadow-2xl">
+            <aside className="cart-drawer-panel fixed bottom-0 right-0 top-0 flex w-[min(88vw,28rem)] max-w-[28rem] flex-col overflow-hidden border-l border-[#c7a852]/30 bg-[#110f0e] shadow-2xl sm:w-[26rem] lg:w-[28rem]">
               <div className="flex shrink-0 items-center justify-between border-b border-[#f5f0e8]/12 p-5">
                 <div>
                   <p
                     id="catalog-filter-title"
-                    className="text-[0.64rem] font-black uppercase tracking-[0.22em] text-[#c7a852]"
+                    className="text-[0.74rem] font-black uppercase tracking-[0.18em] text-[#c7a852]"
                   >
                     {t("filters.title")}
                   </p>
@@ -276,7 +418,7 @@ const CatalogFilters = ({
 
                 <button
                   type="button"
-                  className="flex h-10 w-10 items-center justify-center border border-[#f5f0e8]/18 text-[#f5f0e8]"
+                  className="flex h-10 w-10 items-center justify-center text-[#f5f0e8]/72 transition hover:text-[#c7a852]"
                   aria-label={t("filters.close")}
                   onClick={closeFilterDrawer}
                   data-autofocus
@@ -288,23 +430,30 @@ const CatalogFilters = ({
               <div className="min-h-0 flex-1 overflow-y-auto px-5">
                 <AccordionSection
                   title={t("filters.availability")}
-                  isOpen={openFilterSection === "availability"}
+                  isOpen={openFilterSections.availability}
                   onToggle={() => toggleFilterSection("availability")}
                 >
                   <div className="grid gap-2">
                     {["all", "inStock", "outOfStock"].map((value) => (
                       <label
                         key={value}
-                        className="flex cursor-pointer items-center gap-3 text-sm text-[#f5f0e8]/72"
+                        className="flex cursor-pointer items-center justify-between gap-3 text-sm text-[#f5f0e8]/72"
                       >
-                        <input
-                          type="radio"
-                          name="availability"
-                          value={value}
-                          checked={filters.availability === value}
-                          onChange={() => onAvailabilityChange(value)}
-                        />
-                        <span>{t(`filters.${value}`)}</span>
+                        <span className="flex items-center gap-3">
+                          <input
+                            type="radio"
+                            name="availability"
+                            value={value}
+                            checked={filters.availability === value}
+                            onChange={() => onAvailabilityChange(value)}
+                          />
+                          <span>{t(`filters.${value}`)}</span>
+                        </span>
+                        {value === "all" && (
+                          <span className="text-[#f5f0e8]/38">
+                            {productCount}
+                          </span>
+                        )}
                       </label>
                     ))}
                   </div>
@@ -312,44 +461,93 @@ const CatalogFilters = ({
 
                 <AccordionSection
                   title={t("filters.priceRange")}
-                  isOpen={openFilterSection === "price"}
+                  isOpen={openFilterSections.price}
                   onToggle={() => toggleFilterSection("price")}
                 >
+                  <div className="pb-4">
+                    <div
+                      className="relative h-9"
+                      style={{
+                        "--range-min": `${rangeMinPercent}%`,
+                        "--range-max": `${rangeMaxPercent}%`,
+                      }}
+                    >
+                      <span
+                        className="davinto-range-track"
+                        aria-hidden="true"
+                      />
+                      <input
+                        type="range"
+                        dir="ltr"
+                        min={sliderMinPrice}
+                        max={sliderMaxPrice}
+                        value={normalizedPriceDraft.minValue}
+                        onChange={(event) =>
+                          updatePriceDraft("minPrice", event.target.value)
+                        }
+                        className="davinto-range-input davinto-range-input--min"
+                        style={{
+                          zIndex:
+                            normalizedPriceDraft.minValue >=
+                            normalizedPriceDraft.maxValue - 1
+                              ? 5
+                              : undefined,
+                        }}
+                        aria-label={t("filters.minPrice")}
+                      />
+                      <input
+                        type="range"
+                        dir="ltr"
+                        min={sliderMinPrice}
+                        max={sliderMaxPrice}
+                        value={normalizedPriceDraft.maxValue}
+                        onChange={(event) =>
+                          updatePriceDraft("maxPrice", event.target.value)
+                        }
+                        className="davinto-range-input davinto-range-input--max"
+                        aria-label={t("filters.maxPrice")}
+                      />
+                    </div>
+                  </div>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <Input
                       label={t("filters.minPrice")}
                       type="number"
-                      min="0"
+                      min={sliderMinPrice}
+                      max={sliderMaxPrice}
                       inputMode="numeric"
-                      value={priceDraft.minPrice}
+                      value={priceInputValues.minPrice}
                       onChange={(event) =>
-                        setPriceDraft((current) => ({
-                          ...current,
-                          minPrice: event.target.value,
-                        }))
+                        updatePriceDraft("minPrice", event.target.value)
                       }
-                      placeholder={String(metadata?.price?.min || 0)}
+                      placeholder={String(sliderMinPrice)}
                     />
                     <Input
                       label={t("filters.maxPrice")}
                       type="number"
-                      min="0"
+                      min={sliderMinPrice}
+                      max={sliderMaxPrice}
                       inputMode="numeric"
-                      value={priceDraft.maxPrice}
+                      value={priceInputValues.maxPrice}
                       onChange={(event) =>
-                        setPriceDraft((current) => ({
-                          ...current,
-                          maxPrice: event.target.value,
-                        }))
+                        updatePriceDraft("maxPrice", event.target.value)
                       }
-                      placeholder={String(metadata?.price?.max || 0)}
+                      placeholder={String(sliderMaxPrice)}
                     />
                   </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="mt-3 w-full tracking-[0.14em]"
+                    onClick={applyPriceDraft}
+                  >
+                    {t("filters.apply")}
+                  </Button>
                 </AccordionSection>
 
                 <AccordionSection
                   title={t("filters.productType")}
-                  isOpen={openFilterSection === "productType"}
+                  isOpen={openFilterSections.productType}
                   onToggle={() => toggleFilterSection("productType")}
                 >
                   {currentCategory ? (
@@ -358,7 +556,8 @@ const CatalogFilters = ({
                     </p>
                   ) : (
                     <div className="grid gap-2">
-                      <label className="flex cursor-pointer items-center gap-3 text-sm text-[#f5f0e8]/72">
+                      <label className="flex cursor-pointer items-center justify-between gap-3 text-sm text-[#f5f0e8]/72">
+                        <span className="flex items-center gap-3">
                         <input
                           type="radio"
                           name="category"
@@ -367,6 +566,10 @@ const CatalogFilters = ({
                           onChange={() => onCategoryChange?.("")}
                         />
                         <span>{t("filters.all")}</span>
+                        </span>
+                        <span className="text-[#f5f0e8]/38">
+                          {productCount}
+                        </span>
                       </label>
 
                       {localizedCategories.map((category) => (
@@ -390,7 +593,7 @@ const CatalogFilters = ({
 
                 <AccordionSection
                   title={t("filters.color")}
-                  isOpen={openFilterSection === "color"}
+                  isOpen={openFilterSections.color}
                   onToggle={() => toggleFilterSection("color")}
                 >
                   <div className="flex flex-wrap gap-2">
@@ -422,6 +625,9 @@ const CatalogFilters = ({
                             aria-hidden="true"
                           />
                           <span>{label}</span>
+                          <span className="text-[#f5f0e8]/38">
+                            {Number(color.count || 0)}
+                          </span>
                         </label>
                       );
                     })}
@@ -433,8 +639,8 @@ const CatalogFilters = ({
                 <Button
                   type="button"
                   variant="secondary"
-                  onClick={onClearFilters}
-                  disabled={!hasActiveFilters}
+                  onClick={handleClearFilters}
+                  disabled={!hasActiveFilters && !hasPriceDraft}
                 >
                   {t("filters.clearAll")}
                 </Button>

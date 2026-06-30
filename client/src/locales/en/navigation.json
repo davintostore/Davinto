@@ -15,6 +15,7 @@
   "dashboard": "Dashboard",
   "openNavigation": "Open navigation",
   "closeNavigation": "Close navigation",
+  "searchAria": "Open search",
   "mobileNavigation": "Mobile navigation",
   "homeAria": "Davinto home",
   "cartCloseLabel": "Close cart drawer",
@@ -31,9 +32,10 @@
       "shipping": "Shipping Policy",
       "terms": "Terms & Conditions"
     },
-    "social": "Social",
+    "social": "Social Media",
     "logoAlt": "Davinto logo",
     "location": "Davinto / Cairo, Egypt",
-    "moment": "Delivered across Egypt"
+    "moment": "Delivered across Egypt",
+    "copyright": "\u00a9 {{year}} Davinto. All rights reserved."
   }
 }

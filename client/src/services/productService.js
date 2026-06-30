@@ -5,6 +5,7 @@ const buildProductParams = (params = {}) => {
     "category",
     "search",
     "featured",
+    "bestSeller",
     "limit",
     "page",
     "sort",

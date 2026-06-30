@@ -3,11 +3,18 @@ require("dotenv").config();
 const app = require("./app");
 const connectDB = require("./config/db");
 const { allowedCorsOrigins } = require("./config/cors");
+const { assertProductionEnv } = require("./config/env");
 
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
-  await connectDB();
+  try {
+    assertProductionEnv();
+    await connectDB();
+  } catch (error) {
+    console.error(error?.message || "Server startup failed.");
+    process.exit(1);
+  }
 
   app.listen(PORT, () => {
     console.log(`Davinto API running on port ${PORT}`);

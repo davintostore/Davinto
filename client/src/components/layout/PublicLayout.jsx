@@ -4,7 +4,8 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
-  ShoppingBag,
+  Search,
+  ShoppingCart,
   UserRound,
   X,
 } from "lucide-react";
@@ -15,6 +16,7 @@ import Container from "../ui/Container";
 import Button from "../ui/Button";
 import CartToast from "../cart/CartToast";
 import LanguageSwitcher from "../i18n/LanguageSwitcher";
+import GlobalSearchDrawer from "../search/GlobalSearchDrawer";
 import { socialLinks } from "../../constants/socialLinks";
 import { useAdminAuth } from "../../context/adminAuthContext";
 import { useCart } from "../../context/cartContext";
@@ -65,7 +67,7 @@ const SocialIcon = ({ label }) => {
 
   if (normalizedLabel.includes("instagram")) {
     return (
-      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4">
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6">
         <rect x="5" y="5" width="14" height="14" rx="4" fill="none" stroke="currentColor" strokeWidth="1.8" />
         <circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" strokeWidth="1.8" />
         <circle cx="16.4" cy="7.6" r="1" fill="currentColor" />
@@ -75,7 +77,7 @@ const SocialIcon = ({ label }) => {
 
   if (normalizedLabel.includes("tiktok")) {
     return (
-      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4">
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6">
         <path
           d="M14.2 4.5v8.7a4 4 0 1 1-3.7-4v2.3a1.8 1.8 0 1 0 1.4 1.7V4.5h2.3Zm0 0c.4 2 1.7 3.3 3.8 3.8v2.3c-1.6-.1-2.8-.6-3.8-1.4"
           fill="none"
@@ -89,7 +91,7 @@ const SocialIcon = ({ label }) => {
   }
 
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4">
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6">
       <path
         d="M14 8.2h2.2V5h-2.6c-3 0-4.5 1.8-4.5 4.6v1.7H7v3.1h2.1V20h3.4v-5.6H15l.4-3.1h-2.9V9.7c0-1 .4-1.5 1.5-1.5Z"
         fill="currentColor"
@@ -116,6 +118,7 @@ const PublicLayout = () => {
     signout,
   } = useCustomerAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isHeaderHidden, setIsHeaderHidden] = useState(false);
   const lastScrollYRef = useRef(0);
   const isFocusedRoute =
@@ -123,8 +126,6 @@ const PublicLayout = () => {
   const hideFooter = location.pathname === "/checkout";
   const showCustomerNav =
     !showAdminDashboardLink && !isCustomerLoading && isCustomerAuthenticated;
-  const showGuestSignin =
-    !showAdminDashboardLink && !isCustomerLoading && !isCustomerAuthenticated;
   const { data: settingsData } = useQuery({
     queryKey: ["public-settings"],
     queryFn: getPublicSettingsRequest,
@@ -144,10 +145,18 @@ const PublicLayout = () => {
     isActive: isMenuOpen && !isFocusedRoute,
     onEscape: () => setIsMenuOpen(false),
   });
+  const accountPath = isCustomerAuthenticated ? "/account" : "/signin";
+  const accountLabel = isCustomerAuthenticated ? t("account") : t("signIn");
+
+  const openSearchDrawer = () => {
+    setIsMenuOpen(false);
+    setIsSearchOpen(true);
+  };
 
   useEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
       setIsMenuOpen(false);
+      setIsSearchOpen(false);
       setIsHeaderHidden(false);
       lastScrollYRef.current = window.scrollY || 0;
     });
@@ -201,7 +210,7 @@ const PublicLayout = () => {
     <div className="page-shell">
       {!isFocusedRoute && (
       <header
-        className={`fixed inset-x-0 top-0 z-50 border-b border-[#c7a852]/25 bg-[#050505] transition-transform duration-300 ease-out ${
+        className={`fixed inset-x-0 top-0 z-50 bg-[#050505] transition-transform duration-300 ease-out ${
           isHeaderHidden ? "-translate-y-full" : "translate-y-0"
         }`}
       >
@@ -222,23 +231,34 @@ const PublicLayout = () => {
           </div>
         </div>
 
-        <Container className="flex h-[4.75rem] items-center justify-between">
-          <button
-            type="button"
-            onClick={() => setIsMenuOpen((current) => !current)}
-            className="flex h-11 w-11 items-center justify-center border border-[#f5f0e8]/15 text-[#f5f0e8] transition hover:border-[#c7a852] lg:hidden"
-            aria-label={
-              isMenuOpen ? t("closeNavigation") : t("openNavigation")
-            }
-            aria-expanded={isMenuOpen}
-            aria-controls="public-mobile-navigation"
-          >
-            {isMenuOpen ? <X size={19} /> : <Menu size={19} />}
-          </button>
+        <Container className="relative flex h-[4.75rem] items-center justify-between">
+          <div className="flex flex-1 items-center gap-1 lg:flex-none">
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen((current) => !current)}
+              className="flex h-11 w-11 items-center justify-center text-[#f5f0e8] transition hover:text-[#c7a852] lg:hidden"
+              aria-label={
+                isMenuOpen ? t("closeNavigation") : t("openNavigation")
+              }
+              aria-expanded={isMenuOpen}
+              aria-controls="public-mobile-navigation"
+            >
+              {isMenuOpen ? <X size={25} /> : <Menu size={26} />}
+            </button>
+
+            <button
+              type="button"
+              onClick={openSearchDrawer}
+              className="flex h-11 w-11 items-center justify-center text-[#f5f0e8] transition hover:text-[#c7a852] lg:hidden"
+              aria-label={t("searchAria")}
+            >
+              <Search size={25} />
+            </button>
+          </div>
 
           <Link
             to="/"
-            className="flex h-14 w-32 shrink-0 items-center justify-center sm:w-36"
+            className="absolute left-1/2 flex h-14 w-32 shrink-0 -translate-x-1/2 items-center justify-center sm:w-36 lg:static lg:translate-x-0"
             onClick={() => setIsMenuOpen(false)}
             aria-label="Davinto"
           >
@@ -297,15 +317,24 @@ const PublicLayout = () => {
             )}
           </nav>
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            {showGuestSignin && (
+          <div className="flex flex-1 items-center justify-end gap-1 sm:gap-2 lg:flex-none lg:gap-3">
+            <button
+              type="button"
+              onClick={openSearchDrawer}
+              className="hidden h-11 w-11 items-center justify-center text-[#f5f0e8]/76 transition hover:text-[#c7a852] lg:flex"
+              aria-label={t("searchAria")}
+            >
+              <Search size={21} />
+            </button>
+
+            {!showAdminDashboardLink && !isCustomerLoading && (
               <Link
-                to="/signin"
+                to={accountPath}
                 onClick={() => setIsMenuOpen(false)}
-                className="hidden h-11 items-center gap-2 border border-[#f5f0e8]/15 px-4 text-[0.62rem] font-black uppercase tracking-[0.2em] text-[#f5f0e8] transition hover:border-[#c7a852] lg:flex"
+                className="flex h-11 w-11 items-center justify-center text-[#f5f0e8]/76 transition hover:text-[#c7a852]"
+                aria-label={accountLabel}
               >
-                <UserRound size={15} />
-                {t("signIn")}
+                <UserRound size={25} className="lg:h-[21px] lg:w-[21px]" />
               </Link>
             )}
 
@@ -328,11 +357,11 @@ const PublicLayout = () => {
                 setIsMenuOpen(false);
                 openCartDrawer();
               }}
-              className="relative flex h-11 items-center gap-2 border border-[#f5f0e8]/15 px-3 text-[0.62rem] font-black uppercase tracking-[0.2em] text-[#f5f0e8] transition hover:border-[#c7a852] sm:px-4"
+              className="relative flex h-11 w-11 items-center justify-center text-[#f5f0e8]/76 transition hover:text-[#c7a852] lg:w-auto lg:gap-2 lg:border lg:border-[#f5f0e8]/12 lg:px-4 lg:text-[0.62rem] lg:font-black lg:uppercase lg:tracking-[0.14em] lg:hover:border-[#c7a852]"
               aria-label={t("cartLabel", { count: cartCount })}
             >
-              <ShoppingBag size={16} />
-              <span className="hidden sm:inline">{t("cart")}</span>
+              <ShoppingCart size={26} className="lg:h-4 lg:w-4" />
+              <span className="hidden lg:inline">{t("cart")}</span>
               {cartCount > 0 && (
                 <span className="absolute -right-2 -top-2 flex min-h-5 min-w-5 items-center justify-center rounded-full border border-[#050505] bg-[#c7a852] px-1.5 text-[0.58rem] font-black leading-none tracking-normal text-[#1c1917]">
                   {cartCount > 99 ? "99+" : cartCount}
@@ -414,7 +443,7 @@ const PublicLayout = () => {
                         className="flex items-center justify-between border-b border-[#f5f0e8]/10 py-4 text-sm font-black uppercase tracking-[0.2em] text-[#c7a852]"
                       >
                         <span>{t("myOrders")}</span>
-                        <ShoppingBag size={16} />
+                        <ShoppingCart size={16} />
                       </Link>
                     </>
                   ) : (
@@ -483,9 +512,13 @@ const PublicLayout = () => {
         </Suspense>
       )}
       <CartToast />
+      <GlobalSearchDrawer
+        isOpen={isSearchOpen && !isFocusedRoute}
+        onClose={() => setIsSearchOpen(false)}
+      />
 
       {!hideFooter && (
-      <footer className="border-t border-[#c7a852]/25 bg-[#110f0e]">
+      <footer className="border-t border-[#c7a852]/25 bg-[#050505]">
         <Container className="py-16 sm:py-20">
           <div className="grid gap-12 lg:grid-cols-[1.2fr_0.8fr_0.8fr]">
             <div>
@@ -523,7 +556,7 @@ const PublicLayout = () => {
               <p className="text-[0.64rem] font-black uppercase tracking-[0.28em] text-[#c7a852]">
                 {t("footer.social")}
               </p>
-              <div className="mt-5 flex flex-wrap gap-3 text-[#f5f0e8]/58">
+              <div className="mt-5 flex flex-wrap gap-4 text-[#f5f0e8]/62">
                 {socialLinks.map((link) => (
                   <a
                     key={link.href}
@@ -531,7 +564,7 @@ const PublicLayout = () => {
                     target="_blank"
                     rel="noreferrer noopener"
                     aria-label={link.ariaLabel}
-                    className="flex h-10 w-10 items-center justify-center border border-[#f5f0e8]/12 transition hover:border-[#c7a852]/70 hover:text-[#c7a852]"
+                    className="flex h-11 w-11 items-center justify-center transition hover:text-[#c7a852]"
                   >
                     <SocialIcon label={link.label} />
                   </a>
@@ -551,7 +584,8 @@ const PublicLayout = () => {
             </button>
           )}
 
-          <div className="mt-16 flex flex-col gap-3 border-t border-[#f5f0e8]/10 pt-6 text-[0.58rem] font-black uppercase tracking-[0.22em] text-[#8b8075] sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-16 flex flex-col gap-3 border-t border-[#f5f0e8]/10 pt-6 text-[0.58rem] font-black uppercase tracking-[0.16em] text-[#8b8075] sm:flex-row sm:items-center sm:justify-between">
+            <p>{t("footer.copyright", { year: new Date().getFullYear() })}</p>
             <p>{storeAddress || t("footer.location")}</p>
             <p>{t("footer.moment")}</p>
           </div>

@@ -17,6 +17,28 @@ const getCustomerOrderRequestConfig = () => {
 };
 
 export const createOrderRequest = async (payload) => {
+  const paymentProofFile = payload?.paymentProofFile || null;
+
+  if (paymentProofFile) {
+    const orderPayload = { ...payload };
+    const formData = new FormData();
+    const config = getCustomerOrderRequestConfig();
+
+    delete orderPayload.paymentProofFile;
+    formData.append("payload", JSON.stringify(orderPayload));
+    formData.append("paymentProof", paymentProofFile);
+
+    const { data } = await api.post("/orders", formData, {
+      ...config,
+      headers: {
+        ...(config.headers || {}),
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return data;
+  }
+
   const { data } = await api.post(
     "/orders",
     payload,

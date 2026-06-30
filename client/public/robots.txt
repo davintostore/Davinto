@@ -1,10 +1,11 @@
 # Davinto Store robots.txt
-# Allow public product, shop, and category pages
+# Allow public shop, category, and policy pages
 # Disallow private, admin, and checkout paths
 
 User-agent: *
 Allow: /
 Allow: /shop
+Allow: /categories
 Allow: /category/
 Allow: /product/
 

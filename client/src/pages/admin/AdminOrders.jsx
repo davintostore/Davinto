@@ -156,6 +156,8 @@ const AdminOrders = () => {
   });
 
   const [expandedOrderId, setExpandedOrderId] = useState(null);
+  const [expandedPaymentProofOrderId, setExpandedPaymentProofOrderId] =
+    useState(null);
   const [feedback, setFeedback] = useState({
     type: "",
     message: "",
@@ -195,6 +197,17 @@ const AdminOrders = () => {
       paymentStatus: "",
       paymentMethod: "",
     });
+  };
+
+  const toggleOrderDetails = (orderId) => {
+    setExpandedOrderId((current) => (current === orderId ? null : orderId));
+    setExpandedPaymentProofOrderId(null);
+  };
+
+  const togglePaymentProof = (orderId) => {
+    setExpandedPaymentProofOrderId((current) =>
+      current === orderId ? null : orderId
+    );
   };
 
   const copyText = async (text, successMessage) => {
@@ -664,6 +677,13 @@ const AdminOrders = () => {
           <div className="space-y-4">
             {orders.map((order) => {
               const isExpanded = expandedOrderId === order._id;
+              const isPaymentProofOpen =
+                expandedPaymentProofOrderId === order._id;
+              const shouldShowPaymentProofSection = Boolean(
+                order.paymentReference ||
+                  order.paymentProof?.url ||
+                  ["instapay", "vodafoneCash"].includes(order.paymentMethod)
+              );
               const paymobLink = order.paymentGateway?.paymobIframeUrl || "";
 
               return (
@@ -783,9 +803,7 @@ const AdminOrders = () => {
                     <div className="mt-5 flex flex-wrap gap-3">
                       <Button
                         variant="secondary"
-                        onClick={() =>
-                          setExpandedOrderId(isExpanded ? null : order._id)
-                        }
+                        onClick={() => toggleOrderDetails(order._id)}
                       >
                         {isExpanded ? "Hide Details" : "View Details"}
                       </Button>
@@ -1096,6 +1114,137 @@ const AdminOrders = () => {
                               )}
                             </div>
                           </div>
+                        </Card>
+                      )}
+
+                      {shouldShowPaymentProofSection && (
+                        <Card className="mt-5 p-5">
+                          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                            <div>
+                              <SectionLabel>Payment Proof</SectionLabel>
+                              <div className="mt-4 space-y-3 text-sm text-white/60">
+                                <p>
+                                  <span className="text-white/35">
+                                    Method:
+                                  </span>{" "}
+                                  {statusLabel(
+                                    order.paymentMethod,
+                                    paymentMethodOptions
+                                  )}
+                                </p>
+
+                                {order.paymentReference && (
+                                  <p className="break-all">
+                                    <span className="text-white/35">
+                                      Transaction Reference:
+                                    </span>{" "}
+                                    {order.paymentReference}
+                                  </p>
+                                )}
+
+                                {order.paymentProof?.filename && (
+                                  <p className="break-all">
+                                    <span className="text-white/35">
+                                      Filename:
+                                    </span>{" "}
+                                    {order.paymentProof.filename}
+                                  </p>
+                                )}
+
+                                {order.paymentProof?.mimeType && (
+                                  <p>
+                                    <span className="text-white/35">
+                                      Type:
+                                    </span>{" "}
+                                    {order.paymentProof.mimeType}
+                                  </p>
+                                )}
+
+                                {Number(order.paymentProof?.size || 0) > 0 && (
+                                  <p>
+                                    <span className="text-white/35">
+                                      Size:
+                                    </span>{" "}
+                                    {Math.ceil(order.paymentProof.size / 1024)}{" "}
+                                    KB
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+
+                            <Button
+                              variant="secondary"
+                              onClick={() => togglePaymentProof(order._id)}
+                            >
+                              {isPaymentProofOpen
+                                ? "Hide Payment Screenshot"
+                                : "View Payment Screenshot"}
+                            </Button>
+                          </div>
+
+                          {isPaymentProofOpen && (
+                            <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
+                              <div className="space-y-3 text-sm text-white/60">
+                                {order.paymentProof?.url ? (
+                                  <>
+                                    <p>
+                                      Preview loads only while this payment
+                                      proof panel is open.
+                                    </p>
+                                    <div className="flex flex-wrap gap-3 pt-2">
+                                      <Button
+                                        variant="secondary"
+                                        onClick={() =>
+                                          window.open(
+                                            order.paymentProof.url,
+                                            "_blank",
+                                            "noopener,noreferrer"
+                                          )
+                                        }
+                                      >
+                                        Open Full Image
+                                      </Button>
+                                      <Button
+                                        variant="secondary"
+                                        onClick={() =>
+                                          copyText(
+                                            order.paymentProof.url,
+                                            "Payment proof link copied."
+                                          )
+                                        }
+                                      >
+                                        Copy Image Link
+                                      </Button>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <p className="text-white/40">
+                                    No payment proof uploaded.
+                                  </p>
+                                )}
+                              </div>
+
+                              {order.paymentProof?.url ? (
+                                <a
+                                  href={order.paymentProof.url}
+                                  target="_blank"
+                                  rel="noreferrer noopener"
+                                  className="block overflow-hidden rounded-2xl border border-white/10 bg-white/[0.035]"
+                                >
+                                  <img
+                                    src={order.paymentProof.url}
+                                    alt={`Payment proof for ${order.orderNumber}`}
+                                    className="max-h-80 w-full object-contain"
+                                    loading="lazy"
+                                  />
+                                </a>
+                              ) : (
+                                <div className="grid min-h-48 place-items-center rounded-2xl border border-white/10 bg-white/[0.025] p-4 text-center text-sm text-white/40">
+                                  No payment proof uploaded.
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </Card>
                       )}
 

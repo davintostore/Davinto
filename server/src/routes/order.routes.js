@@ -29,10 +29,21 @@ const {
   orderCreateLimiter,
   paymentRetryLimiter,
 } = require("../middleware/rateLimitMiddleware");
+const {
+  uploadImage,
+  handleMulterError,
+} = require("../middleware/uploadMiddleware");
 
 const router = express.Router();
 
-router.post("/", orderCreateLimiter, optionalCustomer, createOrder);
+router.post(
+  "/",
+  orderCreateLimiter,
+  optionalCustomer,
+  uploadImage.single("paymentProof"),
+  handleMulterError,
+  createOrder
+);
 
 router.post("/track", trackingLimiter, trackOrder);
 

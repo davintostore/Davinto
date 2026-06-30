@@ -1,0 +1,23 @@
+{
+  "name": "Davinto Store",
+  "short_name": "Davinto",
+  "description": "Premium everyday clothing and art-inspired pieces.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#f7f3ea",
+  "icons": [
+    {
+      "src": "/images/logo/logo-1.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/logo/logo-5.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any"
+    }
+  ]
+}

@@ -210,4 +210,7 @@ const deleteImageFromCloudinary = asyncHandler(async (req, res) => {
 module.exports = {
   uploadImageToCloudinary,
   deleteImageFromCloudinary,
+  getUploadFolder,
+  uploadBufferToCloudinary,
+  validateUploadedImageFile,
 };

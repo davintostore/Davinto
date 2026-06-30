@@ -144,7 +144,10 @@ const TrackOrder = () => {
         label={t("orders:track.headerLabel")}
         title={t("orders:track.headerTitle")}
         description={t("orders:track.headerDescription")}
-        backgroundImage="/images/bg/tracking-order.webp"
+        backgroundVideo={{
+          poster: "/videos/track-order/track-order-poster.webp",
+          mp4: "/videos/track-order/track-order.mp4",
+        }}
         className="bg-[#050505]"
       />
 

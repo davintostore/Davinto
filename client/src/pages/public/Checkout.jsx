@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { ImagePlus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import Button from "../../components/ui/Button";
@@ -52,6 +53,18 @@ const initialCustomerInfo = {
 };
 
 const paymentMethodsOrder = ["cod", "instapay", "vodafoneCash", "paymobCard"];
+const PAYMENT_PROOF_MAX_SIZE = 5 * 1024 * 1024;
+const PAYMENT_PROOF_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+]);
+
+const requiredLabel = (label) => (
+  <>
+    {label} <span className="text-[#e8a3a6]">*</span>
+  </>
+);
 
 const Checkout = () => {
   const { t, i18n } = useTranslation(["checkout", "common", "navigation"]);
@@ -83,6 +96,9 @@ const Checkout = () => {
   }));
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [paymentReference, setPaymentReference] = useState("");
+  const [paymentProofFile, setPaymentProofFile] = useState(null);
+  const [paymentProofPreview, setPaymentProofPreview] = useState("");
+  const [paymentProofError, setPaymentProofError] = useState("");
   const [formError, setFormError] = useState("");
 
   const [discountCode, setDiscountCode] = useState("");
@@ -182,9 +198,10 @@ const Checkout = () => {
 
   const manualPayment = localizedSettings?.manualPayment || {};
 
-  const requiresReference =
-    ["instapay", "vodafoneCash"].includes(effectivePaymentMethod) &&
-    manualPayment.requireTransactionReference !== false;
+  const requiresManualPaymentProof = ["instapay", "vodafoneCash"].includes(
+    effectivePaymentMethod
+  );
+  const requiresReference = requiresManualPaymentProof;
 
   const summary = {
     subtotal: quote?.subtotal || 0,
@@ -238,6 +255,14 @@ const Checkout = () => {
       value: summary.total,
     });
   }, [hasCurrentQuote, items, summary.total]);
+
+  useEffect(() => {
+    return () => {
+      if (paymentProofPreview) {
+        URL.revokeObjectURL(paymentProofPreview);
+      }
+    };
+  }, [paymentProofPreview]);
 
   const createOrderMutation = useMutation({
     mutationFn: createOrderRequest,
@@ -332,6 +357,46 @@ const Checkout = () => {
     }
   };
 
+  const clearPaymentProof = () => {
+    if (paymentProofPreview) {
+      URL.revokeObjectURL(paymentProofPreview);
+    }
+
+    setPaymentProofFile(null);
+    setPaymentProofPreview("");
+    setPaymentProofError("");
+  };
+
+  const handlePaymentProofChange = (event) => {
+    const file = event.target.files?.[0] || null;
+
+    if (paymentProofPreview) {
+      URL.revokeObjectURL(paymentProofPreview);
+    }
+
+    setPaymentProofFile(null);
+    setPaymentProofPreview("");
+    setPaymentProofError("");
+
+    if (!file) return;
+
+    if (!PAYMENT_PROOF_TYPES.has(file.type)) {
+      setPaymentProofError(t("checkout:errors.proofType"));
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > PAYMENT_PROOF_MAX_SIZE) {
+      setPaymentProofError(t("checkout:errors.proofSize"));
+      event.target.value = "";
+      return;
+    }
+
+    setPaymentProofFile(file);
+    setPaymentProofPreview(URL.createObjectURL(file));
+    setFormError("");
+  };
+
   const validateForm = () => {
     if (items.length === 0) {
       return t("checkout:errors.cartEmpty");
@@ -388,6 +453,14 @@ const Checkout = () => {
       return t("checkout:errors.reference");
     }
 
+    if (paymentProofError) {
+      return paymentProofError;
+    }
+
+    if (requiresManualPaymentProof && !paymentProofFile) {
+      return t("checkout:errors.proofRequired");
+    }
+
     if (discountCode.trim() && !appliedDiscountCode) {
       return t("checkout:errors.discountFirst");
     }
@@ -396,7 +469,7 @@ const Checkout = () => {
   };
 
   const buildOrderPayload = () => {
-    return {
+    const payload = {
       customerInfo: {
         fullName: customerInfo.fullName.trim(),
         phone: customerInfo.phone.trim(),
@@ -412,6 +485,12 @@ const Checkout = () => {
       locale: language === "ar" ? "ar" : "en",
       items: quoteItems,
     };
+
+    if (requiresManualPaymentProof && paymentProofFile) {
+      payload.paymentProofFile = paymentProofFile;
+    }
+
+    return payload;
   };
 
   const handleApplyDiscount = () => {
@@ -469,7 +548,168 @@ const Checkout = () => {
 
     setPaymentMethod(method);
     setPaymentReference("");
+    clearPaymentProof();
     setFormError("");
+  };
+
+  const renderPaymentProofInput = (inputId) =>
+    requiresManualPaymentProof ? (
+    <div className="mt-4">
+      <label className="block">
+        <span className="mb-2.5 block text-[0.66rem] font-black uppercase tracking-[0.22em] text-[#c7a852]">
+          {requiredLabel(t("checkout:paymentProof"))}
+        </span>
+        <input
+          id={inputId}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={handlePaymentProofChange}
+          className="sr-only"
+        />
+        <span className="group flex cursor-pointer flex-col items-center justify-center border border-dashed border-[#c7a852]/40 bg-[#f5f0e8]/4 px-4 py-5 text-center transition hover:border-[#c7a852] hover:bg-[#c7a852]/8 focus-within:border-[#c7a852]">
+          <ImagePlus
+            size={24}
+            className="text-[#c7a852] transition group-hover:scale-105"
+            aria-hidden="true"
+          />
+          <span className="mt-3 text-[0.62rem] font-black uppercase tracking-[0.16em] text-[#f5f0e8]">
+            {paymentProofFile
+              ? t("checkout:paymentProofReplace")
+              : t("checkout:paymentProofCta")}
+          </span>
+          <span className="mt-2 max-w-sm text-xs leading-6 text-[#f5f0e8]/45">
+            {t("checkout:paymentProofHint")}
+          </span>
+        </span>
+      </label>
+
+      {paymentProofError && (
+        <p className="mt-2 text-xs leading-6 text-[#e8a3a6]">
+          {paymentProofError}
+        </p>
+      )}
+
+      {paymentProofFile && (
+        <div className="mt-4 grid gap-3 border border-[#f5f0e8]/12 bg-[#f5f0e8]/4 p-3 sm:grid-cols-[6rem_1fr]">
+          {paymentProofPreview && (
+            <img
+              src={paymentProofPreview}
+              alt={t("checkout:paymentProofPreviewAlt")}
+              className="aspect-square w-full object-cover"
+            />
+          )}
+          <div className="min-w-0 self-center">
+            <p className="truncate text-sm font-bold text-[#f5f0e8]">
+              {paymentProofFile.name}
+            </p>
+            <p className="mt-1 text-xs text-[#f5f0e8]/45">
+              {t("checkout:selectedFileSize", {
+                size: Math.ceil(paymentProofFile.size / 1024),
+              })}
+            </p>
+            <button
+              type="button"
+              onClick={clearPaymentProof}
+              className="mt-3 text-[0.58rem] font-black uppercase tracking-[0.14em] text-[#e8a3a6] transition hover:text-[#f5d7d8]"
+            >
+              {t("common:remove")}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  ) : null;
+
+  const renderPaymentDetailsPanel = (inputId, className = "") => {
+    if (effectivePaymentMethod === "cod") {
+      return null;
+    }
+
+    if (effectivePaymentMethod === "instapay") {
+      return (
+        <div className={`border border-[#c7a852]/25 bg-[#c7a852]/6 p-4 ${className}`}>
+          <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
+            {manualPayment.detailLabels?.instapay ||
+              t("checkout:instapayDetails")}
+          </p>
+
+          {manualPayment.detailInstructions?.instapay && (
+            <p className="mt-3 text-sm leading-7 text-[#f5f0e8]/58">
+              {manualPayment.detailInstructions.instapay}
+            </p>
+          )}
+
+          <p className="mt-3 break-words font-sans text-lg font-black tracking-[0.04em] text-[#f5f0e8]">
+            {manualPayment.instapayHandle || t("checkout:instapayMissing")}
+          </p>
+
+          {requiresReference && (
+            <div className="mt-4">
+              <Input
+                label={requiredLabel(t("checkout:transactionReference"))}
+                name="paymentReference"
+                value={paymentReference}
+                onChange={(event) => setPaymentReference(event.target.value)}
+                placeholder={t("checkout:transactionPlaceholder")}
+              />
+            </div>
+          )}
+
+          {renderPaymentProofInput(inputId)}
+        </div>
+      );
+    }
+
+    if (effectivePaymentMethod === "vodafoneCash") {
+      return (
+        <div className={`border border-[#c7a852]/25 bg-[#c7a852]/6 p-4 ${className}`}>
+          <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
+            {manualPayment.detailLabels?.vodafoneCash ||
+              t("checkout:vodafoneDetails")}
+          </p>
+
+          {manualPayment.detailInstructions?.vodafoneCash && (
+            <p className="mt-3 text-sm leading-7 text-[#f5f0e8]/58">
+              {manualPayment.detailInstructions.vodafoneCash}
+            </p>
+          )}
+
+          <p className="mt-3 break-words font-sans text-lg font-black tracking-[0.04em] text-[#f5f0e8]">
+            {manualPayment.vodafoneCashNumber || t("checkout:vodafoneMissing")}
+          </p>
+
+          {requiresReference && (
+            <div className="mt-4">
+              <Input
+                label={requiredLabel(t("checkout:transactionReference"))}
+                name="paymentReference"
+                value={paymentReference}
+                onChange={(event) => setPaymentReference(event.target.value)}
+                placeholder={t("checkout:transactionPlaceholder")}
+              />
+            </div>
+          )}
+
+          {renderPaymentProofInput(inputId)}
+        </div>
+      );
+    }
+
+    if (effectivePaymentMethod === "paymobCard" && isPaymobReady) {
+      return (
+        <div className={`border border-[#c7a852]/30 bg-[#c7a852]/10 p-4 ${className}`}>
+          <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
+            {t("checkout:secureCard")}
+          </p>
+
+          <p className="mt-3 text-sm leading-7 text-[#f5f0e8]/65">
+            {t("checkout:secureCardDescription")}
+          </p>
+        </div>
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -555,7 +795,7 @@ const Checkout = () => {
 
                   <div className="grid gap-3 md:grid-cols-2">
                     <Input
-                      label={t("checkout:fullName")}
+                      label={requiredLabel(t("checkout:fullName"))}
                       name="fullName"
                       value={customerInfo.fullName}
                       onChange={updateCustomerField}
@@ -563,7 +803,7 @@ const Checkout = () => {
                     />
 
                     <Input
-                      label={t("checkout:phone")}
+                      label={requiredLabel(t("checkout:phone"))}
                       name="phone"
                       value={customerInfo.phone}
                       onChange={updateCustomerField}
@@ -588,7 +828,7 @@ const Checkout = () => {
                     />
 
                     <Select
-                      label={t("checkout:city")}
+                      label={requiredLabel(t("checkout:city"))}
                       name="city"
                       value={customerInfo.city}
                       onChange={updateCustomerField}
@@ -605,7 +845,7 @@ const Checkout = () => {
 
                     <div className="md:col-span-2">
                       <Textarea
-                        label={t("checkout:address")}
+                        label={requiredLabel(t("checkout:address"))}
                         name="address"
                         value={customerInfo.address}
                         onChange={updateCustomerField}
@@ -629,7 +869,7 @@ const Checkout = () => {
                   <SectionLabel>{t("checkout:payment")}</SectionLabel>
 
                   <h2 className="mb-5 font-serif text-2xl font-semibold">
-                    {t("checkout:paymentMethod")}
+                    {requiredLabel(t("checkout:paymentMethod"))}
                   </h2>
 
                   {isLoadingSettings && (
@@ -654,143 +894,77 @@ const Checkout = () => {
                         (!isPaymobReady || isLoadingPaymobConfig);
 
                       return (
-                        <button
-                          key={payment.method}
-                          type="button"
-                          disabled={isPaymobDisabled}
-                          onClick={() => handlePaymentChange(payment.method)}
-                          aria-pressed={isSelected}
-                          className={`min-h-24 border p-4 text-left transition disabled:cursor-not-allowed disabled:opacity-45 ${
-                            isSelected
-                              ? "border-[#c7a852] bg-[#882c30]/22"
-                              : "border-[#f5f0e8]/12 bg-[#f5f0e8]/3 hover:border-[#f5f0e8]/30"
-                          }`}
-                        >
-                          <div className="flex items-start justify-between gap-4">
-                            <div>
-                              <p className="font-serif text-lg font-semibold text-[#f5f0e8]">
-                                {payment.label}
-                              </p>
-
-                              {payment.instructions && (
-                                <p className="mt-2 text-xs leading-6 text-[#f5f0e8]/45">
-                                  {payment.instructions}
+                        <div key={payment.method} className="contents">
+                          <button
+                            type="button"
+                            disabled={isPaymobDisabled}
+                            onClick={() => handlePaymentChange(payment.method)}
+                            aria-pressed={isSelected}
+                            className={`min-h-24 border p-4 text-left transition disabled:cursor-not-allowed disabled:opacity-45 ${
+                              isSelected
+                                ? "border-[#c7a852] bg-[#882c30]/22"
+                                : "border-[#f5f0e8]/12 bg-[#f5f0e8]/3 hover:border-[#f5f0e8]/30"
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-4">
+                              <div>
+                                <p className="font-serif text-lg font-semibold text-[#f5f0e8]">
+                                  {payment.label}
                                 </p>
-                              )}
 
-                              {isPaymobPayment && isLoadingPaymobConfig && (
-                                <p className="mt-2 text-xs font-bold text-yellow-100">
-                                  {t("checkout:checkingVisa")}
-                                </p>
-                              )}
+                                {payment.instructions && (
+                                  <p className="mt-2 text-xs leading-6 text-[#f5f0e8]/45">
+                                    {payment.instructions}
+                                  </p>
+                                )}
 
-                              {isPaymobPayment &&
-                                !isLoadingPaymobConfig &&
-                                !isPaymobReady && (
+                                {isPaymobPayment && isLoadingPaymobConfig && (
                                   <p className="mt-2 text-xs font-bold text-yellow-100">
-                                    {t("checkout:paymobMissing")}
+                                    {t("checkout:checkingVisa")}
                                   </p>
                                 )}
 
-                              {isPaymobPayment &&
-                                !isLoadingPaymobConfig &&
-                                isPaymobReady && (
-                                  <p className="mt-2 text-xs font-bold text-emerald-100">
-                                    {t("checkout:paymobReady")}
-                                  </p>
-                                )}
+                                {isPaymobPayment &&
+                                  !isLoadingPaymobConfig &&
+                                  !isPaymobReady && (
+                                    <p className="mt-2 text-xs font-bold text-yellow-100">
+                                      {t("checkout:paymobMissing")}
+                                    </p>
+                                  )}
+
+                                {isPaymobPayment &&
+                                  !isLoadingPaymobConfig &&
+                                  isPaymobReady && (
+                                    <p className="mt-2 text-xs font-bold text-emerald-100">
+                                      {t("checkout:paymobReady")}
+                                    </p>
+                                  )}
+                              </div>
+
+                              <span
+                                className={`mt-1 h-4 w-4 rounded-full border ${
+                                  isSelected
+                                    ? "border-[#c7a852] bg-[#c7a852]"
+                                    : "border-[#f5f0e8]/25"
+                                }`}
+                              />
                             </div>
+                          </button>
 
-                            <span
-                              className={`mt-1 h-4 w-4 rounded-full border ${
-                                isSelected
-                                  ? "border-[#c7a852] bg-[#c7a852]"
-                                  : "border-[#f5f0e8]/25"
-                              }`}
-                            />
-                          </div>
-                        </button>
+                          {isSelected && (
+                            <div className="md:hidden">
+                              {renderPaymentDetailsPanel(
+                                `payment-proof-${payment.method}-mobile`
+                              )}
+                            </div>
+                          )}
+                        </div>
                       );
                     })}
                   </div>
-
-                  {effectivePaymentMethod === "instapay" && (
-                    <div className="mt-4 border border-[#c7a852]/25 bg-[#c7a852]/6 p-4">
-                      <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
-                        {manualPayment.detailLabels?.instapay ||
-                          t("checkout:instapayDetails")}
-                      </p>
-
-                      {manualPayment.detailInstructions?.instapay && (
-                        <p className="mt-3 text-sm leading-7 text-[#f5f0e8]/58">
-                          {manualPayment.detailInstructions.instapay}
-                        </p>
-                      )}
-
-                      <p className="mt-3 font-serif text-xl font-semibold text-[#f5f0e8]">
-                        {manualPayment.instapayHandle ||
-                          t("checkout:instapayMissing")}
-                      </p>
-
-                      {requiresReference && (
-                        <div className="mt-4">
-                          <Input
-                            label={t("checkout:transactionReference")}
-                            value={paymentReference}
-                            onChange={(event) =>
-                              setPaymentReference(event.target.value)
-                            }
-                            placeholder={t("checkout:transactionPlaceholder")}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {effectivePaymentMethod === "vodafoneCash" && (
-                    <div className="mt-4 border border-[#c7a852]/25 bg-[#c7a852]/6 p-4">
-                      <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
-                        {manualPayment.detailLabels?.vodafoneCash ||
-                          t("checkout:vodafoneDetails")}
-                      </p>
-
-                      {manualPayment.detailInstructions?.vodafoneCash && (
-                        <p className="mt-3 text-sm leading-7 text-[#f5f0e8]/58">
-                          {manualPayment.detailInstructions.vodafoneCash}
-                        </p>
-                      )}
-
-                      <p className="mt-3 font-serif text-xl font-semibold text-[#f5f0e8]">
-                        {manualPayment.vodafoneCashNumber ||
-                          t("checkout:vodafoneMissing")}
-                      </p>
-
-                      {requiresReference && (
-                        <div className="mt-4">
-                          <Input
-                            label={t("checkout:transactionReference")}
-                            value={paymentReference}
-                            onChange={(event) =>
-                              setPaymentReference(event.target.value)
-                            }
-                            placeholder={t("checkout:transactionPlaceholder")}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {effectivePaymentMethod === "paymobCard" &&
-                    isPaymobReady && (
-                    <div className="mt-4 border border-[#c7a852]/30 bg-[#c7a852]/10 p-4">
-                      <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
-                        {t("checkout:secureCard")}
-                      </p>
-
-                      <p className="mt-3 text-sm leading-7 text-[#f5f0e8]/65">
-                        {t("checkout:secureCardDescription")}
-                      </p>
-                    </div>
+                  {renderPaymentDetailsPanel(
+                    "payment-proof-desktop",
+                    "mt-4 hidden md:block"
                   )}
                 </section>
               </div>

@@ -7,7 +7,7 @@ import { useLocation } from "react-router-dom";
  */
 const useSeo = ({
   title = "Davinto Store | Premium Everyday Clothing",
-  description = "Discover Davinto Store — premium everyday clothing, graphic pieces, blanks, and art-inspired designs made for effortless style.",
+  description = "Discover Davinto Store - premium everyday clothing, graphic pieces, blanks, and art-inspired designs made for effortless style.",
   robots = "index,follow",
   canonical = null,
   og = {},

@@ -53,7 +53,7 @@ const findOrderFromPaymobPayload = async (payload = {}) => {
     return null;
   }
 
-  return Order.findOne(query).select("+lookupToken");
+  return Order.findOne(query);
 };
 
 const applyPaymobResultToOrder = async ({ order, payload }) => {
@@ -159,12 +159,8 @@ const handlePaymobResponseCallback = asyncHandler(async (req, res) => {
 
   const status = isPaymobCallbackSuccess(payload) ? "success" : "failed";
 
-  // TODO(Paymob v2): Replace the lookup token in this redirect with a
-  // short-lived, one-time PaymentAttempt/session handoff so the permanent
-  // guest tracking secret never enters URLs.
   const params = new URLSearchParams({
     orderNumber: updatedOrder.orderNumber,
-    lookupToken: updatedOrder.lookupToken,
     payment: status,
   });
 

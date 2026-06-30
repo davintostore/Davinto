@@ -13,7 +13,7 @@
     "track": "Track Order"
   },
   "features": {
-    "line": "Wear the art · Built to last"
+    "line": "Wear the art \u00b7 Built to last"
   },
   "latest": {
     "label": "Latest pieces",
@@ -28,11 +28,19 @@
     "heading": "Shop by Category",
     "description": "Explore Davinto edits by category.",
     "cardLabel": "Collection",
-    "cardCta": "Shop Collection"
+    "cardCta": "Shop Collection",
+    "viewAll": "View All"
   },
   "cta": {
     "label": "Davinto",
     "title": "Built for daily rotation.",
     "button": "Shop"
+  },
+  "bestSeller": {
+    "label": "Collection",
+    "title": "Best Seller",
+    "shopAll": "Shop All",
+    "emptyTitle": "Best sellers coming soon",
+    "emptyDescription": "Products marked as Best Seller in admin will appear here. Until then, latest active products are used."
   }
 }

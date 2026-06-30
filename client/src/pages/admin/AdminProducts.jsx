@@ -58,6 +58,7 @@ const emptyForm = {
   care: "",
   badgesText: "",
   isFeatured: false,
+  isBestSeller: false,
   status: "draft",
   seoTitle: "",
   seoDescription: "",
@@ -115,6 +116,7 @@ const normalizeProductForForm = (product) => {
     care: product.careInstructions || product.care || "",
     badgesText: Array.isArray(product.badges) ? product.badges.join(", ") : "",
     isFeatured: Boolean(product.isFeatured),
+    isBestSeller: Boolean(product.isBestSeller),
     status: product.status || "draft",
     seoTitle: product.seo?.title || "",
     seoDescription: product.seo?.description || "",
@@ -479,6 +481,7 @@ const AdminProducts = () => {
       careInstructions: formData.care.trim(),
       badges,
       isFeatured: Boolean(formData.isFeatured),
+      isBestSeller: Boolean(formData.isBestSeller),
       status: formData.status,
       seo: {
         title: formData.seoTitle.trim(),
@@ -749,18 +752,33 @@ const AdminProducts = () => {
               />
             </div>
 
-            <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.025] px-4 py-3">
-              <input
-                type="checkbox"
-                name="isFeatured"
-                checked={formData.isFeatured}
-                onChange={updateField}
-              />
+            <div className="grid gap-3 md:grid-cols-2">
+              <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.025] px-4 py-3">
+                <input
+                  type="checkbox"
+                  name="isFeatured"
+                  checked={formData.isFeatured}
+                  onChange={updateField}
+                />
 
-              <span className="text-sm font-bold text-white/65">
-                Featured product
-              </span>
-            </label>
+                <span className="text-sm font-bold text-white/65">
+                  Featured product
+                </span>
+              </label>
+
+              <label className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.025] px-4 py-3">
+                <input
+                  type="checkbox"
+                  name="isBestSeller"
+                  checked={formData.isBestSeller}
+                  onChange={updateField}
+                />
+
+                <span className="text-sm font-bold text-white/65">
+                  Best Seller
+                </span>
+              </label>
+            </div>
 
             <Input
               label="Badges"
@@ -1436,6 +1454,12 @@ const AdminProducts = () => {
                             {product.isFeatured && (
                               <span className="rounded-full border border-emerald-300/20 bg-emerald-400/10 px-3 py-1 text-xs text-emerald-100">
                                 Featured
+                              </span>
+                            )}
+
+                            {product.isBestSeller && (
+                              <span className="rounded-full border border-[#c7a852]/30 bg-[#c7a852]/10 px-3 py-1 text-xs text-[#f5e4a8]">
+                                Best Seller
                               </span>
                             )}
                           </div>

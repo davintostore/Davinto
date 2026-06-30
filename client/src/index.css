@@ -397,6 +397,23 @@ html[lang="ar"] .page-shell label {
   opacity: 1;
 }
 
+.davinto-reveal,
+.davinto-reveal-item {
+  opacity: 0;
+  transform: translateY(1.5rem);
+  transition:
+    opacity 520ms ease,
+    transform 520ms ease;
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.davinto-reveal--visible,
+.davinto-reveal--visible .davinto-reveal-item {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .davinto-spin-logo {
   aspect-ratio: 1 / 1;
   display: inline-flex;
@@ -422,16 +439,77 @@ html[lang="ar"] .page-shell label {
   animation-play-state: running;
 }
 
-.davinto-spin-logo__layer {
+.davinto-spin-logo__mask-layer,
+.davinto-spin-logo__cap,
+.davinto-spin-logo__gloss,
+.davinto-spin-logo__highlight {
   backface-visibility: visible;
   height: 100%;
   inset: 0;
-  object-fit: contain;
+  mask-image: var(--davinto-logo-mask);
+  mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: contain;
   pointer-events: none;
   position: absolute;
+  transform-style: preserve-3d;
   user-select: none;
   width: 100%;
-  -webkit-user-drag: none;
+  -webkit-mask-image: var(--davinto-logo-mask);
+  -webkit-mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+}
+
+.davinto-spin-logo__mask-layer {
+  background: var(--layer-bg);
+  opacity: var(--layer-opacity);
+}
+
+.davinto-spin-logo__cap--front {
+  background:
+    radial-gradient(62% 44% at 32% 24%, rgba(255, 255, 255, 0.86), transparent 62%),
+    linear-gradient(
+      142deg,
+      rgba(255, 255, 255, 0.94) 0%,
+      rgba(199, 221, 229, 0.52) 34%,
+      rgba(42, 47, 58, 0.58) 70%,
+      rgba(255, 255, 255, 0.78) 100%
+    );
+  transform: translateZ(clamp(0.28rem, 0.63vw, 0.55rem));
+}
+
+.davinto-spin-logo__cap--back {
+  background:
+    linear-gradient(
+      322deg,
+      rgba(255, 255, 255, 0.58) 0%,
+      rgba(42, 47, 58, 0.68) 45%,
+      rgba(199, 221, 229, 0.34) 100%
+    );
+  transform: translateZ(clamp(-0.55rem, -0.63vw, -0.28rem));
+}
+
+.davinto-spin-logo__gloss {
+  background:
+    radial-gradient(60% 45% at 32% 26%, rgba(255, 255, 255, 0.85), transparent 60%),
+    radial-gradient(50% 40% at 72% 80%, rgba(199, 221, 229, 0.52), transparent 62%);
+  mix-blend-mode: screen;
+  transform: translateZ(clamp(0.34rem, 0.76vw, 0.68rem));
+}
+
+.davinto-spin-logo__highlight {
+  animation: davintoLogoSweep 4.9s linear infinite;
+  background-image: linear-gradient(
+    115deg,
+    transparent 32%,
+    rgba(255, 255, 255, 0.9) 47%,
+    rgba(255, 255, 255, 0.4) 52%,
+    transparent 64%
+  );
+  background-size: 300% 100%;
+  mix-blend-mode: screen;
+  transform: translateZ(clamp(0.4rem, 0.82vw, 0.76rem));
 }
 
 @keyframes davintoSpinLogo3d {
@@ -441,6 +519,16 @@ html[lang="ar"] .page-shell label {
 
   to {
     transform: rotateY(360deg);
+  }
+}
+
+@keyframes davintoLogoSweep {
+  from {
+    background-position: 220% 0;
+  }
+
+  to {
+    background-position: -120% 0;
   }
 }
 
@@ -459,6 +547,18 @@ html[lang="ar"] .page-shell label {
 
 .fashion-section {
   padding-block: clamp(4rem, 8vw, 8rem);
+}
+
+.categories-page-section {
+  padding-block: clamp(2.25rem, 5vw, 4.5rem) clamp(4rem, 8vw, 8rem);
+}
+
+.davinto-category-carousel {
+  scrollbar-width: none;
+}
+
+.davinto-category-carousel::-webkit-scrollbar {
+  display: none;
 }
 
 .cart-page-section {
@@ -583,6 +683,78 @@ html[lang="ar"] .page-shell label {
   animation: catalog-shimmer 1.5s linear infinite;
 }
 
+.davinto-range-input {
+  appearance: none;
+  background: transparent;
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  width: 100%;
+  z-index: 2;
+}
+
+.davinto-range-input--min {
+  z-index: 3;
+}
+
+.davinto-range-input--max {
+  z-index: 4;
+}
+
+.davinto-range-track {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(245, 240, 232, 0.16) 0%,
+      rgba(245, 240, 232, 0.16) var(--range-min, 0%),
+      var(--davinto-gold) var(--range-min, 0%),
+      var(--davinto-gold) var(--range-max, 100%),
+      rgba(245, 240, 232, 0.16) var(--range-max, 100%),
+      rgba(245, 240, 232, 0.16) 100%
+    );
+  border-radius: 999px;
+  height: 0.35rem;
+  inset-inline: 0;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+.davinto-range-input::-webkit-slider-runnable-track {
+  height: 0.35rem;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.davinto-range-input::-moz-range-track {
+  height: 0.35rem;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.davinto-range-input::-webkit-slider-thumb {
+  appearance: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: -0.45rem;
+  border: 2px solid var(--davinto-paper);
+  border-radius: 999px;
+  background: var(--davinto-gold);
+  box-shadow: 0 0 0 0.22rem rgba(5, 5, 5, 0.78);
+  pointer-events: auto;
+}
+
+.davinto-range-input::-moz-range-thumb {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid var(--davinto-paper);
+  border-radius: 999px;
+  background: var(--davinto-gold);
+  box-shadow: 0 0 0 0.22rem rgba(5, 5, 5, 0.78);
+  pointer-events: auto;
+}
+
 @keyframes catalog-shimmer {
   to {
     background-position-x: -200%;
@@ -669,8 +841,12 @@ select:-webkit-autofill {
     display: none !important;
   }
 
-  .davinto-spin-logo__stage {
+  .davinto-spin-logo__stage,
+  .davinto-spin-logo__highlight {
     animation: none !important;
+  }
+
+  .davinto-spin-logo__stage {
     transform: rotateY(-18deg);
   }
 
@@ -680,5 +856,12 @@ select:-webkit-autofill {
 
   .davinto-route-progress {
     display: none !important;
+  }
+
+  .davinto-reveal,
+  .davinto-reveal-item {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
 }

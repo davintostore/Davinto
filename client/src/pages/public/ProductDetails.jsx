@@ -138,15 +138,20 @@ const ProductDetails = () => {
 
   // SEO
   useSeo({
-    title: localizedProduct?.name 
-      ? `${localizedProduct.name} | Davinto Store`
-      : "Product | Davinto Store",
-    description: `Shop ${localizedProduct?.name || "product"} from Davinto Store with available sizes, delivery options, and order tracking.`,
+    title: localizedProduct?.name
+      ? t("catalog:product.seoTitle", { name: localizedProduct.name })
+      : t("catalog:product.seoFallbackTitle"),
+    description: t("catalog:product.seoDescription", {
+      name: localizedProduct?.name || t("catalog:product.seoFallbackName"),
+    }),
     robots: "index,follow",
     canonical: `${window.location.origin}/product/${slug}`,
     og: {
-      title: localizedProduct?.name || "Davinto Product",
-      description: localizedProduct?.shortDescription || "Shop premium clothing from Davinto Store",
+      title:
+        localizedProduct?.name || t("catalog:product.seoFallbackOgTitle"),
+      description:
+        localizedProduct?.shortDescription ||
+        t("catalog:product.seoFallbackOgDescription"),
       type: "product",
       url: `${window.location.origin}/product/${slug}`,
     },
@@ -230,20 +235,33 @@ const ProductDetails = () => {
   const productDescription =
     localizedProduct?.description ||
     localizedProduct?.shortDescription ||
-    "A Davinto piece designed for everyday rotation with a clean, premium finish.";
-  const materialsText = localizedProduct?.fabric || "Premium cotton blend.";
+    t("catalog:product.descriptionFallback");
+  const materialsText =
+    localizedProduct?.fabric || t("catalog:product.materialsFallback");
   const careText =
     localizedProduct?.care ||
     localizedProduct?.careInstructions ||
-    "Wash gently with similar colors. Avoid bleach and high heat to preserve the print and fabric.";
+    t("catalog:product.careTextFallback");
   const detailBullets = [
     localizedProduct?.category?.name
-      ? `Collection: ${localizedProduct.category.name}`
+      ? t("catalog:product.detailCollection", {
+          name: localizedProduct.category.name,
+        })
       : "",
-    localizedSelectedColor?.name ? `Selected color: ${localizedSelectedColor.name}` : "",
-    selectedSize?.label ? `Selected size: ${selectedSize.label}` : "",
+    localizedSelectedColor?.name
+      ? t("catalog:product.detailSelectedColor", {
+          color: localizedSelectedColor.name,
+        })
+      : "",
+    selectedSize?.label
+      ? t("catalog:product.detailSelectedSize", {
+          size: selectedSize.label,
+        })
+      : "",
     isInStock
-      ? `${selectedStock} pieces available in the selected option`
+      ? t("catalog:product.detailStockAvailable", {
+          count: selectedStock,
+        })
       : t("catalog:product.outOfStock"),
   ].filter(Boolean);
 
@@ -415,10 +433,10 @@ const ProductDetails = () => {
       }
 
       await navigator.clipboard.writeText(shareUrl);
-      setShareMessage("Link copied.");
+      setShareMessage(t("catalog:product.shareCopied"));
       window.setTimeout(() => setShareMessage(""), 2200);
     } catch {
-      setShareMessage("Share link is ready in your browser bar.");
+      setShareMessage(t("catalog:product.shareReady"));
       window.setTimeout(() => setShareMessage(""), 2200);
     }
   };
@@ -809,26 +827,34 @@ const ProductDetails = () => {
               )}
 
               <ProductInfoAccordion
-                title="Materials"
+                title={t("catalog:product.materialsTitle")}
                 isOpen={openInfoSection === "materials"}
                 onToggle={() => toggleInfoSection("materials")}
               >
                 {materialsText}
-                {localizedProduct.fit ? ` Fit: ${localizedProduct.fit}` : ""}
+                {localizedProduct.fit
+                  ? ` ${t("catalog:product.fitLine", {
+                      fit: localizedProduct.fit,
+                    })}`
+                  : ""}
               </ProductInfoAccordion>
 
               <ProductInfoAccordion
-                title="Shipping & Returns"
+                title={t("catalog:product.shippingReturnsTitle")}
                 isOpen={openInfoSection === "shipping"}
                 onToggle={() => toggleInfoSection("shipping")}
               >
-                Delivery is available across Egypt. Cairo and Giza delivery is 70 EGP;
-                other governorates are 120 EGP. Returns and exchanges are reviewed
-                based on item condition and order details.
+                {t("catalog:product.shippingReturnsDescription")}{" "}
+                <Link
+                  to="/shipping-policy"
+                  className="font-bold text-[#c7a852] transition hover:text-[#f5f0e8]"
+                >
+                  {t("catalog:product.shippingPolicyLink")}
+                </Link>
               </ProductInfoAccordion>
 
               <ProductInfoAccordion
-                title="Care Instructions"
+                title={t("catalog:product.careInstructionsTitle")}
                 isOpen={openInfoSection === "care"}
                 onToggle={() => toggleInfoSection("care")}
               >
@@ -842,7 +868,7 @@ const ProductDetails = () => {
                   className="inline-flex items-center gap-2 text-[0.64rem] font-black uppercase tracking-[0.2em] text-[#c7a852] transition hover:text-[#f5f0e8]"
                 >
                   <Share2 size={15} />
-                  Share
+                  {t("catalog:product.share")}
                 </button>
                 {shareMessage && (
                   <span className="text-xs text-[#f5f0e8]/45">
@@ -859,14 +885,14 @@ const ProductDetails = () => {
                 <div>
                   <SectionLabel>{t("catalog:product.relatedLabel")}</SectionLabel>
                   <h2 className="editorial-heading mt-3 text-5xl sm:text-6xl">
-                    More from Davinto
+                    {t("catalog:product.relatedTitle")}
                   </h2>
                 </div>
                 <Link
                   to="/shop"
                   className="hidden text-[0.62rem] font-black uppercase tracking-[0.2em] text-[#c7a852] transition hover:text-[#f5f0e8] sm:block"
                 >
-                  Shop all
+                  {t("catalog:product.shopAll")}
                 </Link>
               </div>
 

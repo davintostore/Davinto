@@ -14,6 +14,7 @@ import Shop from "../pages/public/Shop";
 import ProductDetails from "../pages/public/ProductDetails";
 
 const Category = lazy(() => import("../pages/public/Category"));
+const Categories = lazy(() => import("../pages/public/Categories"));
 const Cart = lazy(() => import("../pages/public/Cart"));
 const Checkout = lazy(() => import("../pages/public/Checkout"));
 const OrderSuccess = lazy(() => import("../pages/public/OrderSuccess"));
@@ -90,6 +91,7 @@ const AppRoutes = () => {
         <Route element={<PublicLayout />}>
           <Route index element={<Home />} />
           <Route path="/shop" element={<Shop />} />
+          <Route path="/categories" element={withRouteFallback(<Categories />)} />
           <Route path="/category/:slug" element={withRouteFallback(<Category />)} />
           <Route path="/product/:slug" element={<ProductDetails />} />
           <Route path="/cart" element={withRouteFallback(<Cart />)} />

@@ -1,5 +1,7 @@
 require("dotenv").config();
 
+const { getProductionEnvReport } = require("../config/env");
+
 const groups = [
   {
     title: "Core Server",
@@ -82,7 +84,7 @@ const isFilled = (key) => {
 
 const printKey = (key, required = false) => {
   const filled = isFilled(key);
-  const icon = filled ? "✅" : required ? "❌" : "⚠️ ";
+  const icon = filled ? "[ok]" : required ? "[missing]" : "[optional]";
   const label = required ? "required" : "optional";
 
   console.log(`${icon} ${key} (${label})`);
@@ -162,6 +164,22 @@ if (
   }
 
   console.log("");
+}
+
+if (String(process.env.NODE_ENV || "").trim() === "production") {
+  const productionReport = getProductionEnvReport();
+
+  productionReport.warnings.forEach((warning) => {
+    console.log("Production warning:");
+    console.log(warning);
+    console.log("");
+  });
+
+  if (productionReport.missing.length > 0) {
+    missingRequired = Array.from(
+      new Set([...missingRequired, ...productionReport.missing])
+    );
+  }
 }
 
 if (missingRequired.length > 0) {

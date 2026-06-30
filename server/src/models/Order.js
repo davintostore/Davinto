@@ -592,6 +592,61 @@ const paymentGatewaySchema = new mongoose.Schema(
   }
 );
 
+const paymentProofSchema = new mongoose.Schema(
+  {
+    url: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    publicId: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    filename: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    mimeType: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    size: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    width: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    height: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    format: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+  },
+  {
+    _id: false,
+  }
+);
+
 const orderSchema = new mongoose.Schema(
   {
     orderNumber: {
@@ -749,6 +804,11 @@ const orderSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: "",
+    },
+
+    paymentProof: {
+      type: paymentProofSchema,
+      default: () => ({}),
     },
 
     orderStatus: {

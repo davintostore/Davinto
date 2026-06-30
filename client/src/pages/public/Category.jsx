@@ -86,6 +86,7 @@ const Category = () => {
           filters.availability === "all" ? undefined : filters.availability,
       }),
     enabled: Boolean(slug),
+    placeholderData: (previousData) => previousData,
   });
 
   const category = useMemo(
@@ -237,7 +238,6 @@ const Category = () => {
       <section className="fashion-section catalog-section" ref={resultsRef}>
         <Container>
           <CatalogFilters
-            key={`${filters.minPrice}:${filters.maxPrice}:${language}`}
             filters={filters}
             metadata={filterMetadata}
             currentCategory={category}

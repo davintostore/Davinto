@@ -1,8 +1,13 @@
 const mongoose = require("mongoose");
+const { isProduction } = require("./env");
 
 const connectDB = async () => {
   try {
     if (!process.env.MONGO_URI) {
+      if (isProduction()) {
+        throw new Error("MONGO_URI is required in production.");
+      }
+
       console.log("MongoDB not connected: MONGO_URI is missing.");
       return;
     }

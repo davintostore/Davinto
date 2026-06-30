@@ -418,15 +418,27 @@ const CartDrawer = () => {
                     {t("common:updatingTotals")}
                   </Button>
                 ) : (
-                  <Link to="/checkout" onClick={closeCartDrawer}>
-                    <Button className="w-full">{t("cart:checkout")}</Button>
-                  </Link>
+                  <>
+                    <Link to="/cart" onClick={closeCartDrawer}>
+                      <Button
+                        variant="secondary"
+                        className="w-full tracking-[0.14em]"
+                      >
+                        {t("cart:viewCartPage")}
+                      </Button>
+                    </Link>
+                    <Link to="/checkout" onClick={closeCartDrawer}>
+                      <Button className="w-full tracking-[0.14em]">
+                        {t("cart:checkout")}
+                      </Button>
+                    </Link>
+                  </>
                 )}
                 {isQuoteError && !isQuotePending && (
                   <button
                     type="button"
                     onClick={() => refetchQuote()}
-                    className="text-[0.58rem] font-black uppercase tracking-[0.18em] text-[#c7a852] transition hover:text-[#f5f0e8]"
+                    className="text-[0.58rem] font-black uppercase tracking-[0.14em] text-[#c7a852] transition hover:text-[#f5f0e8]"
                   >
                     {t("common:tryAgain")}
                   </button>
@@ -434,7 +446,7 @@ const CartDrawer = () => {
                 <button
                   type="button"
                   onClick={closeCartDrawer}
-                  className="text-[0.6rem] font-black uppercase tracking-[0.2em] text-[#f5f0e8]/52 transition hover:text-[#c7a852]"
+                  className="text-[0.6rem] font-black uppercase tracking-[0.14em] text-[#f5f0e8]/52 transition hover:text-[#c7a852]"
                 >
                   {t("cart:keepShopping")}
                 </button>

@@ -326,6 +326,7 @@ const buildAdminOrderText = (order) => {
     `Payment Method: ${getPaymentMethodLabel(order.paymentMethod)}`,
     `Payment Status: ${formatStatus(order.paymentStatus)}`,
     `Payment Reference: ${order.paymentReference || ""}`,
+    `Payment Proof: ${order.paymentProof?.url || ""}`,
     ``,
     `Subtotal: ${formatMoney(order.subtotal)}`,
     `Bundle Discount: ${formatMoney(order.bundleDiscountTotal)}`,
@@ -403,7 +404,13 @@ const buildAdminOrderHtml = (order) => {
           ${buildDetailRow("Order Status", formatStatus(order.orderStatus))}
           ${buildDetailRow("Payment Status", formatStatus(order.paymentStatus))}
           ${buildDetailRow("Payment Reference", order.paymentReference || "—")}
+          ${buildDetailRow("Payment Proof", order.paymentProof?.url || "—")}
         </table>
+        ${
+          order.paymentProof?.url
+            ? `<p style="margin:14px 0 0;"><a href="${escapeHtml(order.paymentProof.url)}" style="color:#d9c16c;font-size:13px;font-weight:800;">Open payment proof image</a></p>`
+            : ""
+        }
       </div>
 
       ${buildDeliveryHtml(order)}

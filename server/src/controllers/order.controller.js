@@ -12,6 +12,16 @@ const {
   isPaymobConfigured,
   createPaymobCardPayment,
 } = require("../services/paymob.service");
+const {
+  configureCloudinary,
+  cloudinary,
+  isCloudinaryConfigured,
+} = require("../config/cloudinary");
+const {
+  getUploadFolder,
+  uploadBufferToCloudinary,
+  validateUploadedImageFile,
+} = require("./upload.controller");
 
 const asyncHandler = require("../utils/asyncHandler");
 
@@ -54,6 +64,16 @@ const normalizeLocale = (value = "") => {
   return String(value || "").trim().toLowerCase().startsWith("ar")
     ? "ar"
     : "en";
+};
+
+const parseOrderRequestBody = (body = {}) => {
+  if (!body.payload) return body;
+
+  try {
+    return JSON.parse(body.payload);
+  } catch {
+    throw createHttpError("Invalid order payload.", 400);
+  }
 };
 
 const createPaymobMerchantOrderId = (orderNumber, mode = "PAY") => {
@@ -189,6 +209,59 @@ const getInitialStatuses = (paymentMethod) => {
   throw createHttpError("Invalid payment method.");
 };
 
+const requiresManualPaymentProof = (paymentMethod) =>
+  ["instapay", "vodafoneCash"].includes(paymentMethod);
+
+const uploadPaymentProof = async (file) => {
+  configureCloudinary();
+
+  if (!isCloudinaryConfigured()) {
+    throw createHttpError(
+      "Payment proof upload is not configured. Please contact the store.",
+      500
+    );
+  }
+
+  validateUploadedImageFile(file);
+
+  const folder = getUploadFolder("orders/payment-proofs");
+  const result = await uploadBufferToCloudinary({
+    buffer: file.buffer,
+    folder,
+  });
+
+  return {
+    url: result.secure_url,
+    publicId: result.public_id,
+    filename: file.originalname || "",
+    mimeType: file.mimetype || "",
+    size: Number(file.size || result.bytes || 0),
+    width: Number(result.width || 0),
+    height: Number(result.height || 0),
+    format: result.format || "",
+  };
+};
+
+const cleanupPaymentProofUpload = async (paymentProof) => {
+  if (!paymentProof?.publicId) return;
+
+  try {
+    configureCloudinary();
+
+    if (!isCloudinaryConfigured()) return;
+
+    await cloudinary.uploader.destroy(paymentProof.publicId, {
+      resource_type: "image",
+    });
+  } catch (error) {
+    console.warn(
+      `Payment proof cleanup failed for ${paymentProof.publicId}: ${
+        error?.message || "Unknown error"
+      }`
+    );
+  }
+};
+
 const buildPaymentSnapshot = (settings, paymentMethod, paymentSetup) => {
   const arabicPayment = settings.translations?.ar?.payments?.[paymentMethod];
 
@@ -218,6 +291,7 @@ const buildPublicOrderPayload = (order, options = {}) => {
     orderStatus: order.orderStatus,
     paymentStatus: order.paymentStatus,
     paymentMethod: order.paymentMethod,
+    paymentProof: order.paymentProof,
     subtotal: order.subtotal,
     productSavings: order.productSavings,
     bundleDiscountTotal: order.bundleDiscountTotal,
@@ -374,6 +448,7 @@ const initializePaymobPaymentForOrder = async (order, mode = "PAY") => {
 };
 
 const createOrder = asyncHandler(async (req, res) => {
+  const requestBody = parseOrderRequestBody(req.body || {});
   const {
     customerInfo,
     items,
@@ -381,7 +456,7 @@ const createOrder = asyncHandler(async (req, res) => {
     paymentReference,
     discountCode,
     locale,
-  } = req.body;
+  } = requestBody;
   const orderLocale = normalizeLocale(locale);
 
   const verifiedCustomerId = req.customer?._id || null;
@@ -421,13 +496,27 @@ const createOrder = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  if (
-    ["instapay", "vodafoneCash"].includes(paymentMethod) &&
-    settings.manualPayment?.requireTransactionReference &&
-    !normalizeText(paymentReference)
-  ) {
+  const manualProofRequired = requiresManualPaymentProof(paymentMethod);
+
+  if (manualProofRequired && !normalizeText(paymentReference)) {
     res.status(400);
     throw new Error("Transaction reference is required for this payment method.");
+  }
+
+  if (manualProofRequired && !req.file) {
+    res.status(400);
+    throw new Error("Transaction screenshot is required for this payment method.");
+  }
+
+  let uploadedPaymentProof = null;
+
+  if (manualProofRequired) {
+    try {
+      uploadedPaymentProof = await uploadPaymentProof(req.file);
+    } catch (error) {
+      res.status(error.statusCode || 400);
+      throw error;
+    }
   }
 
   const session = await mongoose.startSession();
@@ -478,6 +567,7 @@ const createOrder = asyncHandler(async (req, res) => {
             paymentMethod,
             paymentStatus,
             paymentReference: normalizeText(paymentReference),
+            paymentProof: uploadedPaymentProof || {},
             orderStatus,
             paymentSnapshot: buildPaymentSnapshot(
               settings,

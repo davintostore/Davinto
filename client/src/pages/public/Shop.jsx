@@ -75,6 +75,7 @@ const Shop = () => {
         availability:
           filters.availability === "all" ? undefined : filters.availability,
       }),
+    placeholderData: (previousData) => previousData,
   });
 
   const products = useMemo(
@@ -203,14 +204,12 @@ const Shop = () => {
         <h1 className="sr-only">{t("catalog:shop.title")}</h1>
 
           <CatalogFilters
-            key={`${filters.minPrice}:${filters.maxPrice}:${language}`}
             filters={filters}
             metadata={filterMetadata}
             categories={categories}
             productCount={totalProducts}
             language={language}
             t={t}
-            onSearchChange={(value) => updateQueryParams({ search: value })}
             onSortChange={(value) => updateQueryParams({ sort: value })}
             onCategoryChange={(value) => updateQueryParams({ category: value })}
             onToggleColor={toggleColorFilter}

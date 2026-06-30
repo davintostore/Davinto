@@ -344,6 +344,12 @@ const productSchema = new mongoose.Schema(
       index: true,
     },
 
+    isBestSeller: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+
     status: {
       type: String,
       enum: ["draft", "active", "archived"],
@@ -452,6 +458,7 @@ productSchema.virtual("hoverImage").get(function () {
 productSchema.index({ name: "text", description: "text", shortDescription: "text" });
 productSchema.index({ status: 1, category: 1, createdAt: -1 });
 productSchema.index({ isFeatured: 1, status: 1 });
+productSchema.index({ isBestSeller: 1, status: 1, createdAt: -1 });
 productSchema.index({ status: 1, price: 1 });
 productSchema.index({ status: 1, "colors.slug": 1 });
 

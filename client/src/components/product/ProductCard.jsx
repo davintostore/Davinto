@@ -5,6 +5,7 @@ import { formatCurrency } from "../../utils/translatedLabels";
 import { getLocalizedProduct } from "../../utils/localizedContent";
 import { hideBrokenImage } from "../../utils/imageFallback";
 import { getProductGalleryImages } from "../../utils/resolveLocalImages";
+import useScrollReveal from "../../hooks/useScrollReveal";
 
 const QuickProductModal = lazy(() => import("./QuickProductModal"));
 
@@ -37,6 +38,7 @@ const getSimpleBadge = (badge = "", t) => {
 const ProductCard = ({ product }) => {
   const { t, i18n } = useTranslation(["common", "catalog"]);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
+  const [revealRef, revealClassName] = useScrollReveal();
   const language = i18n.resolvedLanguage === "ar" ? "ar" : "en";
   const formatMoney = (value) => formatCurrency(value, language);
   const localizedProduct = getLocalizedProduct(product, language);
@@ -72,9 +74,10 @@ const ProductCard = ({ product }) => {
         .map((badge) => getSimpleBadge(badge, t))
         .filter(Boolean)
         .slice(0, 1);
+  const openQuickOptions = () => setIsQuickViewOpen(true);
 
   return (
-      <article className="group">
+      <article ref={revealRef} className={`group ${revealClassName}`}>
         <div className="relative">
           <Link
             to={`/product/${product.slug}`}
@@ -136,15 +139,15 @@ const ProductCard = ({ product }) => {
 
           <button
             type="button"
-            onClick={() => setIsQuickViewOpen(true)}
-            className="absolute inset-x-3 bottom-3 z-10 hidden min-h-11 items-center justify-center border border-[#c7a852]/55 bg-[#110f0e]/92 px-4 py-3 text-[0.6rem] font-black uppercase tracking-[0.18em] text-[#f5f0e8] opacity-0 shadow-xl transition duration-300 hover:border-[#c7a852] hover:bg-[#882c30]/88 focus-visible:outline-offset-2 md:flex md:translate-y-4 md:group-hover:translate-y-0 md:group-hover:opacity-100 md:group-focus-within:translate-y-0 md:group-focus-within:opacity-100"
+            onClick={openQuickOptions}
+            className="absolute inset-x-3 bottom-3 z-10 hidden min-h-11 items-center justify-center border border-[#c7a852]/55 bg-[#110f0e]/92 px-4 py-3 text-[0.6rem] font-black uppercase tracking-[0.14em] text-[#f5f0e8] opacity-0 shadow-xl transition duration-300 hover:border-[#c7a852] hover:bg-[#882c30]/88 focus-visible:outline-offset-2 md:flex md:translate-y-4 md:group-hover:translate-y-0 md:group-hover:opacity-100 md:group-focus-within:translate-y-0 md:group-focus-within:opacity-100"
             aria-haspopup="dialog"
           >
             {t("catalog:product.chooseOptions")}
           </button>
         </div>
 
-        <div className="border-b border-[#f5f0e8]/12 py-3 sm:py-4">
+        <div className="py-3 sm:py-4">
           <div className="flex items-start justify-between gap-2 sm:gap-5">
             <div className="min-w-0">
               <Link to={`/product/${product.slug}`}>
@@ -168,28 +171,14 @@ const ProductCard = ({ product }) => {
             </div>
           </div>
 
-          {Array.isArray(localizedProduct.colors) &&
-            localizedProduct.colors.length > 0 && (
-            <div className="mt-3 flex items-center justify-between gap-3 sm:mt-4 sm:gap-4">
-              <div className="flex items-center gap-2">
-                {localizedProduct.colors.slice(0, 5).map((color) => (
-                  <span
-                    key={color._id || color.slug || color.name}
-                    title={color.name}
-                    className="h-3 w-3 rounded-full border border-[#f5f0e8]/35 ring-1 ring-[#1c1917] sm:h-3.5 sm:w-3.5"
-                    style={{ backgroundColor: color.hex || "#777" }}
-                  />
-                ))}
-                {localizedProduct.colors.length > 5 && (
-                  <span className="text-[0.62rem] text-[#8b8075]">
-                    +{localizedProduct.colors.length - 5}
-                  </span>
-                )}
-              </div>
-
-            </div>
-          )}
-
+          <button
+            type="button"
+            onClick={openQuickOptions}
+            className="mt-3 flex min-h-9 w-full items-center justify-center border border-[#c7a852]/38 px-3 py-2 text-[0.56rem] font-black uppercase tracking-[0.12em] text-[#f5f0e8]/82 transition hover:border-[#c7a852] hover:text-[#f5f0e8] md:hidden"
+            aria-haspopup="dialog"
+          >
+            {t("catalog:product.chooseOptions")}
+          </button>
         </div>
 
         {isQuickViewOpen && (
