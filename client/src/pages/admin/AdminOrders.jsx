@@ -322,6 +322,17 @@ const AdminOrders = () => {
   const handleOrderStatusChange = (order, nextStatus) => {
     if (!nextStatus || nextStatus === order.orderStatus) return;
 
+    if (nextStatus === "cancelled") {
+      setConfirmationModal({
+        type: "cancelOrder",
+        order,
+        nextStatus: "cancelled",
+        targetLabel: statusLabel(nextStatus, orderStatusOptions),
+        note: "",
+      });
+      return;
+    }
+
     setConfirmationModal({
       type: "orderStatus",
       order,
@@ -770,10 +781,6 @@ const AdminOrders = () => {
                             <option
                               key={status.value}
                               value={status.value}
-                              disabled={
-                                status.value === "cancelled" &&
-                                order.orderStatus !== "cancelled"
-                              }
                             >
                               {status.label}
                             </option>

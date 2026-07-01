@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -14,6 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import Container from "../ui/Container";
 import Button from "../ui/Button";
+import CartDrawer from "../cart/CartDrawer";
 import CartToast from "../cart/CartToast";
 import LanguageSwitcher from "../i18n/LanguageSwitcher";
 import GlobalSearchDrawer from "../search/GlobalSearchDrawer";
@@ -24,36 +25,6 @@ import { useCustomerAuth } from "../../context/customerAuthContext";
 import useFocusTrap from "../../hooks/useFocusTrap";
 import { getPublicSettingsRequest } from "../../services/settingsService";
 import { getLocalizedSettings } from "../../utils/localizedContent";
-
-const CartDrawer = lazy(() => import("../cart/CartDrawer"));
-
-const CartDrawerFallback = ({ closeLabel, loadingLabel, loadingMessage, onClose }) => (
-  <div
-    className="fixed inset-0 z-[80]"
-    role="dialog"
-    aria-modal="true"
-    aria-label={loadingLabel}
-  >
-    <button
-      type="button"
-      className="absolute inset-0 bg-[#050505]/45"
-      aria-label={closeLabel}
-      onClick={onClose}
-    />
-    <aside className="absolute inset-y-0 right-0 flex w-full flex-col border-l border-[#c7a852]/28 bg-[#0b0a09] shadow-2xl sm:max-w-[28rem]">
-      <div className="flex flex-1 items-center justify-center px-6 text-center text-[#f5f0e8]">
-        <div>
-          <p className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-[#c7a852]">
-            Davinto
-          </p>
-          <p className="mt-3 text-sm text-[#f5f0e8]/65">
-            {loadingMessage}
-          </p>
-        </div>
-      </div>
-    </aside>
-  </div>
-);
 
 const policyLinks = [
   { key: "privacy", path: "/privacy-policy" },
@@ -104,8 +75,7 @@ const PublicLayout = () => {
   const { t, i18n } = useTranslation("navigation");
   const language = i18n.resolvedLanguage === "ar" ? "ar" : "en";
   const location = useLocation();
-  const { cartCount, isCartDrawerOpen, openCartDrawer, closeCartDrawer } =
-    useCart();
+  const { cartCount, openCartDrawer } = useCart();
   const {
     isAuthenticated: isAdminAuthenticated,
     isCheckingAuth: isCheckingAdminAuth,
@@ -290,18 +260,6 @@ const PublicLayout = () => {
             {showCustomerNav && (
               <>
                 <NavLink
-                  to="/account"
-                  className={({ isActive }) =>
-                    `relative py-2 text-[0.66rem] font-black uppercase tracking-[0.24em] transition after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:bg-[#c7a852] after:transition-transform ${
-                      isActive
-                        ? "text-[#f5f0e8] after:scale-x-100"
-                        : "text-[#f5f0e8]/52 after:scale-x-0 hover:text-[#f5f0e8] hover:after:scale-x-100"
-                    }`
-                  }
-                >
-                  {t("account")}
-                </NavLink>
-                <NavLink
                   to="/my-orders"
                   className={({ isActive }) =>
                     `relative py-2 text-[0.66rem] font-black uppercase tracking-[0.24em] transition after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:bg-[#c7a852] after:transition-transform ${
@@ -331,7 +289,7 @@ const PublicLayout = () => {
               <Link
                 to={accountPath}
                 onClick={() => setIsMenuOpen(false)}
-                className="flex h-11 w-11 items-center justify-center text-[#f5f0e8]/76 transition hover:text-[#c7a852]"
+                className="hidden h-11 w-11 items-center justify-center text-[#f5f0e8]/76 transition hover:text-[#c7a852] lg:flex"
                 aria-label={accountLabel}
               >
                 <UserRound size={25} className="lg:h-[21px] lg:w-[21px]" />
@@ -497,20 +455,7 @@ const PublicLayout = () => {
         </div>
       </main>
 
-      {isCartDrawerOpen && (
-        <Suspense
-          fallback={
-            <CartDrawerFallback
-              closeLabel={t("cartCloseLabel")}
-              loadingLabel={t("cartLoadingLabel")}
-              loadingMessage={t("cartLoadingMessage")}
-              onClose={closeCartDrawer}
-            />
-          }
-        >
-          <CartDrawer />
-        </Suspense>
-      )}
+      <CartDrawer />
       <CartToast />
       <GlobalSearchDrawer
         isOpen={isSearchOpen && !isFocusedRoute}

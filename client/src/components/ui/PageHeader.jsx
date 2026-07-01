@@ -82,10 +82,12 @@ const HeaderBackgroundVideo = ({ video }) => {
 
   return (
     <>
-      <div
-        className="davinto-hero-poster absolute inset-0"
-        style={{ backgroundImage: `url("${video.poster}")` }}
-      />
+      {video.poster && (
+        <div
+          className="davinto-hero-poster absolute inset-0"
+          style={{ backgroundImage: `url("${video.poster}")` }}
+        />
+      )}
       {shouldRenderVideo && isVideoAvailable && (
         <video
           ref={videoRef}
@@ -98,7 +100,7 @@ const HeaderBackgroundVideo = ({ video }) => {
           playsInline
           disablePictureInPicture
           preload="metadata"
-          poster={video.poster}
+          poster={video.poster || undefined}
           aria-hidden="true"
           tabIndex={-1}
           onLoadStart={() => setIsVideoPlaying(false)}
