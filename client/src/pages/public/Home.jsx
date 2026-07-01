@@ -303,16 +303,29 @@ const Home = () => {
     });
   }, [getCarouselCards]);
   const scrollCategoryCarousel = (direction) => {
+    const carousel = categoryCarouselRef.current;
     const { cards, activeIndex } = getCarouselCards();
+
+    if (!carousel || cards.length === 0) return;
+
     const nextIndex = Math.min(
       Math.max(activeIndex + direction, 0),
       cards.length - 1
     );
+    const nextCard = cards[nextIndex];
 
-    cards[nextIndex]?.scrollIntoView({
+    if (!nextCard || nextIndex === activeIndex) return;
+
+    const carouselRect = carousel.getBoundingClientRect();
+    const nextCardRect = nextCard.getBoundingClientRect();
+    const scrollDelta =
+      language === "ar"
+        ? nextCardRect.right - carouselRect.right
+        : nextCardRect.left - carouselRect.left;
+
+    carousel.scrollBy({
+      left: scrollDelta,
       behavior: "smooth",
-      block: "nearest",
-      inline: "start",
     });
 
     window.setTimeout(updateCategoryCarouselState, 360);
@@ -433,7 +446,7 @@ const Home = () => {
 
               <div
                 ref={categoryCarouselRef}
-                className="davinto-category-carousel -mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-3 lg:hidden"
+                className="davinto-category-carousel flex w-full snap-x snap-mandatory gap-4 overflow-x-auto overflow-y-hidden scroll-px-1 px-1 pb-3 lg:hidden"
               >
                 {visibleCategories.map((category, index) => (
                   <EditorialCategoryCard
@@ -442,7 +455,7 @@ const Home = () => {
                     label={t("categories.cardLabel")}
                     cta={t("categories.cardCta")}
                     isCarouselCard
-                    className="davinto-reveal-item min-w-[78vw] max-w-[21rem] snap-start"
+                    className="davinto-reveal-item w-[82vw] max-w-[21.5rem] flex-none snap-start"
                     cardClassName="min-h-[19rem]"
                     style={{ "--reveal-delay": `${Math.min(index, 5) * 55}ms` }}
                   />
