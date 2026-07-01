@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import EditorialCategoryCard from "../../components/category/EditorialCategoryCard";
 import ProductCard from "../../components/product/ProductCard";
@@ -170,11 +169,6 @@ const HeroBackgroundVideo = () => {
 const Home = () => {
   const { t, i18n } = useTranslation(["home", "common"]);
   const language = i18n.resolvedLanguage === "ar" ? "ar" : "en";
-  const categoryCarouselRef = useRef(null);
-  const [categoryCarouselState, setCategoryCarouselState] = useState({
-    canScrollPrev: false,
-    canScrollNext: false,
-  });
   const [statementRevealRef, statementRevealClass] = useScrollReveal();
   const [categoriesTextRef, categoriesTextClass] = useScrollReveal();
   const [categoriesGridRef, categoriesGridClass] = useScrollReveal();
@@ -252,101 +246,6 @@ const Home = () => {
       ? categories
       : [{ _id: "t-shirts", name: t("categories.heading"), slug: "" }];
   const primaryCategoryPath = "/shop";
-  const getCarouselCards = useCallback(() => {
-    const carousel = categoryCarouselRef.current;
-
-    if (!carousel) {
-      return {
-        cards: [],
-        activeIndex: 0,
-      };
-    }
-
-    const cards = Array.from(
-      carousel.querySelectorAll('[data-home-category-card="true"]')
-    );
-
-    if (cards.length === 0) {
-      return {
-        cards,
-        activeIndex: 0,
-      };
-    }
-
-    const carouselRect = carousel.getBoundingClientRect();
-    const anchor = language === "ar" ? carouselRect.right : carouselRect.left;
-    let activeIndex = 0;
-    let closestDistance = Number.POSITIVE_INFINITY;
-
-    cards.forEach((card, index) => {
-      const cardRect = card.getBoundingClientRect();
-      const cardAnchor = language === "ar" ? cardRect.right : cardRect.left;
-      const distance = Math.abs(cardAnchor - anchor);
-
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        activeIndex = index;
-      }
-    });
-
-    return {
-      cards,
-      activeIndex,
-    };
-  }, [language]);
-  const updateCategoryCarouselState = useCallback(() => {
-    const { cards, activeIndex } = getCarouselCards();
-
-    setCategoryCarouselState({
-      canScrollPrev: activeIndex > 0,
-      canScrollNext: activeIndex < cards.length - 1,
-    });
-  }, [getCarouselCards]);
-  const scrollCategoryCarousel = (direction) => {
-    const carousel = categoryCarouselRef.current;
-    const { cards, activeIndex } = getCarouselCards();
-
-    if (!carousel || cards.length === 0) return;
-
-    const nextIndex = Math.min(
-      Math.max(activeIndex + direction, 0),
-      cards.length - 1
-    );
-    const nextCard = cards[nextIndex];
-
-    if (!nextCard || nextIndex === activeIndex) return;
-
-    const carouselRect = carousel.getBoundingClientRect();
-    const nextCardRect = nextCard.getBoundingClientRect();
-    const scrollDelta =
-      language === "ar"
-        ? nextCardRect.right - carouselRect.right
-        : nextCardRect.left - carouselRect.left;
-
-    carousel.scrollBy({
-      left: scrollDelta,
-      behavior: "smooth",
-    });
-
-    window.setTimeout(updateCategoryCarouselState, 360);
-  };
-
-  useEffect(() => {
-    const carousel = categoryCarouselRef.current;
-
-    if (!carousel) return undefined;
-
-    updateCategoryCarouselState();
-    carousel.addEventListener("scroll", updateCategoryCarouselState, {
-      passive: true,
-    });
-    window.addEventListener("resize", updateCategoryCarouselState);
-
-    return () => {
-      carousel.removeEventListener("scroll", updateCategoryCarouselState);
-      window.removeEventListener("resize", updateCategoryCarouselState);
-    };
-  }, [updateCategoryCarouselState, visibleCategories.length]);
 
   return (
     <>
@@ -405,11 +304,11 @@ const Home = () => {
               </p>
             </div>
 
-            <div
-              ref={categoriesGridRef}
-              className={categoriesGridClass}
-            >
-              <div className="hidden gap-4 lg:grid lg:grid-cols-3">
+            <div>
+              <div
+                ref={categoriesGridRef}
+                className={`hidden gap-4 lg:grid lg:grid-cols-3 ${categoriesGridClass}`}
+              >
                 {visibleCategories.map((category, index) => (
                   <EditorialCategoryCard
                     key={category._id || category.slug}
@@ -423,46 +322,27 @@ const Home = () => {
                 ))}
               </div>
 
-              <div className="mb-3 flex justify-end gap-2 lg:hidden">
-                <button
-                  type="button"
-                  className="flex h-10 w-10 items-center justify-center border border-[#050505] bg-[#050505] text-[#f5f0e8] transition hover:border-[#c7a852] hover:text-[#c7a852] disabled:cursor-not-allowed disabled:opacity-35"
-                  aria-label={t("common:previous")}
-                  disabled={!categoryCarouselState.canScrollPrev}
-                  onClick={() => scrollCategoryCarousel(-1)}
-                >
-                  <ChevronLeft size={18} />
-                </button>
-                <button
-                  type="button"
-                  className="flex h-10 w-10 items-center justify-center border border-[#050505] bg-[#050505] text-[#f5f0e8] transition hover:border-[#c7a852] hover:text-[#c7a852] disabled:cursor-not-allowed disabled:opacity-35"
-                  aria-label={t("common:next")}
-                  disabled={!categoryCarouselState.canScrollNext}
-                  onClick={() => scrollCategoryCarousel(1)}
-                >
-                  <ChevronRight size={18} />
-                </button>
-              </div>
-
-              <div
-                ref={categoryCarouselRef}
-                className="davinto-category-carousel flex w-full snap-x snap-mandatory gap-4 overflow-x-auto overflow-y-hidden scroll-px-1 px-1 pb-3 lg:hidden"
-              >
-                {visibleCategories.map((category, index) => (
+              <div className="space-y-4 lg:hidden">
+                {visibleCategories.slice(0, 3).map((category) => (
                   <EditorialCategoryCard
                     key={category._id || category.slug}
                     category={category}
                     label={t("categories.cardLabel")}
                     cta={t("categories.cardCta")}
-                    isCarouselCard
-                    className="davinto-reveal-item w-[82vw] max-w-[21.5rem] flex-none snap-start"
-                    cardClassName="min-h-[19rem]"
-                    style={{ "--reveal-delay": `${Math.min(index, 5) * 55}ms` }}
+                    cardClassName="min-h-[16rem]"
                   />
                 ))}
               </div>
 
-              <div className="mt-7 flex justify-center">
+              <div className="relative z-10 mt-7 flex justify-center lg:hidden">
+                <Link to="/categories">
+                  <Button className="border-[#050505] bg-[#050505] text-[#f5f0e8] hover:border-[#1c1917] hover:bg-[#1c1917]">
+                    {t("categories.viewAll")}
+                  </Button>
+                </Link>
+              </div>
+
+              <div className="mt-7 hidden justify-center lg:flex">
                 <Link to="/categories">
                   <Button className="border-[#050505] bg-[#050505] text-[#f5f0e8] hover:border-[#1c1917] hover:bg-[#1c1917]">
                     {t("categories.viewAll")}

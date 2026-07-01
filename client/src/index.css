@@ -553,15 +553,6 @@ html[lang="ar"] .page-shell label {
   padding-block: clamp(2.25rem, 5vw, 4.5rem) clamp(4rem, 8vw, 8rem);
 }
 
-.davinto-category-carousel {
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-
-.davinto-category-carousel::-webkit-scrollbar {
-  display: none;
-}
-
 .cart-page-section {
   padding-block: clamp(1.75rem, 4vw, 3.25rem);
   min-height: calc(100vh - 4rem);
