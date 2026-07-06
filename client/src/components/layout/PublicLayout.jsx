@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import {
+  ChevronDown,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -23,8 +24,12 @@ import { useAdminAuth } from "../../context/adminAuthContext";
 import { useCart } from "../../context/cartContext";
 import { useCustomerAuth } from "../../context/customerAuthContext";
 import useFocusTrap from "../../hooks/useFocusTrap";
+import { getPublicCategoriesRequest } from "../../services/categoryService";
 import { getPublicSettingsRequest } from "../../services/settingsService";
-import { getLocalizedSettings } from "../../utils/localizedContent";
+import {
+  getLocalizedCategory,
+  getLocalizedSettings,
+} from "../../utils/localizedContent";
 
 const policyLinks = [
   { key: "privacy", path: "/privacy-policy" },
@@ -89,8 +94,11 @@ const PublicLayout = () => {
   } = useCustomerAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
+  const [isMobileCategoriesOpen, setIsMobileCategoriesOpen] = useState(false);
   const [isHeaderHidden, setIsHeaderHidden] = useState(false);
   const lastScrollYRef = useRef(0);
+  const categoriesDropdownRef = useRef(null);
   const isFocusedRoute =
     location.pathname === "/cart" || location.pathname === "/checkout";
   const hideFooter = location.pathname === "/checkout";
@@ -100,9 +108,34 @@ const PublicLayout = () => {
     queryKey: ["public-settings"],
     queryFn: getPublicSettingsRequest,
   });
+  const { data: categoriesData } = useQuery({
+    queryKey: ["layout-categories"],
+    queryFn: getPublicCategoriesRequest,
+  });
   const localizedSettings = getLocalizedSettings(
     settingsData?.settings,
     language
+  );
+  const navCategories = useMemo(
+    () => {
+      const seenCategories = new Set();
+
+      return (categoriesData?.categories || [])
+        .map((category) => getLocalizedCategory(category, language))
+        .filter((category) => {
+          const key = String(
+            category?.slug || category?._id || category?.name || ""
+          )
+            .trim()
+            .toLowerCase();
+
+          if (!key || seenCategories.has(key)) return false;
+
+          seenCategories.add(key);
+          return true;
+        });
+    },
+    [categoriesData, language]
   );
   const storeAddress = localizedSettings?.store?.address || "";
   const announcementText = t("announcement");
@@ -117,6 +150,9 @@ const PublicLayout = () => {
   });
   const accountPath = isCustomerAuthenticated ? "/account" : "/signin";
   const accountLabel = isCustomerAuthenticated ? t("account") : t("signIn");
+  const isCategoriesNavActive =
+    location.pathname === "/categories" ||
+    location.pathname.startsWith("/category/");
 
   const openSearchDrawer = () => {
     setIsMenuOpen(false);
@@ -127,6 +163,8 @@ const PublicLayout = () => {
     const frameId = window.requestAnimationFrame(() => {
       setIsMenuOpen(false);
       setIsSearchOpen(false);
+      setIsCategoriesOpen(false);
+      setIsMobileCategoriesOpen(false);
       setIsHeaderHidden(false);
       lastScrollYRef.current = window.scrollY || 0;
     });
@@ -135,6 +173,30 @@ const PublicLayout = () => {
       window.cancelAnimationFrame(frameId);
     };
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (!isCategoriesOpen) return undefined;
+
+    const handlePointerDown = (event) => {
+      if (!categoriesDropdownRef.current?.contains(event.target)) {
+        setIsCategoriesOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setIsCategoriesOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isCategoriesOpen]);
 
   useEffect(() => {
     if (isFocusedRoute) return undefined;
@@ -240,7 +302,77 @@ const PublicLayout = () => {
           </Link>
 
           <nav className="hidden items-center gap-5 lg:flex xl:gap-8">
-            {navLinks.map((link) => (
+            {navLinks.slice(0, 2).map((link) => (
+              <NavLink
+                key={link.path}
+                to={link.path}
+                end={link.path === "/"}
+                className={({ isActive }) =>
+                  `relative py-2 text-[0.66rem] font-black uppercase tracking-[0.24em] transition after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:bg-[#c7a852] after:transition-transform ${
+                    isActive
+                      ? "text-[#f5f0e8] after:scale-x-100"
+                      : "text-[#f5f0e8]/52 after:scale-x-0 hover:text-[#f5f0e8] hover:after:scale-x-100"
+                  }`
+                }
+              >
+                {link.label}
+              </NavLink>
+            ))}
+
+            <div ref={categoriesDropdownRef} className="relative">
+              <button
+                type="button"
+                id="desktop-categories-trigger"
+                aria-expanded={isCategoriesOpen}
+                aria-controls="desktop-categories-menu"
+                onClick={() => setIsCategoriesOpen((current) => !current)}
+                className={`relative inline-flex items-center py-2 text-[0.66rem] font-black uppercase tracking-[0.24em] transition after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:bg-[#c7a852] after:transition-transform ${
+                  isCategoriesOpen || isCategoriesNavActive
+                    ? "text-[#f5f0e8] after:scale-x-100"
+                    : "text-[#f5f0e8]/52 after:scale-x-0 hover:text-[#f5f0e8] hover:after:scale-x-100"
+                }`}
+              >
+                <span>{t("categories")}</span>
+                <ChevronDown
+                  size={11}
+                  className={`ms-1 align-middle opacity-70 transition ${
+                    isCategoriesOpen ? "rotate-180 text-[#c7a852]" : ""
+                  }`}
+                  aria-hidden="true"
+                />
+              </button>
+
+              {isCategoriesOpen && (
+                <div
+                  id="desktop-categories-menu"
+                  className="absolute left-1/2 top-full z-50 mt-4 w-64 -translate-x-1/2 border border-[#c7a852]/28 bg-[#0b0a09] p-2 shadow-2xl"
+                  role="menu"
+                  aria-labelledby="desktop-categories-trigger"
+                >
+                  <div className="max-h-80 overflow-y-auto">
+                    {navCategories.length > 0 ? (
+                      navCategories.map((category) => (
+                        <Link
+                          key={category._id || category.slug || category.name}
+                          to={category.slug ? `/category/${category.slug}` : "/shop"}
+                          role="menuitem"
+                          onClick={() => setIsCategoriesOpen(false)}
+                          className="block border-b border-[#f5f0e8]/8 px-3 py-3 text-sm font-bold text-[#f5f0e8]/70 transition last:border-b-0 hover:bg-[#f5f0e8]/5 hover:text-[#c7a852]"
+                        >
+                          {category.name}
+                        </Link>
+                      ))
+                    ) : (
+                      <p className="px-3 py-4 text-xs leading-6 text-[#f5f0e8]/45">
+                        {t("categoriesEmpty")}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {navLinks.slice(2).map((link) => (
               <NavLink
                 key={link.path}
                 to={link.path}
@@ -348,7 +480,7 @@ const PublicLayout = () => {
           <div
             ref={mobileMenuRef}
             id="public-mobile-navigation"
-            className="border-t border-[#f5f0e8]/10 bg-[#050505] lg:hidden"
+            className="max-h-[calc(100svh-6.5rem)] overflow-y-auto border-t border-[#f5f0e8]/10 bg-[#050505] lg:hidden"
             tabIndex={-1}
           >
             <Container className="py-5">
@@ -356,7 +488,71 @@ const PublicLayout = () => {
                 className="grid"
                 aria-label={t("mobileNavigation")}
               >
-                {navLinks.map((link) => (
+                {navLinks.slice(0, 2).map((link) => (
+                  <NavLink
+                    key={link.path}
+                    to={link.path}
+                    end={link.path === "/"}
+                    onClick={() => setIsMenuOpen(false)}
+                    className={({ isActive }) =>
+                      `flex items-center justify-between border-b border-[#f5f0e8]/10 py-4 text-sm font-black uppercase tracking-[0.2em] ${
+                        isActive ? "text-[#c7a852]" : "text-[#f5f0e8]/72"
+                      }`
+                    }
+                  >
+                    <span>{link.label}</span>
+                  </NavLink>
+                ))}
+
+                <button
+                  type="button"
+                  aria-expanded={isMobileCategoriesOpen}
+                  aria-controls="mobile-categories-menu"
+                  onClick={() =>
+                    setIsMobileCategoriesOpen((current) => !current)
+                  }
+                  className={`flex items-center justify-between border-b border-[#f5f0e8]/10 py-4 text-sm font-black uppercase tracking-[0.2em] ${
+                    isCategoriesNavActive ? "text-[#c7a852]" : "text-[#f5f0e8]/72"
+                  }`}
+                >
+                  <span>{t("categories")}</span>
+                  <ChevronDown
+                    size={16}
+                    className={`transition ${
+                      isMobileCategoriesOpen ? "rotate-180 text-[#c7a852]" : ""
+                    }`}
+                    aria-hidden="true"
+                  />
+                </button>
+
+                {isMobileCategoriesOpen && (
+                  <div
+                    id="mobile-categories-menu"
+                    className="davinto-mobile-categories-list border-b border-[#f5f0e8]/10 bg-[#f5f0e8]/[0.025] py-2"
+                  >
+                    {navCategories.length > 0 ? (
+                      navCategories.map((category) => (
+                        <Link
+                          key={category._id || category.slug || category.name}
+                          to={category.slug ? `/category/${category.slug}` : "/shop"}
+                          onClick={() => {
+                            setIsMenuOpen(false);
+                            setIsMobileCategoriesOpen(false);
+                          }}
+                          className="block px-4 py-3 text-sm font-bold text-[#f5f0e8]/64 transition hover:text-[#c7a852]"
+                        >
+                          {category.name}
+                        </Link>
+                      ))
+                    ) : (
+                      <p className="px-4 py-3 text-xs leading-6 text-[#f5f0e8]/42">
+                        {t("categoriesEmpty")}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {navLinks.slice(2).map((link) => (
                   <NavLink
                     key={link.path}
                     to={link.path}

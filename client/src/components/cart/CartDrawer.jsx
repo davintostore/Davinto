@@ -121,8 +121,8 @@ const CartDrawer = () => {
         onClick={closeCartDrawer}
       />
 
-      <aside className="cart-drawer-panel absolute inset-y-0 right-0 flex w-full flex-col border-l border-[#c7a852]/28 bg-[#0b0a09] shadow-2xl sm:max-w-[28rem]">
-        <div className="flex h-[4.5rem] items-center justify-between gap-4 border-b border-[#f5f0e8]/12 px-5 sm:px-6">
+      <aside className="cart-drawer-panel absolute inset-y-0 right-0 flex w-[min(92vw,26rem)] flex-col border-l border-[#c7a852]/28 bg-[#0b0a09] shadow-2xl sm:w-full sm:max-w-[28rem]">
+        <div className="flex h-[4.5rem] items-center justify-between gap-4 border-b border-[#f5f0e8]/12 px-6">
           <div>
             <p className="text-[0.56rem] font-black uppercase tracking-[0.26em] text-[#c7a852]">
               {t("cart:totalItems", { count: cartCount })}
@@ -147,7 +147,7 @@ const CartDrawer = () => {
         </div>
 
         {items.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
+          <div className="flex flex-1 flex-col items-center justify-center px-7 text-center">
             <p className="text-[0.62rem] font-black uppercase tracking-[0.26em] text-[#c7a852]">
               {t("cart:emptyLabel")}
             </p>
@@ -163,7 +163,7 @@ const CartDrawer = () => {
           </div>
         ) : (
           <>
-            <div className="flex-1 overflow-y-auto px-5 py-4 sm:px-6">
+            <div className="flex-1 overflow-y-auto px-6 py-4">
               {isQuoteError && (
                 <div className="mb-4 border border-[#b8585d]/45 bg-[#882c30]/18 px-4 py-3 text-xs text-[#f5d7d8]">
                   {quoteError?.friendlyMessage ||
@@ -320,7 +320,7 @@ const CartDrawer = () => {
               </div>
             </div>
 
-            <div className="border-t border-[#c7a852]/20 bg-[#110f0e] px-5 py-5 sm:px-6">
+            <div className="border-t border-[#c7a852]/20 bg-[#110f0e] px-6 py-5">
               {(isQuotePending || isQuoteRefreshing) && (
                 <p className="mb-3 text-xs text-[#f5f0e8]/45">
                   {isQuotePending

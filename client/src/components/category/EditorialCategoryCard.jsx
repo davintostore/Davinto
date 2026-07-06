@@ -56,9 +56,6 @@ const EditorialCategoryCard = ({
           <h3 className="mt-3 break-words font-serif text-4xl leading-[0.95] text-[#f5f0e8] transition group-hover:text-[#c7a852] sm:text-5xl">
             {category.name}
           </h3>
-          <p className="mt-3 line-clamp-2 max-w-xs text-sm leading-6 text-[#f5f0e8]/68">
-            {visual.subtitle}
-          </p>
           <span className="mt-6 inline-flex w-fit items-center gap-2 border border-[#f5f0e8]/18 px-4 py-3 text-[0.62rem] font-black uppercase tracking-[0.16em] text-[#f5f0e8] transition group-hover:border-[#c7a852] group-hover:text-[#c7a852]">
             {cta}
             <ArrowUpRight size={15} />

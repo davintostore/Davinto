@@ -18,6 +18,7 @@
     "sortPriceHigh": "Price: High to Low",
     "sortNameAsc": "Name A-Z",
     "sortNameDesc": "Name Z-A",
+    "showingRange": "Showing {{start}} - {{end}} of {{total}}",
     "loadError": "Failed to load products.",
     "emptyLabel": "No Products",
     "emptyTitle": "Coming Soon",

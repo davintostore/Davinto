@@ -553,6 +553,43 @@ html[lang="ar"] .page-shell label {
   padding-block: clamp(2.25rem, 5vw, 4.5rem) clamp(4rem, 8vw, 8rem);
 }
 
+.davinto-mobile-category-slide-card h3 {
+  font-size: clamp(1.35rem, 7vw, 2rem);
+  line-height: 1;
+}
+
+.davinto-mobile-category-slide-card p {
+  font-size: 0.62rem;
+  line-height: 1.35;
+}
+
+.davinto-mobile-category-slide-card span {
+  margin-top: 0.85rem;
+  padding: 0.55rem 0.65rem;
+  font-size: 0.48rem;
+  letter-spacing: 0.08em;
+}
+
+.davinto-mobile-categories-list {
+  max-height: min(45vh, 20rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(199, 168, 82, 0.55) rgba(245, 240, 232, 0.08);
+}
+
+.davinto-mobile-categories-list::-webkit-scrollbar {
+  width: 0.35rem;
+}
+
+.davinto-mobile-categories-list::-webkit-scrollbar-thumb {
+  background: rgba(199, 168, 82, 0.55);
+}
+
+.davinto-mobile-categories-list::-webkit-scrollbar-track {
+  background: rgba(245, 240, 232, 0.08);
+}
+
 .cart-page-section {
   padding-block: clamp(1.75rem, 4vw, 3.25rem);
   min-height: calc(100vh - 4rem);
@@ -575,6 +612,11 @@ html[lang="ar"] .page-shell label {
 
 .quick-product-panel {
   animation: davintoQuickProductEnter 240ms ease-out both;
+}
+
+.checkout-payment-accordion {
+  overflow: hidden;
+  animation: davintoCheckoutAccordionEnter 220ms ease-out both;
 }
 
 @keyframes davintoDrawerEnter {
@@ -611,9 +653,29 @@ html[lang="ar"] .page-shell label {
   }
 }
 
+@keyframes davintoCheckoutAccordionEnter {
+  from {
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-0.25rem);
+  }
+
+  to {
+    max-height: 60rem;
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (min-width: 40rem) {
   .quick-product-panel {
     animation-name: davintoQuickProductEnter;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .checkout-payment-accordion {
+    animation: none;
   }
 }
 

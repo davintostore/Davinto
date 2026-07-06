@@ -229,12 +229,12 @@ const Cart = () => {
                     return (
                       <article
                         key={itemKey}
-                        className="grid gap-4 py-5 md:grid-cols-[minmax(0,1fr)_110px_140px_120px_40px] md:items-center md:gap-4"
+                        className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-3 py-4 md:grid-cols-[minmax(0,1fr)_110px_140px_120px_40px] md:items-center md:gap-4 md:py-5"
                       >
-                        <div className="flex min-w-0 gap-3">
+                        <div className="col-span-2 flex min-w-0 gap-3 md:col-span-1">
                           <Link
                             to={`/product/${item.slug}`}
-                            className="h-24 w-[4.5rem] shrink-0 overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f]"
+                            className="h-20 w-16 shrink-0 overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f] sm:h-24 sm:w-[4.5rem]"
                           >
                             {displayImage ? (
                               <img
@@ -250,22 +250,22 @@ const Cart = () => {
                             )}
                           </Link>
 
-                          <div className="min-w-0">
+                          <div className="min-w-0 self-center md:self-auto">
                             <p className="text-[0.54rem] font-black uppercase tracking-[0.18em] text-[#c7a852]">
                               {item.category?.name || "Davinto"}
                             </p>
                             <Link to={`/product/${item.slug}`}>
-                              <h3 className="mt-1 line-clamp-2 font-serif text-xl font-semibold text-[#f5f0e8] transition hover:text-[#c7a852]">
+                              <h3 className="mt-1 line-clamp-2 font-serif text-lg font-semibold leading-tight text-[#f5f0e8] transition hover:text-[#c7a852] sm:text-xl">
                                 {item.name}
                               </h3>
                             </Link>
-                            <p className="mt-2 text-xs leading-5 text-[#f5f0e8]/48">
+                            <p className="mt-1.5 text-xs leading-5 text-[#f5f0e8]/48">
                               {t("common:color")}: {item.color?.name}
                               <span className="mx-2 text-[#8b8075]">/</span>
                               {t("common:size")}: {item.size?.label}
                             </p>
                             {hasItemOffer && (
-                              <p className="mt-2 w-fit border border-[#c7a852]/25 bg-[#c7a852]/8 px-2 py-1 text-[0.54rem] font-black uppercase tracking-[0.14em] text-[#c7a852]">
+                              <p className="mt-2 w-fit border border-[#c7a852]/25 bg-[#c7a852]/8 px-2 py-1 text-[0.52rem] font-black uppercase tracking-[0.1em] text-[#c7a852]">
                                 {appliedOfferTitle} -
                                 {formatMoney(itemOfferDiscount)}
                               </p>
@@ -273,8 +273,8 @@ const Cart = () => {
                           </div>
                         </div>
 
-                        <div>
-                          <p className="mb-1 text-[0.55rem] font-black uppercase tracking-[0.18em] text-[#8b8075] md:hidden">
+                        <div className="min-w-0">
+                          <p className="mb-1 text-[0.52rem] font-black uppercase tracking-[0.14em] text-[#8b8075] md:hidden">
                             {t("common:subtotal")}
                           </p>
                           <p className="text-sm font-bold text-[#f5f0e8]">
@@ -289,29 +289,29 @@ const Cart = () => {
                           )}
                         </div>
 
-                        <div>
-                          <p className="mb-2 text-[0.55rem] font-black uppercase tracking-[0.18em] text-[#8b8075] md:hidden">
+                        <div className="justify-self-end md:justify-self-auto">
+                          <p className="mb-2 text-[0.52rem] font-black uppercase tracking-[0.14em] text-[#8b8075] md:hidden">
                             {t("common:quantity")}
                           </p>
-                          <div className="flex h-10 w-fit items-center border border-[#f5f0e8]/16">
+                          <div className="flex h-9 w-fit items-center border border-[#f5f0e8]/16 md:h-10">
                             <button
                               type="button"
                               onClick={() => decreaseQuantity(itemKey)}
-                              className="flex h-full w-10 items-center justify-center transition hover:bg-[#f5f0e8]/8"
+                              className="flex h-full w-9 items-center justify-center transition hover:bg-[#f5f0e8]/8 md:w-10"
                               aria-label={t("cart:decreaseItem", {
                                 name: item.name,
                               })}
                             >
                               <Minus size={14} />
                             </button>
-                            <span className="min-w-9 text-center text-sm font-black">
+                            <span className="min-w-8 text-center text-sm font-black md:min-w-9">
                               {item.quantity}
                             </span>
                             <button
                               type="button"
                               onClick={() => increaseQuantity(itemKey)}
                               disabled={!canIncrease}
-                              className="flex h-full w-10 items-center justify-center transition hover:bg-[#f5f0e8]/8 disabled:opacity-25"
+                              className="flex h-full w-9 items-center justify-center transition hover:bg-[#f5f0e8]/8 disabled:opacity-25 md:w-10"
                               aria-label={t("cart:increaseItem", {
                                 name: item.name,
                               })}
@@ -319,16 +319,16 @@ const Cart = () => {
                               <Plus size={14} />
                             </button>
                           </div>
-                          <p className="mt-2 text-[0.68rem] text-[#8b8075]">
+                          <p className="mt-1.5 text-[0.64rem] text-[#8b8075]">
                             {t("cart:max", { count: maxStock })}
                           </p>
                         </div>
 
-                        <div className="md:text-right">
-                          <p className="mb-1 text-[0.55rem] font-black uppercase tracking-[0.18em] text-[#8b8075] md:hidden">
+                        <div className="min-w-0 md:text-right">
+                          <p className="mb-1 text-[0.52rem] font-black uppercase tracking-[0.14em] text-[#8b8075] md:hidden">
                             {t("common:total")}
                           </p>
-                          <p className="font-serif text-xl font-semibold text-[#f5f0e8]">
+                          <p className="font-serif text-lg font-semibold text-[#f5f0e8] sm:text-xl">
                             {hasQuoteItem
                               ? formatMoney(finalLineTotal)
                               : itemQuoteStatus}
@@ -343,7 +343,7 @@ const Cart = () => {
                         <button
                           type="button"
                           onClick={() => removeItem(itemKey)}
-                          className="flex h-10 w-10 items-center justify-center border border-[#f5f0e8]/12 text-[#e8a3a6] transition hover:border-[#b8585d]/60 hover:text-[#f5d7d8]"
+                          className="flex h-10 w-10 items-center justify-center justify-self-end self-center border border-[#f5f0e8]/12 text-[#e8a3a6] transition hover:border-[#b8585d]/60 hover:text-[#f5d7d8]"
                           aria-label={`${t("common:remove")} ${item.name}`}
                         >
                           <Trash2 size={15} />

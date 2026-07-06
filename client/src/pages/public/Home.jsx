@@ -241,11 +241,45 @@ const Home = () => {
     [categoriesData, language]
   );
 
-  const visibleCategories =
-    categories.length > 0
-      ? categories
-      : [{ _id: "t-shirts", name: t("categories.heading"), slug: "" }];
+  const visibleCategories = useMemo(
+    () =>
+      categories.length > 0
+        ? categories
+        : [{ _id: "t-shirts", name: t("categories.heading"), slug: "" }],
+    [categories, t]
+  );
+  const mobileCategorySlides = useMemo(() => {
+    const slides = [];
+
+    for (let index = 0; index < visibleCategories.length; index += 2) {
+      slides.push(visibleCategories.slice(index, index + 2));
+    }
+
+    return slides.length > 0 ? slides : [visibleCategories];
+  }, [visibleCategories]);
+  const [activeCategorySlide, setActiveCategorySlide] = useState(0);
+  const [isCategorySliderPaused, setIsCategorySliderPaused] = useState(false);
+  const activeMobileCategorySlide = Math.min(
+    activeCategorySlide,
+    Math.max(mobileCategorySlides.length - 1, 0)
+  );
   const primaryCategoryPath = "/shop";
+
+  useEffect(() => {
+    if (isCategorySliderPaused || mobileCategorySlides.length <= 1) {
+      return undefined;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setActiveCategorySlide((current) =>
+        (current + 1) % mobileCategorySlides.length
+      );
+    }, 5000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [isCategorySliderPaused, mobileCategorySlides.length]);
 
   return (
     <>
@@ -322,16 +356,86 @@ const Home = () => {
                 ))}
               </div>
 
-              <div className="space-y-4 lg:hidden">
-                {visibleCategories.slice(0, 3).map((category) => (
-                  <EditorialCategoryCard
-                    key={category._id || category.slug}
-                    category={category}
-                    label={t("categories.cardLabel")}
-                    cta={t("categories.cardCta")}
-                    cardClassName="min-h-[16rem]"
-                  />
-                ))}
+              <div
+                className="lg:hidden"
+                onPointerDown={() => setIsCategorySliderPaused(true)}
+                onPointerLeave={() => setIsCategorySliderPaused(false)}
+                onPointerUp={() => setIsCategorySliderPaused(false)}
+              >
+                <div className="overflow-hidden">
+                  <div
+                    className="flex transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                    dir="ltr"
+                    style={{
+                      transform: `translateX(-${
+                        activeMobileCategorySlide * 100
+                      }%)`,
+                    }}
+                  >
+                    {mobileCategorySlides.map((slide, slideIndex) => (
+                      <div
+                        key={`mobile-category-slide-${slideIndex}`}
+                        className="grid min-w-full grid-cols-2 gap-3"
+                        aria-hidden={slideIndex !== activeMobileCategorySlide}
+                      >
+                        {Array.from({ length: 2 }).map((_, slotIndex) => {
+                          const category = slide[slotIndex];
+
+                          if (!category) {
+                            return (
+                              <div
+                                key={`mobile-category-placeholder-${slotIndex}`}
+                                className="invisible min-h-[12rem]"
+                                aria-hidden="true"
+                              />
+                            );
+                          }
+
+                          return (
+                            <EditorialCategoryCard
+                              key={category._id || category.slug}
+                              category={category}
+                              label={t("categories.cardLabel")}
+                              cta={t("categories.cardCta")}
+                              className="davinto-mobile-category-slide-card h-full"
+                              cardClassName="h-full min-h-[12rem]"
+                              style={{
+                                direction: language === "ar" ? "rtl" : "ltr",
+                              }}
+                            />
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {mobileCategorySlides.length > 1 && (
+                  <div className="mt-4 flex justify-center gap-2">
+                    {mobileCategorySlides.map((_, slideIndex) => {
+                      const isActiveSlide =
+                        slideIndex === activeMobileCategorySlide;
+
+                      return (
+                        <button
+                          key={`mobile-category-dot-${slideIndex}`}
+                          type="button"
+                          onClick={() => setActiveCategorySlide(slideIndex)}
+                          className={`h-2.5 rounded-full transition ${
+                            isActiveSlide
+                              ? "w-6 bg-[#050505]"
+                              : "w-2.5 bg-[#f5f0e8]/35 hover:bg-[#f5f0e8]/65"
+                          }`}
+                          aria-label={t("common:page", {
+                            page: slideIndex + 1,
+                            pages: mobileCategorySlides.length,
+                          })}
+                          aria-current={isActiveSlide ? "page" : undefined}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               <div className="relative z-10 mt-7 flex justify-center lg:hidden">

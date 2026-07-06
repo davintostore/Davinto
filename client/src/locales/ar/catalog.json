@@ -18,6 +18,7 @@
     "sortPriceHigh": "السعر: من الأعلى للأقل",
     "sortNameAsc": "الاسم: أ-ي",
     "sortNameDesc": "الاسم: ي-أ",
+    "showingRange": "عرض {{start}} - {{end}} من {{total}}",
     "loadError": "تعذر تحميل المنتجات.",
     "emptyLabel": "لا توجد منتجات",
     "emptyTitle": "قريبًا",

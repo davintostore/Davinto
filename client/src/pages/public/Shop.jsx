@@ -2,10 +2,10 @@ import { useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import CatalogFilters from "../../components/product/CatalogFilters";
 import ProductCard from "../../components/product/ProductCard";
-import Button from "../../components/ui/Button";
 import Container from "../../components/ui/Container";
 import useSeo from "../../hooks/useSeo";
 
@@ -90,6 +90,12 @@ const Shop = () => {
   const totalProducts = productsData?.total ?? products.length;
   const totalPages = Math.max(Number(productsData?.pages || 0), 0);
   const currentPage = Number(productsData?.page || filters.page);
+  const showingStart =
+    totalProducts > 0 ? (currentPage - 1) * PRODUCTS_PER_PAGE + 1 : 0;
+  const showingEnd =
+    totalProducts > 0
+      ? Math.min(currentPage * PRODUCTS_PER_PAGE, totalProducts)
+      : 0;
 
   useEffect(() => {
     const searchString = filters.search.trim();
@@ -266,47 +272,59 @@ const Shop = () => {
               </div>
 
               {totalPages > 1 && (
-                <div className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-[#f5f0e8]/12 pt-6 sm:flex-row">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    disabled={currentPage <= 1}
-                    onClick={() => goToPage(currentPage - 1)}
-                  >
-                    {t("common:previous")}
-                  </Button>
-
-                  <div className="flex flex-wrap justify-center gap-2">
-                    {Array.from({ length: totalPages }).map((_, index) => {
-                      const page = index + 1;
-                      const isActive = page === currentPage;
-
-                      return (
-                        <button
-                          key={page}
-                          type="button"
-                          className={`flex h-10 min-w-10 items-center justify-center border px-3 text-xs font-black transition ${
-                            isActive
-                              ? "border-[#c7a852] bg-[#c7a852] text-[#1c1917]"
-                              : "border-[#f5f0e8]/16 text-[#f5f0e8]/68 hover:border-[#c7a852] hover:text-[#f5f0e8]"
-                          }`}
-                          aria-current={isActive ? "page" : undefined}
-                          onClick={() => goToPage(page)}
-                        >
-                          {page}
-                        </button>
-                      );
+                <div className="mt-10 border-t border-[#f5f0e8]/12 pt-6 text-center">
+                  <p className="text-[0.62rem] font-black uppercase tracking-[0.16em] text-[#8b8075]">
+                    {t("shop.showingRange", {
+                      start: showingStart,
+                      end: showingEnd,
+                      total: totalProducts,
                     })}
-                  </div>
+                  </p>
 
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    disabled={currentPage >= totalPages}
-                    onClick={() => goToPage(currentPage + 1)}
-                  >
-                    {t("common:next")}
-                  </Button>
+                  <div className="mt-4 flex flex-wrap items-center justify-center gap-2 sm:gap-4">
+                    <button
+                      type="button"
+                      disabled={currentPage <= 1}
+                      onClick={() => goToPage(currentPage - 1)}
+                      className="inline-flex min-h-10 items-center gap-1.5 px-2 text-[0.64rem] font-black uppercase tracking-[0.12em] text-[#f5f0e8]/68 transition hover:text-[#c7a852] disabled:cursor-not-allowed disabled:text-[#f5f0e8]/25"
+                    >
+                      <ChevronLeft size={15} aria-hidden="true" />
+                      {t("common:previous")}
+                    </button>
+
+                    <div className="flex flex-wrap items-center justify-center gap-1.5">
+                      {Array.from({ length: totalPages }).map((_, index) => {
+                        const page = index + 1;
+                        const isActive = page === currentPage;
+
+                        return (
+                          <button
+                            key={page}
+                            type="button"
+                            className={`flex h-9 min-w-8 items-center justify-center border-b px-2 text-sm font-black transition ${
+                              isActive
+                                ? "border-[#c7a852] text-[#f5f0e8]"
+                                : "border-transparent text-[#f5f0e8]/50 hover:border-[#c7a852]/55 hover:text-[#f5f0e8]"
+                            }`}
+                            aria-current={isActive ? "page" : undefined}
+                            onClick={() => goToPage(page)}
+                          >
+                            {page}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={currentPage >= totalPages}
+                      onClick={() => goToPage(currentPage + 1)}
+                      className="inline-flex min-h-10 items-center gap-1.5 px-2 text-[0.64rem] font-black uppercase tracking-[0.12em] text-[#f5f0e8]/68 transition hover:text-[#c7a852] disabled:cursor-not-allowed disabled:text-[#f5f0e8]/25"
+                    >
+                      {t("common:next")}
+                      <ChevronRight size={15} aria-hidden="true" />
+                    </button>
+                  </div>
                 </div>
               )}
             </>

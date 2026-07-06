@@ -627,7 +627,7 @@ const Checkout = () => {
 
     if (effectivePaymentMethod === "instapay") {
       return (
-        <div className={`border border-[#c7a852]/25 bg-[#c7a852]/6 p-4 ${className}`}>
+        <div className={`checkout-payment-accordion border border-[#c7a852]/25 bg-[#c7a852]/6 p-4 ${className}`}>
           <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
             {manualPayment.detailLabels?.instapay ||
               t("checkout:instapayDetails")}
@@ -662,7 +662,7 @@ const Checkout = () => {
 
     if (effectivePaymentMethod === "vodafoneCash") {
       return (
-        <div className={`border border-[#c7a852]/25 bg-[#c7a852]/6 p-4 ${className}`}>
+        <div className={`checkout-payment-accordion border border-[#c7a852]/25 bg-[#c7a852]/6 p-4 ${className}`}>
           <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
             {manualPayment.detailLabels?.vodafoneCash ||
               t("checkout:vodafoneDetails")}
@@ -697,7 +697,7 @@ const Checkout = () => {
 
     if (effectivePaymentMethod === "paymobCard" && isPaymobReady) {
       return (
-        <div className={`border border-[#c7a852]/30 bg-[#c7a852]/10 p-4 ${className}`}>
+        <div className={`checkout-payment-accordion border border-[#c7a852]/30 bg-[#c7a852]/10 p-4 ${className}`}>
           <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
             {t("checkout:secureCard")}
           </p>
