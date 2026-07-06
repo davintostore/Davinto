@@ -121,7 +121,7 @@ const CartDrawer = () => {
         onClick={closeCartDrawer}
       />
 
-      <aside className="cart-drawer-panel absolute inset-y-0 right-0 flex w-[min(92vw,26rem)] flex-col border-l border-[#c7a852]/28 bg-[#0b0a09] shadow-2xl sm:w-full sm:max-w-[28rem]">
+      <aside className="cart-drawer-panel absolute inset-y-0 right-0 flex w-[min(86vw,25rem)] flex-col border-l border-[#c7a852]/28 bg-[#0b0a09] shadow-2xl sm:w-full sm:max-w-[28rem]">
         <div className="flex h-[4.5rem] items-center justify-between gap-4 border-b border-[#f5f0e8]/12 px-6">
           <div>
             <p className="text-[0.56rem] font-black uppercase tracking-[0.26em] text-[#c7a852]">

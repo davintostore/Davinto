@@ -508,7 +508,7 @@ const Home = () => {
             <div className="mx-auto max-w-5xl">
               <div className="mx-auto max-w-4xl text-left">
                 <StickerLabel>{t("cta.label")}</StickerLabel>
-                <h2 className="editorial-heading mt-4 text-5xl sm:text-7xl lg:text-8xl">
+                <h2 className="editorial-heading davinto-cta-heading mt-4 text-5xl sm:text-7xl lg:text-8xl">
                   {t("cta.title")}
                 </h2>
               </div>

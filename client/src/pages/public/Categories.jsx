@@ -81,7 +81,7 @@ const Categories = () => {
               <p className="text-xs font-black uppercase tracking-[0.3em] text-[#c7a852]">
                 {t("catalog:categoriesPage.emptyLabel")}
               </p>
-              <h2 className="editorial-heading mt-5 text-6xl">
+              <h2 className="editorial-heading davinto-editorial-heading mt-5 text-6xl">
                 {t("catalog:categoriesPage.emptyTitle")}
               </h2>
               <p className="mx-auto mt-6 max-w-xl text-sm leading-7 text-[#f5f0e8]/52">

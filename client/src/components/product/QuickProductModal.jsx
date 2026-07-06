@@ -468,12 +468,12 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
                   </div>
                 )}
 
-                <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+                <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
                   <Button
                     type="button"
                     onClick={handleAddToCart}
                     disabled={Boolean(selectedSize) && !isInStock}
-                    className="w-full gap-2"
+                    className="w-full gap-2 whitespace-nowrap px-4 py-2.5 tracking-[0.12em] sm:min-w-[10.5rem]"
                   >
                     <ShoppingBag size={16} />
                     {selectedSize && !isInStock
@@ -481,7 +481,10 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
                       : t("catalog:product.addToCart")}
                   </Button>
                   <Link to={`/product/${product.slug}`} onClick={onClose}>
-                    <Button variant="secondary" className="w-full">
+                    <Button
+                      variant="secondary"
+                      className="w-full whitespace-nowrap px-4 py-2.5 tracking-[0.12em]"
+                    >
                       View Full Details
                     </Button>
                   </Link>

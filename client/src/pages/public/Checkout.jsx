@@ -552,8 +552,8 @@ const Checkout = () => {
     setFormError("");
   };
 
-  const renderPaymentProofInput = (inputId) =>
-    requiresManualPaymentProof ? (
+  const renderPaymentProofInput = (inputId, isPanelActive = true) =>
+    isPanelActive && requiresManualPaymentProof ? (
     <div className="mt-4">
       <label className="block">
         <span className="mb-2.5 block text-[0.66rem] font-black uppercase tracking-[0.22em] text-[#c7a852]">
@@ -620,91 +620,122 @@ const Checkout = () => {
     </div>
   ) : null;
 
-  const renderPaymentDetailsPanel = (inputId, className = "") => {
-    if (effectivePaymentMethod === "cod") {
+  const renderPaymentDetailsPanel = (method, inputId, className = "") => {
+    if (method === "cod") {
       return null;
     }
 
-    if (effectivePaymentMethod === "instapay") {
+    if (method === "paymobCard" && !isPaymobReady) {
+      return null;
+    }
+
+    const isOpen = effectivePaymentMethod === method;
+    const panelStateClass = isOpen
+      ? "checkout-payment-accordion--open"
+      : "checkout-payment-accordion--closed";
+    const panelThemeClass =
+      method === "paymobCard"
+        ? "border border-[#c7a852]/30 bg-[#c7a852]/10 p-4"
+        : "border border-[#c7a852]/25 bg-[#c7a852]/6 p-4";
+
+    if (method === "instapay") {
       return (
-        <div className={`checkout-payment-accordion border border-[#c7a852]/25 bg-[#c7a852]/6 p-4 ${className}`}>
-          <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
-            {manualPayment.detailLabels?.instapay ||
-              t("checkout:instapayDetails")}
-          </p>
-
-          {manualPayment.detailInstructions?.instapay && (
-            <p className="mt-3 text-sm leading-7 text-[#f5f0e8]/58">
-              {manualPayment.detailInstructions.instapay}
+        <div
+          key={inputId}
+          className={`checkout-payment-accordion ${panelStateClass} ${className}`}
+          aria-hidden={!isOpen}
+        >
+          <div className={`checkout-payment-accordion__inner ${panelThemeClass}`}>
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
+              {manualPayment.detailLabels?.instapay ||
+                t("checkout:instapayDetails")}
             </p>
-          )}
 
-          <p className="mt-3 break-words font-sans text-lg font-black tracking-[0.04em] text-[#f5f0e8]">
-            {manualPayment.instapayHandle || t("checkout:instapayMissing")}
-          </p>
+            {manualPayment.detailInstructions?.instapay && (
+              <p className="mt-3 text-sm leading-7 text-[#f5f0e8]/58">
+                {manualPayment.detailInstructions.instapay}
+              </p>
+            )}
 
-          {requiresReference && (
-            <div className="mt-4">
-              <Input
-                label={requiredLabel(t("checkout:transactionReference"))}
-                name="paymentReference"
-                value={paymentReference}
-                onChange={(event) => setPaymentReference(event.target.value)}
-                placeholder={t("checkout:transactionPlaceholder")}
-              />
-            </div>
-          )}
+            <p className="mt-3 break-words font-sans text-lg font-black tracking-[0.04em] text-[#f5f0e8]">
+              {manualPayment.instapayHandle || t("checkout:instapayMissing")}
+            </p>
 
-          {renderPaymentProofInput(inputId)}
+            {isOpen && requiresReference && (
+              <div className="mt-4">
+                <Input
+                  label={requiredLabel(t("checkout:transactionReference"))}
+                  name="paymentReference"
+                  value={paymentReference}
+                  onChange={(event) => setPaymentReference(event.target.value)}
+                  placeholder={t("checkout:transactionPlaceholder")}
+                />
+              </div>
+            )}
+
+            {renderPaymentProofInput(inputId, isOpen)}
+          </div>
         </div>
       );
     }
 
-    if (effectivePaymentMethod === "vodafoneCash") {
+    if (method === "vodafoneCash") {
       return (
-        <div className={`checkout-payment-accordion border border-[#c7a852]/25 bg-[#c7a852]/6 p-4 ${className}`}>
-          <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
-            {manualPayment.detailLabels?.vodafoneCash ||
-              t("checkout:vodafoneDetails")}
-          </p>
-
-          {manualPayment.detailInstructions?.vodafoneCash && (
-            <p className="mt-3 text-sm leading-7 text-[#f5f0e8]/58">
-              {manualPayment.detailInstructions.vodafoneCash}
+        <div
+          key={inputId}
+          className={`checkout-payment-accordion ${panelStateClass} ${className}`}
+          aria-hidden={!isOpen}
+        >
+          <div className={`checkout-payment-accordion__inner ${panelThemeClass}`}>
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
+              {manualPayment.detailLabels?.vodafoneCash ||
+                t("checkout:vodafoneDetails")}
             </p>
-          )}
 
-          <p className="mt-3 break-words font-sans text-lg font-black tracking-[0.04em] text-[#f5f0e8]">
-            {manualPayment.vodafoneCashNumber || t("checkout:vodafoneMissing")}
-          </p>
+            {manualPayment.detailInstructions?.vodafoneCash && (
+              <p className="mt-3 text-sm leading-7 text-[#f5f0e8]/58">
+                {manualPayment.detailInstructions.vodafoneCash}
+              </p>
+            )}
 
-          {requiresReference && (
-            <div className="mt-4">
-              <Input
-                label={requiredLabel(t("checkout:transactionReference"))}
-                name="paymentReference"
-                value={paymentReference}
-                onChange={(event) => setPaymentReference(event.target.value)}
-                placeholder={t("checkout:transactionPlaceholder")}
-              />
-            </div>
-          )}
+            <p className="mt-3 break-words font-sans text-lg font-black tracking-[0.04em] text-[#f5f0e8]">
+              {manualPayment.vodafoneCashNumber || t("checkout:vodafoneMissing")}
+            </p>
 
-          {renderPaymentProofInput(inputId)}
+            {isOpen && requiresReference && (
+              <div className="mt-4">
+                <Input
+                  label={requiredLabel(t("checkout:transactionReference"))}
+                  name="paymentReference"
+                  value={paymentReference}
+                  onChange={(event) => setPaymentReference(event.target.value)}
+                  placeholder={t("checkout:transactionPlaceholder")}
+                />
+              </div>
+            )}
+
+            {renderPaymentProofInput(inputId, isOpen)}
+          </div>
         </div>
       );
     }
 
-    if (effectivePaymentMethod === "paymobCard" && isPaymobReady) {
+    if (method === "paymobCard") {
       return (
-        <div className={`checkout-payment-accordion border border-[#c7a852]/30 bg-[#c7a852]/10 p-4 ${className}`}>
-          <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
-            {t("checkout:secureCard")}
-          </p>
+        <div
+          key={inputId}
+          className={`checkout-payment-accordion ${panelStateClass} ${className}`}
+          aria-hidden={!isOpen}
+        >
+          <div className={`checkout-payment-accordion__inner ${panelThemeClass}`}>
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
+              {t("checkout:secureCard")}
+            </p>
 
-          <p className="mt-3 text-sm leading-7 text-[#f5f0e8]/65">
-            {t("checkout:secureCardDescription")}
-          </p>
+            <p className="mt-3 text-sm leading-7 text-[#f5f0e8]/65">
+              {t("checkout:secureCardDescription")}
+            </p>
+          </div>
         </div>
       );
     }
@@ -951,21 +982,24 @@ const Checkout = () => {
                             </div>
                           </button>
 
-                          {isSelected && (
-                            <div className="md:hidden">
-                              {renderPaymentDetailsPanel(
-                                `payment-proof-${payment.method}-mobile`
-                              )}
-                            </div>
-                          )}
+                          <div className="md:hidden">
+                            {renderPaymentDetailsPanel(
+                              payment.method,
+                              `payment-proof-${payment.method}-mobile`
+                            )}
+                          </div>
                         </div>
                       );
                     })}
                   </div>
-                  {renderPaymentDetailsPanel(
-                    "payment-proof-desktop",
-                    "mt-4 hidden md:block"
-                  )}
+                  <div className="mt-4 hidden md:block">
+                    {availablePayments.map((payment) =>
+                      renderPaymentDetailsPanel(
+                        payment.method,
+                        `payment-proof-${payment.method}-desktop`
+                      )
+                    )}
+                  </div>
                 </section>
               </div>
 

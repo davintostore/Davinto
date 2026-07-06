@@ -153,6 +153,18 @@ const PublicLayout = () => {
   const isCategoriesNavActive =
     location.pathname === "/categories" ||
     location.pathname.startsWith("/category/");
+  const desktopNavLinkClass = (isActive = false) =>
+    `relative py-2 text-[0.66rem] font-black uppercase tracking-[0.24em] transition after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:bg-[#c7a852] after:transition-transform ${
+      isActive
+        ? "text-[#f5f0e8] after:scale-x-100"
+        : "text-[#f5f0e8]/52 after:scale-x-0 hover:text-[#f5f0e8] hover:after:scale-x-100"
+    }`;
+  const desktopCategoriesTriggerClass = (isActive = false) =>
+    `relative py-2 text-[0.62rem] font-black uppercase tracking-[0.16em] transition after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:bg-[#c7a852] after:transition-transform ${
+      isActive
+        ? "text-[#f5f0e8] after:scale-x-100"
+        : "text-[#f5f0e8]/52 after:scale-x-0 hover:text-[#f5f0e8] hover:after:scale-x-100"
+    }`;
 
   const openSearchDrawer = () => {
     setIsMenuOpen(false);
@@ -307,13 +319,7 @@ const PublicLayout = () => {
                 key={link.path}
                 to={link.path}
                 end={link.path === "/"}
-                className={({ isActive }) =>
-                  `relative py-2 text-[0.66rem] font-black uppercase tracking-[0.24em] transition after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:bg-[#c7a852] after:transition-transform ${
-                    isActive
-                      ? "text-[#f5f0e8] after:scale-x-100"
-                      : "text-[#f5f0e8]/52 after:scale-x-0 hover:text-[#f5f0e8] hover:after:scale-x-100"
-                  }`
-                }
+                className={({ isActive }) => desktopNavLinkClass(isActive)}
               >
                 {link.label}
               </NavLink>
@@ -326,17 +332,15 @@ const PublicLayout = () => {
                 aria-expanded={isCategoriesOpen}
                 aria-controls="desktop-categories-menu"
                 onClick={() => setIsCategoriesOpen((current) => !current)}
-                className={`relative inline-flex items-center py-2 text-[0.66rem] font-black uppercase tracking-[0.24em] transition after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:bg-[#c7a852] after:transition-transform ${
+                className={desktopCategoriesTriggerClass(
                   isCategoriesOpen || isCategoriesNavActive
-                    ? "text-[#f5f0e8] after:scale-x-100"
-                    : "text-[#f5f0e8]/52 after:scale-x-0 hover:text-[#f5f0e8] hover:after:scale-x-100"
-                }`}
+                )}
               >
                 <span>{t("categories")}</span>
                 <ChevronDown
-                  size={11}
-                  className={`ms-1 align-middle opacity-70 transition ${
-                    isCategoriesOpen ? "rotate-180 text-[#c7a852]" : ""
+                  size={8}
+                  className={`pointer-events-none absolute top-1/2 end-[-0.45rem] -translate-y-1/2 opacity-55 transition ${
+                    isCategoriesOpen ? "rotate-180" : ""
                   }`}
                   aria-hidden="true"
                 />
@@ -377,13 +381,7 @@ const PublicLayout = () => {
                 key={link.path}
                 to={link.path}
                 end={link.path === "/"}
-                className={({ isActive }) =>
-                  `relative py-2 text-[0.66rem] font-black uppercase tracking-[0.24em] transition after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:bg-[#c7a852] after:transition-transform ${
-                    isActive
-                      ? "text-[#f5f0e8] after:scale-x-100"
-                      : "text-[#f5f0e8]/52 after:scale-x-0 hover:text-[#f5f0e8] hover:after:scale-x-100"
-                  }`
-                }
+                className={({ isActive }) => desktopNavLinkClass(isActive)}
               >
                 {link.label}
               </NavLink>
@@ -393,13 +391,7 @@ const PublicLayout = () => {
               <>
                 <NavLink
                   to="/my-orders"
-                  className={({ isActive }) =>
-                    `relative py-2 text-[0.66rem] font-black uppercase tracking-[0.24em] transition after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:bg-[#c7a852] after:transition-transform ${
-                      isActive
-                        ? "text-[#f5f0e8] after:scale-x-100"
-                        : "text-[#f5f0e8]/52 after:scale-x-0 hover:text-[#f5f0e8] hover:after:scale-x-100"
-                    }`
-                  }
+                  className={({ isActive }) => desktopNavLinkClass(isActive)}
                 >
                   {t("myOrders")}
                 </NavLink>

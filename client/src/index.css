@@ -305,7 +305,19 @@ img {
 }
 
 .hero-display-heading {
-  max-width: 14ch;
+  max-width: 15ch;
+  letter-spacing: -0.035em;
+  word-spacing: -0.08em;
+}
+
+html[dir="rtl"] .page-shell .hero-display-heading {
+  letter-spacing: 0;
+  word-spacing: normal;
+}
+
+.davinto-cta-heading {
+  letter-spacing: -0.04em;
+  word-spacing: -0.12em;
 }
 
 .page-display-title {
@@ -317,6 +329,21 @@ img {
 .section-display-title {
   font-size: clamp(3rem, 7vw, 6.5rem);
   line-height: 1;
+}
+
+.davinto-editorial-heading,
+.page-display-title,
+.section-display-title {
+  letter-spacing: -0.04em;
+  word-spacing: -0.12em;
+}
+
+html[dir="rtl"] .page-shell .davinto-cta-heading,
+html[dir="rtl"] .page-shell .davinto-editorial-heading,
+html[dir="rtl"] .page-shell .page-display-title,
+html[dir="rtl"] .page-shell .section-display-title {
+  letter-spacing: 0;
+  word-spacing: normal;
 }
 
 .brand-wordmark {
@@ -616,7 +643,36 @@ html[lang="ar"] .page-shell label {
 
 .checkout-payment-accordion {
   overflow: hidden;
-  animation: davintoCheckoutAccordionEnter 220ms ease-out both;
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-0.35rem);
+  transition:
+    max-height 300ms ease,
+    opacity 220ms ease,
+    transform 240ms ease,
+    visibility 0s linear 300ms;
+  visibility: hidden;
+}
+
+.checkout-payment-accordion--open {
+  max-height: 72rem;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition:
+    max-height 320ms ease,
+    opacity 220ms ease,
+    transform 240ms ease;
+  visibility: visible;
+}
+
+.checkout-payment-accordion--closed {
+  max-height: 0;
+}
+
+.checkout-payment-accordion__inner {
+  transform-origin: top;
 }
 
 @keyframes davintoDrawerEnter {
@@ -675,7 +731,8 @@ html[lang="ar"] .page-shell label {
 
 @media (prefers-reduced-motion: reduce) {
   .checkout-payment-accordion {
-    animation: none;
+    transition: none;
+    transform: none;
   }
 }
 

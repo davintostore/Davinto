@@ -275,7 +275,7 @@ const Category = () => {
               <p className="text-xs font-black uppercase tracking-[0.3em] text-[#c7a852]">
                 {t("catalog:category.emptyLabel")}
               </p>
-              <h2 className="editorial-heading mt-5 text-6xl">
+              <h2 className="editorial-heading davinto-editorial-heading mt-5 text-6xl">
                 {hasActiveFilters
                   ? t("catalog:filters.noMatchesTitle")
                   : t("catalog:category.emptyTitle")}
