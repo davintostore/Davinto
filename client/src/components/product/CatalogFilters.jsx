@@ -6,6 +6,7 @@ import { SlidersHorizontal, X } from "lucide-react";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
 import useFocusTrap from "../../hooks/useFocusTrap";
+import useOverlayBackClose from "../../hooks/useOverlayBackClose";
 import { getLocalizedCategory } from "../../utils/localizedContent";
 
 const fallbackColors = [
@@ -317,6 +318,12 @@ const CatalogFilters = ({
   const closeFilterDrawer = () => {
     setIsFilterOpen(false);
   };
+
+  useOverlayBackClose({
+    isOpen: isFilterOpen,
+    onClose: closeFilterDrawer,
+    overlayId: "catalog-filter-drawer",
+  });
 
   const filterDrawerRef = useFocusTrap({
     isActive: isFilterOpen,

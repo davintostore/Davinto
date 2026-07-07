@@ -17,7 +17,7 @@
   "phone": "Phone Number",
   "secondPhone": "Second Phone Optional",
   "optional": "Optional",
-  "email": "Email Optional",
+  "email": "Email Address",
   "city": "City",
   "cityPlaceholder": "Choose delivery area",
   "deliveryZones": {
@@ -102,6 +102,7 @@
     "phone": "Phone number is required.",
     "city": "City is required.",
     "address": "Address is required.",
+    "emailRequired": "Email address is required so you can track your order.",
     "email": "Please enter a valid email address.",
     "payment": "Please choose a payment method.",
     "paymob": "Visa / Mastercard payment is not configured yet. Please choose another payment method.",

@@ -168,7 +168,7 @@ const CartDrawer = () => {
                 <div className="mb-4 border border-[#b8585d]/45 bg-[#882c30]/18 px-4 py-3 text-xs text-[#f5d7d8]">
                   {quoteError?.friendlyMessage ||
                     quoteError?.message ||
-                    "Could not refresh cart pricing."}
+                    t("cart:quoteRefreshError")}
                 </div>
               )}
 

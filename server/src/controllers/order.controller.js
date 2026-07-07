@@ -159,7 +159,11 @@ const validateCustomerInfo = (customerInfo = {}) => {
     throw createHttpError("Address is required.");
   }
 
-  if (email && !/^\S+@\S+\.\S+$/.test(email)) {
+  if (!email) {
+    throw createHttpError("Email address is required.");
+  }
+
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
     throw createHttpError("Please enter a valid email address.");
   }
 
@@ -591,6 +595,10 @@ const createOrder = asyncHandler(async (req, res) => {
       createdOrder = order;
     });
   } catch (error) {
+    if (uploadedPaymentProof) {
+      await cleanupPaymentProofUpload(uploadedPaymentProof);
+    }
+
     if (res.statusCode === 200) {
       res.status(error.statusCode || 500);
     }

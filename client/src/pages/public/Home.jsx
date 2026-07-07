@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import EditorialCategoryCard from "../../components/category/EditorialCategoryCard";
 import ProductCard from "../../components/product/ProductCard";
@@ -259,6 +260,8 @@ const Home = () => {
   }, [visibleCategories]);
   const [activeCategorySlide, setActiveCategorySlide] = useState(0);
   const [isCategorySliderPaused, setIsCategorySliderPaused] = useState(false);
+  const [categorySliderInteractionKey, setCategorySliderInteractionKey] =
+    useState(0);
   const activeMobileCategorySlide = Math.min(
     activeCategorySlide,
     Math.max(mobileCategorySlides.length - 1, 0)
@@ -279,7 +282,33 @@ const Home = () => {
     return () => {
       window.clearInterval(intervalId);
     };
-  }, [isCategorySliderPaused, mobileCategorySlides.length]);
+  }, [
+    categorySliderInteractionKey,
+    isCategorySliderPaused,
+    mobileCategorySlides.length,
+  ]);
+
+  const resetCategorySliderTimer = () => {
+    setCategorySliderInteractionKey((current) => current + 1);
+  };
+
+  const handleCategorySlideChange = (direction) => {
+    setActiveCategorySlide((current) => {
+      const totalSlides = mobileCategorySlides.length;
+
+      if (totalSlides <= 1) return 0;
+
+      return direction === "next"
+        ? (current + 1) % totalSlides
+        : (current - 1 + totalSlides) % totalSlides;
+    });
+    resetCategorySliderTimer();
+  };
+
+  const handleCategoryDotClick = (slideIndex) => {
+    setActiveCategorySlide(slideIndex);
+    resetCategorySliderTimer();
+  };
 
   return (
     <>
@@ -362,52 +391,75 @@ const Home = () => {
                 onPointerLeave={() => setIsCategorySliderPaused(false)}
                 onPointerUp={() => setIsCategorySliderPaused(false)}
               >
-                <div className="overflow-hidden">
-                  <div
-                    className="flex transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
-                    dir="ltr"
-                    style={{
-                      transform: `translateX(-${
-                        activeMobileCategorySlide * 100
-                      }%)`,
-                    }}
-                  >
-                    {mobileCategorySlides.map((slide, slideIndex) => (
-                      <div
-                        key={`mobile-category-slide-${slideIndex}`}
-                        className="grid min-w-full grid-cols-2 gap-3"
-                        aria-hidden={slideIndex !== activeMobileCategorySlide}
-                      >
-                        {Array.from({ length: 2 }).map((_, slotIndex) => {
-                          const category = slide[slotIndex];
+                <div className="relative px-7">
+                  <div className="overflow-hidden">
+                    <div
+                      className="flex transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                      dir="ltr"
+                      style={{
+                        transform: `translateX(-${
+                          activeMobileCategorySlide * 100
+                        }%)`,
+                      }}
+                    >
+                      {mobileCategorySlides.map((slide, slideIndex) => (
+                        <div
+                          key={`mobile-category-slide-${slideIndex}`}
+                          className="grid min-w-full grid-cols-2 gap-3"
+                          aria-hidden={slideIndex !== activeMobileCategorySlide}
+                        >
+                          {Array.from({ length: 2 }).map((_, slotIndex) => {
+                            const category = slide[slotIndex];
 
-                          if (!category) {
+                            if (!category) {
+                              return (
+                                <div
+                                  key={`mobile-category-placeholder-${slotIndex}`}
+                                  className="invisible min-h-[12rem]"
+                                  aria-hidden="true"
+                                />
+                              );
+                            }
+
                             return (
-                              <div
-                                key={`mobile-category-placeholder-${slotIndex}`}
-                                className="invisible min-h-[12rem]"
-                                aria-hidden="true"
+                              <EditorialCategoryCard
+                                key={category._id || category.slug}
+                                category={category}
+                                label={t("categories.cardLabel")}
+                                cta={t("categories.cardCta")}
+                                className="davinto-mobile-category-slide-card h-full"
+                                cardClassName="h-full min-h-[12rem]"
+                                style={{
+                                  direction: language === "ar" ? "rtl" : "ltr",
+                                }}
                               />
                             );
-                          }
-
-                          return (
-                            <EditorialCategoryCard
-                              key={category._id || category.slug}
-                              category={category}
-                              label={t("categories.cardLabel")}
-                              cta={t("categories.cardCta")}
-                              className="davinto-mobile-category-slide-card h-full"
-                              cardClassName="h-full min-h-[12rem]"
-                              style={{
-                                direction: language === "ar" ? "rtl" : "ltr",
-                              }}
-                            />
-                          );
-                        })}
-                      </div>
-                    ))}
+                          })}
+                        </div>
+                      ))}
+                    </div>
                   </div>
+
+                  {mobileCategorySlides.length > 1 && (
+                    <div dir="ltr">
+                      <button
+                        type="button"
+                        onClick={() => handleCategorySlideChange("previous")}
+                        className="absolute -left-1 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center border border-[#c7a852]/45 bg-[#050505]/88 text-[#f5f0e8] shadow-xl backdrop-blur transition hover:border-[#c7a852] hover:text-[#c7a852]"
+                        aria-label={t("common:previous")}
+                      >
+                        <ChevronLeft size={20} aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleCategorySlideChange("next")}
+                        className="absolute -right-1 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center border border-[#c7a852]/45 bg-[#050505]/88 text-[#f5f0e8] shadow-xl backdrop-blur transition hover:border-[#c7a852] hover:text-[#c7a852]"
+                        aria-label={t("common:next")}
+                      >
+                        <ChevronRight size={20} aria-hidden="true" />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {mobileCategorySlides.length > 1 && (
@@ -420,7 +472,7 @@ const Home = () => {
                         <button
                           key={`mobile-category-dot-${slideIndex}`}
                           type="button"
-                          onClick={() => setActiveCategorySlide(slideIndex)}
+                          onClick={() => handleCategoryDotClick(slideIndex)}
                           className={`h-2.5 rounded-full transition ${
                             isActiveSlide
                               ? "w-6 bg-[#050505]"

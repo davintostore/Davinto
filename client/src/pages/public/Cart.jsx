@@ -178,11 +178,10 @@ const Cart = () => {
           ) : (
             <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
               <div className="min-w-0">
-                <div className="hidden border-b border-[#f5f0e8]/12 pb-3 text-[0.58rem] font-black uppercase tracking-[0.2em] text-[#8b8075] md:grid md:grid-cols-[minmax(0,1fr)_110px_140px_120px_40px] md:gap-4">
+                <div className="hidden border-b border-[#f5f0e8]/12 pb-3 text-[0.58rem] font-black uppercase tracking-[0.2em] text-[#8b8075] md:grid md:grid-cols-[minmax(0,1fr)_132px_128px_36px] md:gap-4">
                   <span>{t("common:items")}</span>
-                  <span>{t("common:subtotal")}</span>
-                  <span>{t("common:quantity")}</span>
                   <span className="text-right">{t("common:total")}</span>
+                  <span>{t("common:quantity")}</span>
                   <span className="sr-only">{t("common:remove")}</span>
                 </div>
 
@@ -229,12 +228,12 @@ const Cart = () => {
                     return (
                       <article
                         key={itemKey}
-                        className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-3 py-4 md:grid-cols-[minmax(0,1fr)_110px_140px_120px_40px] md:items-center md:gap-4 md:py-5"
+                        className="flex gap-3 py-4 md:grid md:grid-cols-[minmax(0,1fr)_132px_128px_36px] md:items-center md:gap-4 md:py-4"
                       >
-                        <div className="col-span-2 flex min-w-0 gap-3 md:col-span-1">
+                        <div className="flex min-w-0 flex-1 gap-3">
                           <Link
                             to={`/product/${item.slug}`}
-                            className="h-20 w-16 shrink-0 overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f] sm:h-24 sm:w-[4.5rem]"
+                            className="h-24 w-20 shrink-0 overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f] sm:w-[4.5rem]"
                           >
                             {displayImage ? (
                               <img
@@ -250,15 +249,33 @@ const Cart = () => {
                             )}
                           </Link>
 
-                          <div className="min-w-0 self-center md:self-auto">
-                            <p className="text-[0.54rem] font-black uppercase tracking-[0.18em] text-[#c7a852]">
-                              {item.category?.name || "Davinto"}
-                            </p>
-                            <Link to={`/product/${item.slug}`}>
-                              <h3 className="mt-1 line-clamp-2 font-serif text-lg font-semibold leading-tight text-[#f5f0e8] transition hover:text-[#c7a852] sm:text-xl">
-                                {item.name}
-                              </h3>
-                            </Link>
+                          <div className="min-w-0 flex-1 self-center md:self-auto">
+                            <div className="flex items-start justify-between gap-3 md:block">
+                              <div className="min-w-0">
+                                <p className="text-[0.54rem] font-black uppercase tracking-[0.18em] text-[#c7a852]">
+                                  {item.category?.name || "Davinto"}
+                                </p>
+                                <Link to={`/product/${item.slug}`}>
+                                  <h3 className="mt-1 line-clamp-2 font-serif text-lg font-semibold leading-tight text-[#f5f0e8] transition hover:text-[#c7a852] sm:text-xl">
+                                    {item.name}
+                                  </h3>
+                                </Link>
+                              </div>
+
+                              <div className="shrink-0 text-right md:hidden">
+                                <p className="font-serif text-lg font-semibold leading-tight text-[#f5f0e8]">
+                                  {hasQuoteItem
+                                    ? formatMoney(finalLineTotal)
+                                    : itemQuoteStatus}
+                                </p>
+                                {hasItemOffer && (
+                                  <p className="mt-1 text-xs text-[#8b8075] line-through">
+                                    {formatMoney(originalLineTotal)}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+
                             <p className="mt-1.5 text-xs leading-5 text-[#f5f0e8]/48">
                               {t("common:color")}: {item.color?.name}
                               <span className="mx-2 text-[#8b8075]">/</span>
@@ -270,48 +287,94 @@ const Cart = () => {
                                 {formatMoney(itemOfferDiscount)}
                               </p>
                             )}
+
+                            <div className="mt-3 flex items-end justify-between gap-3 md:hidden">
+                              <div>
+                                <div className="flex h-9 w-fit items-center border border-[#f5f0e8]/16">
+                                  <button
+                                    type="button"
+                                    onClick={() => decreaseQuantity(itemKey)}
+                                    className="flex h-full w-9 items-center justify-center transition hover:bg-[#f5f0e8]/8"
+                                    aria-label={t("cart:decreaseItem", {
+                                      name: item.name,
+                                    })}
+                                  >
+                                    <Minus size={14} />
+                                  </button>
+                                  <span className="min-w-8 text-center text-sm font-black">
+                                    {item.quantity}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => increaseQuantity(itemKey)}
+                                    disabled={!canIncrease}
+                                    className="flex h-full w-9 items-center justify-center transition hover:bg-[#f5f0e8]/8 disabled:opacity-25"
+                                    aria-label={t("cart:increaseItem", {
+                                      name: item.name,
+                                    })}
+                                  >
+                                    <Plus size={14} />
+                                  </button>
+                                </div>
+                                <p className="mt-1.5 text-[0.64rem] text-[#8b8075]">
+                                  {t("cart:max", { count: maxStock })}
+                                </p>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => removeItem(itemKey)}
+                                className="flex h-9 w-9 items-center justify-center border border-[#f5f0e8]/12 text-[#e8a3a6] transition hover:border-[#b8585d]/60 hover:text-[#f5d7d8]"
+                                aria-label={t("cart:removeItem", {
+                                  name: item.name,
+                                })}
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
                           </div>
                         </div>
 
-                        <div className="min-w-0">
-                          <p className="mb-1 text-[0.52rem] font-black uppercase tracking-[0.14em] text-[#8b8075] md:hidden">
-                            {t("common:subtotal")}
-                          </p>
-                          <p className="text-sm font-bold text-[#f5f0e8]">
+                        <div className="hidden min-w-0 text-right md:block">
+                          <p className="font-serif text-xl font-semibold text-[#f5f0e8]">
                             {hasQuoteItem
-                              ? formatMoney(finalUnitPrice)
+                              ? formatMoney(finalLineTotal)
                               : itemQuoteStatus}
                           </p>
                           {hasItemOffer && (
                             <p className="mt-1 text-xs text-[#8b8075] line-through">
-                              {formatMoney(originalUnitPrice)}
+                              {formatMoney(originalLineTotal)}
+                            </p>
+                          )}
+                          {hasQuoteItem && (
+                            <p className="mt-1 text-[0.62rem] text-[#8b8075]">
+                              {t("common:each", {
+                                price: formatMoney(finalUnitPrice),
+                              })}
                             </p>
                           )}
                         </div>
 
-                        <div className="justify-self-end md:justify-self-auto">
-                          <p className="mb-2 text-[0.52rem] font-black uppercase tracking-[0.14em] text-[#8b8075] md:hidden">
-                            {t("common:quantity")}
-                          </p>
-                          <div className="flex h-9 w-fit items-center border border-[#f5f0e8]/16 md:h-10">
+                        <div className="hidden md:block">
+                          <div className="flex h-9 w-fit items-center border border-[#f5f0e8]/16">
                             <button
                               type="button"
                               onClick={() => decreaseQuantity(itemKey)}
-                              className="flex h-full w-9 items-center justify-center transition hover:bg-[#f5f0e8]/8 md:w-10"
+                              className="flex h-full w-9 items-center justify-center transition hover:bg-[#f5f0e8]/8"
                               aria-label={t("cart:decreaseItem", {
                                 name: item.name,
                               })}
                             >
                               <Minus size={14} />
                             </button>
-                            <span className="min-w-8 text-center text-sm font-black md:min-w-9">
+                            <span className="min-w-8 text-center text-sm font-black">
                               {item.quantity}
                             </span>
                             <button
                               type="button"
                               onClick={() => increaseQuantity(itemKey)}
                               disabled={!canIncrease}
-                              className="flex h-full w-9 items-center justify-center transition hover:bg-[#f5f0e8]/8 disabled:opacity-25 md:w-10"
+                              className="flex h-full w-9 items-center justify-center transition hover:bg-[#f5f0e8]/8 disabled:opacity-25"
                               aria-label={t("cart:increaseItem", {
                                 name: item.name,
                               })}
@@ -324,29 +387,15 @@ const Cart = () => {
                           </p>
                         </div>
 
-                        <div className="min-w-0 md:text-right">
-                          <p className="mb-1 text-[0.52rem] font-black uppercase tracking-[0.14em] text-[#8b8075] md:hidden">
-                            {t("common:total")}
-                          </p>
-                          <p className="font-serif text-lg font-semibold text-[#f5f0e8] sm:text-xl">
-                            {hasQuoteItem
-                              ? formatMoney(finalLineTotal)
-                              : itemQuoteStatus}
-                          </p>
-                          {hasItemOffer && (
-                            <p className="mt-1 text-xs text-[#8b8075] line-through">
-                              {formatMoney(originalLineTotal)}
-                            </p>
-                          )}
-                        </div>
-
                         <button
                           type="button"
                           onClick={() => removeItem(itemKey)}
-                          className="flex h-10 w-10 items-center justify-center justify-self-end self-center border border-[#f5f0e8]/12 text-[#e8a3a6] transition hover:border-[#b8585d]/60 hover:text-[#f5d7d8]"
-                          aria-label={`${t("common:remove")} ${item.name}`}
+                          className="hidden h-9 w-9 items-center justify-center justify-self-end border border-[#f5f0e8]/12 text-[#e8a3a6] transition hover:border-[#b8585d]/60 hover:text-[#f5d7d8] md:flex"
+                          aria-label={t("cart:removeItem", {
+                            name: item.name,
+                          })}
                         >
-                          <Trash2 size={15} />
+                          <Trash2 size={14} />
                         </button>
                       </article>
                     );
@@ -381,7 +430,7 @@ const Cart = () => {
                   <div className="mt-4 border border-[#b8585d]/45 bg-[#882c30]/18 px-3 py-2 text-xs text-[#f5d7d8]">
                     {quoteError?.friendlyMessage ||
                       quoteError?.message ||
-                      "Could not refresh cart pricing."}
+                      t("cart:quoteRefreshError")}
                   </div>
                 )}
 

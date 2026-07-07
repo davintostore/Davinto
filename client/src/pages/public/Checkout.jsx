@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ImagePlus } from "lucide-react";
+import { ImagePlus, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import Button from "../../components/ui/Button";
@@ -85,7 +85,9 @@ const Checkout = () => {
     items,
     cartCount,
     clearCart,
+    removeItem,
     rememberCheckoutQuote,
+    getCartItemKey,
   } = useCart();
 
   const [customerInfo, setCustomerInfo] = useState(() => ({
@@ -426,19 +428,20 @@ const Checkout = () => {
       return t("checkout:errors.phone");
     }
 
+    if (!customerInfo.email.trim()) {
+      return t("checkout:errors.emailRequired");
+    }
+
+    if (!/^\S+@\S+\.\S+$/.test(customerInfo.email.trim())) {
+      return t("checkout:errors.email");
+    }
+
     if (!customerInfo.city.trim()) {
       return t("checkout:errors.city");
     }
 
     if (!customerInfo.address.trim()) {
       return t("checkout:errors.address");
-    }
-
-    if (
-      customerInfo.email.trim() &&
-      !/^\S+@\S+\.\S+$/.test(customerInfo.email.trim())
-    ) {
-      return t("checkout:errors.email");
     }
 
     if (!effectivePaymentMethod) {
@@ -850,7 +853,7 @@ const Checkout = () => {
                     />
 
                     <Input
-                      label={t("checkout:email")}
+                      label={requiredLabel(t("checkout:email"))}
                       name="email"
                       type="email"
                       value={customerInfo.email}
@@ -1024,11 +1027,9 @@ const Checkout = () => {
 
                   <div className="space-y-3">
                     {items.map((item, index) => {
-                      const quoteLookupKey = `${item.productId}__${
-                        item.color?.key || item.color?.name
-                      }__${item.size?.label}`;
+                      const itemKey = getCartItemKey(item);
                       const quoteItem =
-                        quoteItemsByKey.get(quoteLookupKey) ||
+                        quoteItemsByKey.get(itemKey) ||
                         quote?.items?.[index];
                       const quantity = Number(item.quantity || 0);
                       const hasQuoteItem = Boolean(quoteItem);
@@ -1060,52 +1061,61 @@ const Checkout = () => {
                       const displayImage = getCartItemImage(item);
 
                       return (
-                      <div
-                        key={`${item.productId}-${item.color?.key}-${item.size?.label}`}
-                        className="flex gap-3 border-b border-[#f5f0e8]/10 pb-3"
-                      >
-                        <div className="h-16 w-12 shrink-0 overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f]">
-                          {displayImage ? (
-                            <img
-                              src={displayImage}
-                              alt={item.name}
-                              onError={hideBrokenImage}
-                              className="h-full w-full object-cover"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="h-full w-full bg-white/5" />
-                          )}
+                        <div
+                          key={itemKey}
+                          className="flex gap-3 border-b border-[#f5f0e8]/10 pb-3"
+                        >
+                          <div className="h-16 w-12 shrink-0 overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f]">
+                            {displayImage ? (
+                              <img
+                                src={displayImage}
+                                alt={item.name}
+                                onError={hideBrokenImage}
+                                className="h-full w-full object-cover"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div className="h-full w-full bg-white/5" />
+                            )}
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-serif text-sm font-semibold text-[#f5f0e8]">
+                              {item.name}
+                            </p>
+
+                            <p className="mt-1 text-[0.72rem] text-[#f5f0e8]/40">
+                              {item.color?.name} / {item.size?.label} x{" "}
+                              {item.quantity}
+                            </p>
+
+                            <p className="mt-1 text-sm font-bold text-[#c7a852]">
+                              {hasQuoteItem
+                                ? formatMoney(finalLineTotal)
+                                : itemQuoteStatus}
+                            </p>
+                            {hasItemOffer && (
+                              <>
+                                <p className="mt-1 text-[0.68rem] text-[#8b8075] line-through">
+                                  {formatMoney(originalUnitPrice * quantity)}
+                                </p>
+                                <p className="mt-2 text-[0.58rem] font-black uppercase tracking-[0.14em] text-[#c7a852]">
+                                  {quoteItem?.appliedOfferTitle ||
+                                    t("common:offer")}
+                                </p>
+                              </>
+                            )}
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => removeItem(itemKey)}
+                            className="flex h-8 w-8 shrink-0 items-center justify-center border border-[#f5f0e8]/12 text-[#f5f0e8]/42 transition hover:border-[#b8585d]/60 hover:text-[#e8a3a6]"
+                            aria-label={`${t("common:remove")} ${item.name}`}
+                          >
+                            <Trash2 size={14} />
+                          </button>
                         </div>
-
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate font-serif text-sm font-semibold text-[#f5f0e8]">
-                            {item.name}
-                          </p>
-
-                          <p className="mt-1 text-[0.72rem] text-[#f5f0e8]/40">
-                            {item.color?.name} / {item.size?.label} x{" "}
-                            {item.quantity}
-                          </p>
-
-                          <p className="mt-1 text-sm font-bold text-[#c7a852]">
-                            {hasQuoteItem
-                              ? formatMoney(finalLineTotal)
-                              : itemQuoteStatus}
-                          </p>
-                          {hasItemOffer && (
-                            <>
-                              <p className="mt-1 text-[0.68rem] text-[#8b8075] line-through">
-                                {formatMoney(originalUnitPrice * quantity)}
-                              </p>
-                              <p className="mt-2 text-[0.58rem] font-black uppercase tracking-[0.14em] text-[#c7a852]">
-                                {quoteItem?.appliedOfferTitle ||
-                                  t("common:offer")}
-                              </p>
-                            </>
-                          )}
-                        </div>
-                      </div>
                       );
                     })}
                   </div>

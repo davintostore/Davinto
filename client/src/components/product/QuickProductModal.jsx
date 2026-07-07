@@ -485,7 +485,7 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
                       variant="secondary"
                       className="w-full whitespace-nowrap px-4 py-2.5 tracking-[0.12em]"
                     >
-                      View Full Details
+                      {t("catalog:product.viewFullDetails")}
                     </Button>
                   </Link>
                 </div>

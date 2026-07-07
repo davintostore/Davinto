@@ -52,6 +52,8 @@ const paymentMethodOptions = [
   { value: "paymobCard", label: "Visa / Mastercard" },
 ];
 
+const ADMIN_ORDERS_PAGE_SIZE = 50;
+
 const statusLabel = (value, options) => {
   return options.find((option) => option.value === value)?.label || value;
 };
@@ -154,6 +156,7 @@ const AdminOrders = () => {
     paymentStatus: "",
     paymentMethod: "",
   });
+  const [page, setPage] = useState(1);
 
   const [expandedOrderId, setExpandedOrderId] = useState(null);
   const [expandedPaymentProofOrderId, setExpandedPaymentProofOrderId] =
@@ -165,17 +168,23 @@ const AdminOrders = () => {
   const [confirmationModal, setConfirmationModal] = useState(null);
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["admin-orders", filters],
+    queryKey: ["admin-orders", filters, page, ADMIN_ORDERS_PAGE_SIZE],
     queryFn: () =>
       getAdminOrdersRequest({
         search: filters.search || undefined,
         orderStatus: filters.orderStatus || undefined,
         paymentStatus: filters.paymentStatus || undefined,
         paymentMethod: filters.paymentMethod || undefined,
+        page,
+        limit: ADMIN_ORDERS_PAGE_SIZE,
       }),
   });
 
   const orders = useMemo(() => data?.orders || [], [data]);
+  const totalPages = Math.max(Number(data?.pages || 1), 1);
+  const currentPage = Math.min(Number(data?.page || page), totalPages);
+  const canGoPrevious = currentPage > 1 && !isLoading;
+  const canGoNext = currentPage < totalPages && !isLoading;
 
   const showFeedback = (type, message) => {
     setFeedback({ type, message });
@@ -188,6 +197,7 @@ const AdminOrders = () => {
       ...current,
       [name]: value,
     }));
+    setPage(1);
   };
 
   const clearFilters = () => {
@@ -197,6 +207,19 @@ const AdminOrders = () => {
       paymentStatus: "",
       paymentMethod: "",
     });
+    setPage(1);
+  };
+
+  const goToPreviousPage = () => {
+    setPage((current) => Math.max(current - 1, 1));
+    setExpandedOrderId(null);
+    setExpandedPaymentProofOrderId(null);
+  };
+
+  const goToNextPage = () => {
+    setPage((current) => Math.min(current + 1, totalPages));
+    setExpandedOrderId(null);
+    setExpandedPaymentProofOrderId(null);
   };
 
   const toggleOrderDetails = (orderId) => {
@@ -658,9 +681,36 @@ const AdminOrders = () => {
             </h2>
           </div>
 
-          <p className="rounded-full border border-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-white/40">
-            Page {data?.page || 1} / {data?.pages || 1}
-          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="rounded-full border border-white/10 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-white/40">
+              Page {currentPage} / {totalPages}
+            </p>
+
+            {totalPages > 1 && (
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={goToPreviousPage}
+                  disabled={!canGoPrevious}
+                  aria-label="Load previous orders page"
+                  className="min-h-10 px-4 py-2 text-[0.58rem]"
+                >
+                  Previous
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={goToNextPage}
+                  disabled={!canGoNext}
+                  aria-label="Load next orders page"
+                  className="min-h-10 px-4 py-2 text-[0.58rem]"
+                >
+                  Next
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
 
         {isLoading && (

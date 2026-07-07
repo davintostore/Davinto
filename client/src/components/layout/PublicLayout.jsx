@@ -24,6 +24,7 @@ import { useAdminAuth } from "../../context/adminAuthContext";
 import { useCart } from "../../context/cartContext";
 import { useCustomerAuth } from "../../context/customerAuthContext";
 import useFocusTrap from "../../hooks/useFocusTrap";
+import useOverlayBackClose from "../../hooks/useOverlayBackClose";
 import { getPublicCategoriesRequest } from "../../services/categoryService";
 import { getPublicSettingsRequest } from "../../services/settingsService";
 import {
@@ -80,7 +81,12 @@ const PublicLayout = () => {
   const { t, i18n } = useTranslation("navigation");
   const language = i18n.resolvedLanguage === "ar" ? "ar" : "en";
   const location = useLocation();
-  const { cartCount, openCartDrawer } = useCart();
+  const {
+    cartCount,
+    isCartDrawerOpen,
+    openCartDrawer,
+    closeCartDrawer,
+  } = useCart();
   const {
     isAuthenticated: isAdminAuthenticated,
     isCheckingAuth: isCheckingAdminAuth,
@@ -99,6 +105,7 @@ const PublicLayout = () => {
   const [isHeaderHidden, setIsHeaderHidden] = useState(false);
   const lastScrollYRef = useRef(0);
   const categoriesDropdownRef = useRef(null);
+  const mobileMenuTriggerRef = useRef(null);
   const isFocusedRoute =
     location.pathname === "/cart" || location.pathname === "/checkout";
   const hideFooter = location.pathname === "/checkout";
@@ -163,13 +170,31 @@ const PublicLayout = () => {
     `relative py-2 text-[0.62rem] font-black uppercase tracking-[0.16em] transition after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:bg-[#c7a852] after:transition-transform ${
       isActive
         ? "text-[#f5f0e8] after:scale-x-100"
-        : "text-[#f5f0e8]/52 after:scale-x-0 hover:text-[#f5f0e8] hover:after:scale-x-100"
+        : "text-[#f5f0e8] after:scale-x-0 hover:text-[#f5f0e8] hover:after:scale-x-100"
     }`;
 
   const openSearchDrawer = () => {
     setIsMenuOpen(false);
     setIsSearchOpen(true);
   };
+
+  useOverlayBackClose({
+    isOpen: isMenuOpen && !isFocusedRoute,
+    onClose: () => setIsMenuOpen(false),
+    overlayId: "mobile-menu",
+  });
+
+  useOverlayBackClose({
+    isOpen: isSearchOpen && !isFocusedRoute,
+    onClose: () => setIsSearchOpen(false),
+    overlayId: "search-drawer",
+  });
+
+  useOverlayBackClose({
+    isOpen: isCartDrawerOpen,
+    onClose: closeCartDrawer,
+    overlayId: "cart-drawer",
+  });
 
   useEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
@@ -187,10 +212,30 @@ const PublicLayout = () => {
   }, [location.pathname]);
 
   useEffect(() => {
+    const frameId = window.requestAnimationFrame(() => {
+      setIsHeaderHidden(false);
+      lastScrollYRef.current = window.scrollY || 0;
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [language]);
+
+  useEffect(() => {
     if (!isCategoriesOpen) return undefined;
 
-    const handlePointerDown = (event) => {
-      if (!categoriesDropdownRef.current?.contains(event.target)) {
+    const handlePressOutside = (event) => {
+      const dropdownNode = categoriesDropdownRef.current;
+
+      if (!dropdownNode) return;
+
+      const eventPath =
+        typeof event.composedPath === "function" ? event.composedPath() : [];
+      const isInsideDropdown =
+        dropdownNode.contains(event.target) || eventPath.includes(dropdownNode);
+
+      if (!isInsideDropdown) {
         setIsCategoriesOpen(false);
       }
     };
@@ -201,14 +246,123 @@ const PublicLayout = () => {
       }
     };
 
-    document.addEventListener("pointerdown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
+    const listenerOptions = { capture: true };
+    const supportsPointerEvents = Boolean(window.PointerEvent);
+
+    if (supportsPointerEvents) {
+      document.addEventListener(
+        "pointerdown",
+        handlePressOutside,
+        listenerOptions
+      );
+    } else {
+      document.addEventListener(
+        "mousedown",
+        handlePressOutside,
+        listenerOptions
+      );
+      document.addEventListener(
+        "touchstart",
+        handlePressOutside,
+        listenerOptions
+      );
+    }
+
+    document.addEventListener("keydown", handleKeyDown, listenerOptions);
 
     return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
+      if (supportsPointerEvents) {
+        document.removeEventListener(
+          "pointerdown",
+          handlePressOutside,
+          listenerOptions
+        );
+      } else {
+        document.removeEventListener(
+          "mousedown",
+          handlePressOutside,
+          listenerOptions
+        );
+        document.removeEventListener(
+          "touchstart",
+          handlePressOutside,
+          listenerOptions
+        );
+      }
+
+      document.removeEventListener("keydown", handleKeyDown, listenerOptions);
     };
   }, [isCategoriesOpen]);
+
+  useEffect(() => {
+    if (!isMenuOpen || isFocusedRoute) return undefined;
+
+    const menuNode = mobileMenuRef.current;
+    const triggerNode = mobileMenuTriggerRef.current;
+
+    if (!menuNode) return undefined;
+
+    const handlePressOutside = (event) => {
+      const target = event.target;
+
+      if (!target || !(target instanceof Node)) return;
+
+      const eventPath =
+        typeof event.composedPath === "function" ? event.composedPath() : [];
+      const isInsideMenu =
+        menuNode.contains(target) || eventPath.includes(menuNode);
+      const isTriggerInteraction =
+        triggerNode &&
+        (triggerNode.contains(target) || eventPath.includes(triggerNode));
+
+      if (isTriggerInteraction || isInsideMenu) return;
+
+      setIsMenuOpen(false);
+    };
+
+    const listenerOptions = { capture: true };
+    const supportsPointerEvents = Boolean(window.PointerEvent);
+
+    if (supportsPointerEvents) {
+      document.addEventListener(
+        "pointerdown",
+        handlePressOutside,
+        listenerOptions
+      );
+    } else {
+      document.addEventListener(
+        "mousedown",
+        handlePressOutside,
+        listenerOptions
+      );
+      document.addEventListener(
+        "touchstart",
+        handlePressOutside,
+        listenerOptions
+      );
+    }
+
+    return () => {
+      if (supportsPointerEvents) {
+        document.removeEventListener(
+          "pointerdown",
+          handlePressOutside,
+          listenerOptions
+        );
+      } else {
+        document.removeEventListener(
+          "mousedown",
+          handlePressOutside,
+          listenerOptions
+        );
+        document.removeEventListener(
+          "touchstart",
+          handlePressOutside,
+          listenerOptions
+        );
+      }
+    };
+  }, [isFocusedRoute, isMenuOpen, mobileMenuRef]);
 
   useEffect(() => {
     if (isFocusedRoute) return undefined;
@@ -278,6 +432,7 @@ const PublicLayout = () => {
         <Container className="relative flex h-[4.75rem] items-center justify-between">
           <div className="flex flex-1 items-center gap-1 lg:flex-none">
             <button
+              ref={mobileMenuTriggerRef}
               type="button"
               onClick={() => setIsMenuOpen((current) => !current)}
               className="flex h-11 w-11 items-center justify-center text-[#f5f0e8] transition hover:text-[#c7a852] lg:hidden"

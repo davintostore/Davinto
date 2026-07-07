@@ -50,6 +50,11 @@ const orderCreateLimiter = createLimiter({
   message: "Too many order attempts. Please try again later.",
 });
 
+const quoteLimiter = createLimiter({
+  max: getPositiveInteger("QUOTE_RATE_LIMIT_MAX", 120),
+  message: "Too many quote requests. Please try again later.",
+});
+
 const paymentRetryLimiter = createLimiter({
   max: getPositiveInteger("PAYMENT_RETRY_RATE_LIMIT_MAX", 10),
   message: "Too many payment retry attempts. Please try again later.",
@@ -60,5 +65,6 @@ module.exports = {
   refreshLimiter,
   trackingLimiter,
   orderCreateLimiter,
+  quoteLimiter,
   paymentRetryLimiter,
 };

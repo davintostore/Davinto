@@ -306,8 +306,8 @@ img {
 
 .hero-display-heading {
   max-width: 15ch;
-  letter-spacing: -0.035em;
-  word-spacing: -0.08em;
+  letter-spacing: -0.04em;
+  word-spacing: -0.12em;
 }
 
 html[dir="rtl"] .page-shell .hero-display-heading {

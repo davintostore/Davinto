@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useTranslation } from "react-i18next";
 
 import { CartContext } from "./cartContext";
 import { trackAddToCart } from "../utils/metaPixel";
@@ -46,6 +47,7 @@ const normalizeQuantity = (quantity, maxStock) => {
 };
 
 export const CartProvider = ({ children }) => {
+  const { t } = useTranslation("cart");
   const [items, setItems] = useState(readStoredCart);
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
   const [cartToast, setCartToast] = useState(null);
@@ -69,14 +71,14 @@ export const CartProvider = ({ children }) => {
 
     setCartToast({
       id: Date.now(),
-      title: "Added to cart",
+      title: t("addedToCart"),
     });
 
     cartToastTimeoutRef.current = window.setTimeout(() => {
       setCartToast(null);
       cartToastTimeoutRef.current = null;
     }, 2000);
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     return () => {

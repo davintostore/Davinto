@@ -10,9 +10,9 @@ import MetaPixelRouteTracker from "../components/meta/MetaPixelRouteTracker";
 import PublicLayout from "../components/layout/PublicLayout";
 
 import Home from "../pages/public/Home";
-import Shop from "../pages/public/Shop";
-import ProductDetails from "../pages/public/ProductDetails";
 
+const Shop = lazy(() => import("../pages/public/Shop"));
+const ProductDetails = lazy(() => import("../pages/public/ProductDetails"));
 const Category = lazy(() => import("../pages/public/Category"));
 const Categories = lazy(() => import("../pages/public/Categories"));
 const Cart = lazy(() => import("../pages/public/Cart"));
@@ -90,10 +90,13 @@ const AppRoutes = () => {
       <Routes>
         <Route element={<PublicLayout />}>
           <Route index element={<Home />} />
-          <Route path="/shop" element={<Shop />} />
+          <Route path="/shop" element={withRouteFallback(<Shop />)} />
           <Route path="/categories" element={withRouteFallback(<Categories />)} />
           <Route path="/category/:slug" element={withRouteFallback(<Category />)} />
-          <Route path="/product/:slug" element={<ProductDetails />} />
+          <Route
+            path="/product/:slug"
+            element={withRouteFallback(<ProductDetails />)}
+          />
           <Route path="/cart" element={withRouteFallback(<Cart />)} />
           <Route path="/checkout" element={withRouteFallback(<Checkout />)} />
           <Route

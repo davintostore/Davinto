@@ -45,10 +45,12 @@ const Category = () => {
 
   // SEO
   useSeo({
-    title: localizedCategory?.name 
-      ? `${localizedCategory.name} | Davinto Store`
-      : "Category | Davinto Store",
-    description: `Explore ${localizedCategory?.name || "products"} from Davinto Store with simple checkout and delivery across Egypt.`,
+    title: localizedCategory?.name
+      ? t("catalog:category.seoTitle", { name: localizedCategory.name })
+      : t("catalog:category.seoFallbackTitle"),
+    description: t("catalog:category.seoDescription", {
+      name: localizedCategory?.name || t("catalog:category.seoFallbackName"),
+    }),
     robots: "index,follow",
     canonical: `${window.location.origin}/category/${slug}`,
   });
