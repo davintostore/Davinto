@@ -659,7 +659,7 @@ const PublicLayout = () => {
                     setIsMobileCategoriesOpen((current) => !current)
                   }
                   className={`flex items-center justify-between border-b border-[#f5f0e8]/10 py-4 text-sm font-black uppercase tracking-[0.2em] ${
-                    isCategoriesNavActive ? "text-[#c7a852]" : "text-[#f5f0e8]/72"
+                    isCategoriesNavActive ? "text-[#c7a852]" : "text-[#f5f0e8]"
                   }`}
                 >
                   <span>{t("categories")}</span>
