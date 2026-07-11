@@ -157,12 +157,12 @@ const GlobalSearchDrawer = ({ isOpen, onClose }) => {
               onChange={(event) => setQuery(event.target.value)}
               placeholder={t("search.placeholder")}
               aria-label={t("search.search")}
-              className="h-14 w-full rounded-[0.2rem] border border-[#f5f0e8]/16 bg-[#f5f0e8]/6 px-4 pe-12 text-base text-[#f5f0e8] outline-none transition placeholder:text-[#8b8075] hover:border-[#f5f0e8]/25 focus:border-[#c7a852]"
+              className="h-14 w-full rounded-[0.2rem] border border-[#f5f0e8]/16 bg-[#f5f0e8]/6 ps-4 pe-12 text-base text-[#f5f0e8] outline-none transition placeholder:text-[#8b8075] hover:border-[#f5f0e8]/25 focus:border-[#c7a852]"
               data-autofocus
             />
             <button
               type="submit"
-              className="absolute inset-y-0 right-3 flex items-center text-[#f5f0e8]/72 transition hover:text-[#c7a852]"
+              className="absolute inset-y-0 end-3 flex items-center text-[#f5f0e8]/72 transition hover:text-[#c7a852]"
               aria-label={t("search.submit")}
             >
               <Search size={23} />

@@ -112,7 +112,6 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
     onEscape: onClose,
     lockScroll: true,
   });
-
   const handleColorChange = (color) => {
     const availableSizes = getAvailableSizes(color);
 
@@ -439,7 +438,7 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
                       onClick={() =>
                         setQuantity((current) => Math.max(1, current - 1))
                       }
-                      className="flex h-full w-11 items-center justify-center text-[#f5f0e8]/65 transition hover:bg-[#f5f0e8]/8"
+                      className="flex h-full w-11 items-center justify-center text-[#f5f0e8]/65 transition hover:bg-[#c7a852]/12 hover:text-[#c7a852]"
                       aria-label={t("catalog:product.decreaseQuantity")}
                     >
                       <Minus size={14} />
@@ -454,7 +453,7 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
                           isInStock ? Math.min(selectedStock, current + 1) : 1
                         )
                       }
-                      className="flex h-full w-11 items-center justify-center text-[#f5f0e8]/65 transition hover:bg-[#f5f0e8]/8"
+                      className="flex h-full w-11 items-center justify-center text-[#f5f0e8]/65 transition hover:bg-[#c7a852]/12 hover:text-[#c7a852]"
                       aria-label={t("catalog:product.increaseQuantity")}
                     >
                       <Plus size={14} />

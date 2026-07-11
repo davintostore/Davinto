@@ -6,6 +6,7 @@ import { getLocalizedProduct } from "../../utils/localizedContent";
 import { hideBrokenImage } from "../../utils/imageFallback";
 import { getProductGalleryImages } from "../../utils/resolveLocalImages";
 import useScrollReveal from "../../hooks/useScrollReveal";
+import useOverlayBackClose from "../../hooks/useOverlayBackClose";
 
 const QuickProductModal = lazy(() => import("./QuickProductModal"));
 
@@ -39,6 +40,11 @@ const ProductCard = ({ product }) => {
   const { t, i18n } = useTranslation(["common", "catalog"]);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const [revealRef, revealClassName] = useScrollReveal();
+  useOverlayBackClose({
+    isOpen: isQuickViewOpen,
+    onClose: () => setIsQuickViewOpen(false),
+    overlayId: `quick-product-${product?._id || product?.slug || "modal"}`,
+  });
   const language = i18n.resolvedLanguage === "ar" ? "ar" : "en";
   const formatMoney = (value) => formatCurrency(value, language);
   const localizedProduct = getLocalizedProduct(product, language);

@@ -5,6 +5,32 @@ const isArabic = (language) =>
 
 const hasText = (value) => Boolean(String(value || "").trim());
 
+const normalizeCategoryKey = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+const ARABIC_CATEGORY_NAME_FALLBACKS = {
+  "nature-botanical": "طبيعة ونباتات",
+  "nature-and-botanical": "طبيعة ونباتات",
+  "music-culture": "موسيقى وثقافة",
+  "music-and-culture": "موسيقى وثقافة",
+  words: "كلمات",
+  "graphic-design": "تصميم جرافيك",
+  blanks: "أساسيات سادة",
+  "art-history": "فن وتاريخ",
+  "art-and-history": "فن وتاريخ",
+  "customize-yours": "صمّم قطعتك",
+};
+
+const getArabicCategoryNameFallback = (category) =>
+  ARABIC_CATEGORY_NAME_FALLBACKS[
+    normalizeCategoryKey(category?.slug || category?.name)
+  ] || ARABIC_CATEGORY_NAME_FALLBACKS[normalizeCategoryKey(category?.name)];
+
 export const getLocalizedImageAlt = (
   image,
   fallback = "",
@@ -55,12 +81,20 @@ export const getLocalizedCategory = (category, language = "en") => {
   if (!category) return category;
 
   const arabic = category.translations?.ar;
+  const arabicName = String(arabic?.name || "").trim();
+  const englishName = String(category.name || "").trim();
+  const shouldUseArabicName =
+    hasText(arabicName) &&
+    normalizeCategoryKey(arabicName) !== normalizeCategoryKey(englishName);
+  const fallbackArabicName = getArabicCategoryNameFallback(category);
 
   return {
     ...category,
     name:
-      isArabic(language) && hasText(arabic?.name)
-        ? arabic.name
+      isArabic(language) && shouldUseArabicName
+        ? arabicName
+        : isArabic(language) && fallbackArabicName
+          ? fallbackArabicName
         : category.name,
     description:
       isArabic(language) && hasText(arabic?.description)

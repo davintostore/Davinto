@@ -580,6 +580,21 @@ html[lang="ar"] .page-shell label {
   padding-block: clamp(2.25rem, 5vw, 4.5rem) clamp(4rem, 8vw, 8rem);
 }
 
+.davinto-category-carousel {
+  cursor: grab;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: none;
+  touch-action: pan-x pan-y;
+}
+
+.davinto-category-carousel:active {
+  cursor: grabbing;
+}
+
+.davinto-category-carousel::-webkit-scrollbar {
+  display: none;
+}
+
 .davinto-mobile-category-slide-card h3 {
   font-size: clamp(1.35rem, 7vw, 2rem);
   line-height: 1;

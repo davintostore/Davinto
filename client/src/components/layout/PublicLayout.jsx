@@ -135,8 +135,19 @@ const PublicLayout = () => {
           )
             .trim()
             .toLowerCase();
+          const normalizedName = String(category?.name || "")
+            .trim()
+            .toLowerCase();
 
-          if (!key || seenCategories.has(key)) return false;
+          if (
+            !key ||
+            key === "all-categories" ||
+            normalizedName === "all categories" ||
+            normalizedName === "كل الفئات" ||
+            seenCategories.has(key)
+          ) {
+            return false;
+          }
 
           seenCategories.add(key);
           return true;
@@ -509,6 +520,14 @@ const PublicLayout = () => {
                   aria-labelledby="desktop-categories-trigger"
                 >
                   <div className="max-h-80 overflow-y-auto">
+                    <Link
+                      to="/categories"
+                      role="menuitem"
+                      onClick={() => setIsCategoriesOpen(false)}
+                      className="block border-b border-[#c7a852]/22 px-3 py-3 text-sm font-black text-[#c7a852] transition hover:bg-[#c7a852]/10 hover:text-[#f5f0e8]"
+                    >
+                      {t("allCategories")}
+                    </Link>
                     {navCategories.length > 0 ? (
                       navCategories.map((category) => (
                         <Link
@@ -574,8 +593,6 @@ const PublicLayout = () => {
                 <UserRound size={25} className="lg:h-[21px] lg:w-[21px]" />
               </Link>
             )}
-
-            <LanguageSwitcher className="hidden lg:inline-flex" compact />
 
             {showAdminDashboardLink && (
               <Link
@@ -677,6 +694,16 @@ const PublicLayout = () => {
                     id="mobile-categories-menu"
                     className="davinto-mobile-categories-list border-b border-[#f5f0e8]/10 bg-[#f5f0e8]/[0.025] py-2"
                   >
+                    <Link
+                      to="/categories"
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        setIsMobileCategoriesOpen(false);
+                      }}
+                      className="block border-b border-[#c7a852]/18 px-4 py-3 text-sm font-black text-[#c7a852] transition hover:bg-[#c7a852]/8 hover:text-[#f5f0e8]"
+                    >
+                      {t("allCategories")}
+                    </Link>
                     {navCategories.length > 0 ? (
                       navCategories.map((category) => (
                         <Link
@@ -759,8 +786,6 @@ const PublicLayout = () => {
                   ))}
               </nav>
 
-              <LanguageSwitcher className="mt-5 w-full" />
-
               {showCustomerNav && (
                 <button
                   type="button"
@@ -804,6 +829,16 @@ const PublicLayout = () => {
         isOpen={isSearchOpen && !isFocusedRoute}
         onClose={() => setIsSearchOpen(false)}
       />
+
+      {!isFocusedRoute &&
+        !isMenuOpen &&
+        !isSearchOpen &&
+        !isCartDrawerOpen && (
+          <LanguageSwitcher
+            className="fixed bottom-4 left-4 z-40"
+            compact
+          />
+        )}
 
       {!hideFooter && (
       <footer className="border-t border-[#c7a852]/25 bg-[#050505]">

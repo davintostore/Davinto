@@ -46,7 +46,7 @@ const LanguageSwitcher = ({ className = "", compact = false }) => {
     <button
       type="button"
       onClick={changeLanguage}
-      className={`inline-flex min-h-11 items-center justify-center gap-2 border border-[#f5f0e8]/15 px-3 text-[0.62rem] font-black tracking-[0.12em] text-[#f5f0e8] transition hover:border-[#c7a852] ${className}`}
+      className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-[#c7a852]/45 bg-[#0b0a09]/94 px-3.5 text-[0.62rem] font-black tracking-[0.1em] text-[#f5f0e8] shadow-[0_0.75rem_2rem_rgba(5,5,5,0.3)] backdrop-blur transition duration-200 hover:border-[#c7a852] hover:bg-[#c7a852] hover:text-[#110f0e] focus-visible:outline-[#c7a852] disabled:cursor-not-allowed disabled:opacity-45 ${className}`}
       aria-label={t("language.switchTo", {
         language: t(`language.${nextLanguage}`),
       })}
@@ -54,7 +54,9 @@ const LanguageSwitcher = ({ className = "", compact = false }) => {
       <FlagBadge language={displayedLanguage} />
       <span>
         {compact
-          ? t(`language.short.${displayedLanguage}`)
+          ? displayedLanguage === "en"
+            ? "EN"
+            : t("language.ar")
           : t(`language.${displayedLanguage}`)}
       </span>
     </button>
