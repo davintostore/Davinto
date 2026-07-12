@@ -111,6 +111,7 @@
     "selectColorName": "Select {{color}}",
     "selectSize": "Select size",
     "selectSizeName": "Select size {{size}}",
+    "chooseSizeFirst": "Choose your size first.",
     "availability": "Availability",
     "stockAvailable": "{{count}} pieces available",
     "detailStockAvailable": "{{count}} pieces available in the selected option",

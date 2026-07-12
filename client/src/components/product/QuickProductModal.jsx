@@ -28,10 +28,6 @@ const getActiveSizes = (color) => {
   return color.sizes.filter((size) => size.isActive !== false);
 };
 
-const getAvailableSizes = (color) => {
-  return getActiveSizes(color).filter((size) => Number(size.stock || 0) > 0);
-};
-
 const getColorKey = (color) => color?._id || color?.slug || color?.name || "";
 
 const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
@@ -40,7 +36,10 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
   const formatMoney = (value) => formatCurrency(value, language);
   const { addItem } = useCart();
   const [selectedColorId, setSelectedColorId] = useState("");
-  const [selectedSizeLabel, setSelectedSizeLabel] = useState("");
+  const [selectedSizeSelection, setSelectedSizeSelection] = useState({
+    productSlug: "",
+    label: "",
+  });
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [errorMessage, setErrorMessage] = useState("");
@@ -52,6 +51,10 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
   });
 
   const product = data?.product || previewProduct;
+  const selectedSizeLabel =
+    selectedSizeSelection.productSlug === previewProduct?.slug
+      ? selectedSizeSelection.label
+      : "";
   const localizedProduct = useMemo(
     () => getLocalizedProduct(product, language),
     [product, language]
@@ -78,17 +81,10 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
   );
 
   const selectedSize = useMemo(() => {
-    const matchedSize = selectedSizes.find(
-      (size) => size.label === selectedSizeLabel
+    return (
+      selectedSizes.find((size) => size.label === selectedSizeLabel) || null
     );
-
-    if (matchedSize) return matchedSize;
-
-    const availableSizes = getAvailableSizes(selectedColor);
-    if (availableSizes.length === 1) return availableSizes[0];
-
-    return null;
-  }, [selectedColor, selectedSizes, selectedSizeLabel]);
+  }, [selectedSizes, selectedSizeLabel]);
 
   const images = useMemo(() => {
     return getProductGalleryImages(product, selectedColor);
@@ -112,13 +108,10 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
     onEscape: onClose,
     lockScroll: true,
   });
-  const handleColorChange = (color) => {
-    const availableSizes = getAvailableSizes(color);
 
+  const handleColorChange = (color) => {
     setSelectedColorId(getColorKey(color));
-    setSelectedSizeLabel(
-      availableSizes.length === 1 ? availableSizes[0].label : ""
-    );
+    setSelectedSizeSelection({ productSlug: "", label: "" });
     setSelectedImageIndex(0);
     setQuantity(1);
     setErrorMessage("");
@@ -391,19 +384,25 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
                         <button
                           key={size.label}
                           type="button"
-                          disabled={disabled}
                           aria-pressed={isSelected}
                           aria-label={t("catalog:product.selectSizeName", {
                             size: size.label,
                           })}
                           onClick={() => {
-                            setSelectedSizeLabel(size.label);
+                            setSelectedSizeSelection({
+                              productSlug: previewProduct?.slug || "",
+                              label: size.label,
+                            });
                             setQuantity(1);
                             setErrorMessage("");
                           }}
-                          className={`min-h-11 min-w-12 border px-3 text-xs font-black uppercase tracking-[0.14em] transition disabled:cursor-not-allowed disabled:opacity-25 ${
+                          className={`min-h-11 min-w-12 border px-3 text-xs font-black uppercase tracking-[0.14em] transition ${
                             isSelected
-                              ? "border-[#f5f0e8] bg-[#f5f0e8] text-[#1c1917]"
+                              ? disabled
+                                ? "border-[#b8585d] bg-[#882c30]/28 text-[#f5d7d8]"
+                                : "border-[#f5f0e8] bg-[#f5f0e8] text-[#1c1917]"
+                              : disabled
+                                ? "border-[#f5f0e8]/10 text-[#f5f0e8]/32 hover:border-[#b8585d]/55 hover:text-[#f5d7d8]"
                               : "border-[#f5f0e8]/14 text-[#f5f0e8]/58 hover:border-[#c7a852] hover:text-[#f5f0e8]"
                           }`}
                         >
@@ -421,10 +420,16 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
                     </p>
                     <p
                       className={`mt-1 text-sm font-bold ${
-                        isInStock ? "text-[#c7a852]" : "text-[#e8a3a6]"
+                        !selectedSize
+                          ? "text-[#f5f0e8]/62"
+                          : isInStock
+                            ? "text-[#c7a852]"
+                            : "text-[#e8a3a6]"
                       }`}
                     >
-                      {isInStock
+                      {!selectedSize
+                        ? t("catalog:product.chooseSizeFirst")
+                        : isInStock
                         ? t("catalog:product.stockAvailable", {
                             count: selectedStock,
                           })
@@ -471,7 +476,7 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
                   <Button
                     type="button"
                     onClick={handleAddToCart}
-                    disabled={Boolean(selectedSize) && !isInStock}
+                    disabled={!selectedColor || !selectedSize || !isInStock}
                     className="w-full gap-2 whitespace-nowrap px-4 py-2.5 tracking-[0.12em] sm:min-w-[10.5rem]"
                   >
                     <ShoppingBag size={16} />

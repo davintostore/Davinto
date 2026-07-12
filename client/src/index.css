@@ -582,17 +582,16 @@ html[lang="ar"] .page-shell label {
 
 .davinto-category-carousel {
   cursor: grab;
-  overscroll-behavior-inline: contain;
-  scrollbar-width: none;
-  touch-action: pan-x pan-y;
+  touch-action: pan-y;
+  user-select: none;
 }
 
 .davinto-category-carousel:active {
   cursor: grabbing;
 }
 
-.davinto-category-carousel::-webkit-scrollbar {
-  display: none;
+.davinto-category-carousel img {
+  -webkit-user-drag: none;
 }
 
 .davinto-mobile-category-slide-card h3 {

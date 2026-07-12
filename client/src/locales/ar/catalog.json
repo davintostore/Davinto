@@ -111,6 +111,7 @@
     "selectColorName": "اختر {{color}}",
     "selectSize": "اختر المقاس",
     "selectSizeName": "اختر مقاس {{size}}",
+    "chooseSizeFirst": "اختر مقاسك أولًا",
     "availability": "التوفر",
     "stockAvailable": "متاح {{count}} قطعة",
     "detailStockAvailable": "متاح {{count}} قطعة من الاختيار المحدد",

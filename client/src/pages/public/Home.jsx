@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay";
 
 import EditorialCategoryCard from "../../components/category/EditorialCategoryCard";
 import ProductCard from "../../components/product/ProductCard";
@@ -249,36 +251,35 @@ const Home = () => {
         : [{ _id: "t-shirts", name: t("categories.heading"), slug: "" }],
     [categories, t]
   );
-  const categoryTrackRef = useRef(null);
-  const categoryScrollSettleTimerRef = useRef(null);
-  const categoryScrollSettleHandlerRef = useRef(null);
-  const isProgrammaticCategoryScrollRef = useRef(false);
-  const programmaticCategoryTargetRef = useRef(null);
-  const activeCategoryIndexRef = useRef(0);
-  const categoryDragRef = useRef({
-    pointerId: null,
-    startX: 0,
-    startScrollLeft: 0,
-    moved: false,
-  });
-  const [activeCategorySlide, setActiveCategorySlide] = useState(0);
-  const [isCategorySliderPaused, setIsCategorySliderPaused] = useState(false);
   const [isMobileCategoryCarousel, setIsMobileCategoryCarousel] = useState(
     () =>
       typeof window === "undefined" ||
       window.matchMedia("(max-width: 1023px)").matches
   );
-  const [categorySliderInteractionKey, setCategorySliderInteractionKey] =
-    useState(0);
-  const activeCategoryIndex = Math.min(
-    activeCategorySlide,
-    Math.max(visibleCategories.length - 1, 0)
+  const categoryAutoplay = useMemo(
+    () =>
+      Autoplay({
+        delay: 5000,
+        stopOnFocusIn: false,
+        stopOnInteraction: false,
+      }),
+    []
   );
+  const [categoryViewportRef, categoryEmblaApi] = useEmblaCarousel(
+    {
+      active: isMobileCategoryCarousel,
+      align: "start",
+      axis: "x",
+      direction: "ltr",
+      dragFree: false,
+      loop: true,
+      skipSnaps: false,
+      slidesToScroll: 1,
+    },
+    [categoryAutoplay]
+  );
+  const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
   const primaryCategoryPath = "/shop";
-
-  useEffect(() => {
-    activeCategoryIndexRef.current = activeCategoryIndex;
-  }, [activeCategoryIndex]);
 
   useEffect(() => {
     const mobileCategoryQuery = window.matchMedia("(max-width: 1023px)");
@@ -296,257 +297,51 @@ const Home = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (
-      !isMobileCategoryCarousel ||
-      isCategorySliderPaused ||
-      visibleCategories.length <= 1
-    ) {
-      return undefined;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      const nextIndex = (activeCategoryIndex + 1) % visibleCategories.length;
-      const track = categoryTrackRef.current;
-      const cards = track?.querySelectorAll("[data-home-category-card]");
-      const nextCard = cards?.[nextIndex];
-
-      if (track && nextCard) {
-        if (categoryScrollSettleTimerRef.current) {
-          window.clearTimeout(categoryScrollSettleTimerRef.current);
-        }
-
-        isProgrammaticCategoryScrollRef.current = true;
-        programmaticCategoryTargetRef.current = nextIndex;
-        activeCategoryIndexRef.current = nextIndex;
-        setActiveCategorySlide(nextIndex);
-        track.scrollTo({
-          left: nextCard.offsetLeft,
-          behavior: "smooth",
-        });
-      }
-    }, 5000);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [
-    activeCategoryIndex,
-    categorySliderInteractionKey,
-    isMobileCategoryCarousel,
-    isCategorySliderPaused,
-    visibleCategories.length,
-  ]);
-
-  useEffect(
-    () => () => {
-      if (categoryScrollSettleTimerRef.current) {
-        window.clearTimeout(categoryScrollSettleTimerRef.current);
-      }
-    },
-    []
-  );
-
-  const resetCategorySliderTimer = useCallback(() => {
-    setCategorySliderInteractionKey((current) => current + 1);
+  const syncSelectedCategory = useCallback((emblaApi) => {
+    setActiveCategoryIndex(emblaApi.selectedScrollSnap());
   }, []);
 
-  const scrollToCategory = (index) => {
-    const track = categoryTrackRef.current;
-    const cards = track?.querySelectorAll("[data-home-category-card]");
-    const targetCard = cards?.[index];
-
-    if (!track || !targetCard) return;
-
-    if (categoryScrollSettleTimerRef.current) {
-      window.clearTimeout(categoryScrollSettleTimerRef.current);
-    }
-
-    isProgrammaticCategoryScrollRef.current = true;
-    programmaticCategoryTargetRef.current = index;
-    activeCategoryIndexRef.current = index;
-    setActiveCategorySlide(index);
-    track.scrollTo({
-      left: targetCard.offsetLeft,
-      behavior: "smooth",
-    });
-  };
-
-  const handleCategorySlideChange = (direction) => {
-    const totalSlides = visibleCategories.length;
-    if (totalSlides <= 1) return;
-
-    const currentIndex = Math.min(
-      activeCategoryIndexRef.current,
-      totalSlides - 1
-    );
-    const nextIndex =
-      direction === "next"
-        ? (currentIndex + 1) % totalSlides
-        : (currentIndex - 1 + totalSlides) % totalSlides;
-
-    scrollToCategory(nextIndex);
-    resetCategorySliderTimer();
-  };
-
-  const getNearestCategoryIndex = useCallback(() => {
-    const track = categoryTrackRef.current;
-    const cards = Array.from(
-      track?.querySelectorAll("[data-home-category-card]") || []
-    );
-
-    if (!track || cards.length === 0) return null;
-
-    return cards.reduce((closest, card, index) => {
-      const closestCard = cards[closest];
-
-      return Math.abs(card.offsetLeft - track.scrollLeft) <
-        Math.abs(closestCard.offsetLeft - track.scrollLeft)
-        ? index
-        : closest;
-    }, 0);
-  }, []);
-
-  const settleCategoryScroll = useCallback(
-    ({ fromScrollEnd = false } = {}) => {
-      const nearestIndex = getNearestCategoryIndex();
-      if (nearestIndex === null) return;
-
-      const wasProgrammatic = isProgrammaticCategoryScrollRef.current;
-      const programmaticTarget = programmaticCategoryTargetRef.current;
-
-      if (
-        wasProgrammatic &&
-        programmaticTarget !== null &&
-        nearestIndex !== programmaticTarget
-      ) {
-        if (!fromScrollEnd) {
-          categoryScrollSettleTimerRef.current = window.setTimeout(() => {
-            categoryScrollSettleHandlerRef.current?.();
-          }, 150);
-        }
-
-        return;
-      }
-
-      if (categoryScrollSettleTimerRef.current) {
-        window.clearTimeout(categoryScrollSettleTimerRef.current);
-        categoryScrollSettleTimerRef.current = null;
-      }
-
-      isProgrammaticCategoryScrollRef.current = false;
-      programmaticCategoryTargetRef.current = null;
-
-      if (nearestIndex !== activeCategoryIndexRef.current) {
-        activeCategoryIndexRef.current = nearestIndex;
-        setActiveCategorySlide(nearestIndex);
-      }
-
-      if (!wasProgrammatic) {
-        resetCategorySliderTimer();
-      }
-    },
-    [getNearestCategoryIndex, resetCategorySliderTimer]
-  );
-
   useEffect(() => {
-    categoryScrollSettleHandlerRef.current = settleCategoryScroll;
+    if (!categoryEmblaApi) return undefined;
+
+    categoryEmblaApi.on("init", syncSelectedCategory);
+    categoryEmblaApi.on("select", syncSelectedCategory);
+    categoryEmblaApi.on("reInit", syncSelectedCategory);
 
     return () => {
-      categoryScrollSettleHandlerRef.current = null;
+      categoryEmblaApi.off("init", syncSelectedCategory);
+      categoryEmblaApi.off("select", syncSelectedCategory);
+      categoryEmblaApi.off("reInit", syncSelectedCategory);
     };
-  }, [settleCategoryScroll]);
+  }, [categoryEmblaApi, syncSelectedCategory]);
 
-  const handleCategoryTrackScroll = useCallback(() => {
-    if (categoryScrollSettleTimerRef.current) {
-      window.clearTimeout(categoryScrollSettleTimerRef.current);
+  const resetCategoryAutoplay = useCallback(() => {
+    categoryAutoplay.reset();
+  }, [categoryAutoplay]);
+
+  const scrollToPreviousCategory = useCallback(() => {
+    categoryEmblaApi?.scrollPrev();
+    resetCategoryAutoplay();
+  }, [categoryEmblaApi, resetCategoryAutoplay]);
+
+  const scrollToNextCategory = useCallback(() => {
+    categoryEmblaApi?.scrollNext();
+    resetCategoryAutoplay();
+  }, [categoryEmblaApi, resetCategoryAutoplay]);
+
+  const handleCategoryViewportKeyDown = (event) => {
+    if (visibleCategories.length <= 1) return;
+
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      scrollToNextCategory();
     }
 
-    categoryScrollSettleTimerRef.current = window.setTimeout(() => {
-      settleCategoryScroll();
-    }, 150);
-  }, [settleCategoryScroll]);
-
-  const handleCategoryPointerDown = (event) => {
-    isProgrammaticCategoryScrollRef.current = false;
-    programmaticCategoryTargetRef.current = null;
-    setIsCategorySliderPaused(true);
-
-    if (event.pointerType !== "mouse" || event.button !== 0) return;
-
-    const track = categoryTrackRef.current;
-    if (!track) return;
-
-    categoryDragRef.current = {
-      pointerId: event.pointerId,
-      startX: event.clientX,
-      startScrollLeft: track.scrollLeft,
-      moved: false,
-    };
-    track.setPointerCapture(event.pointerId);
-  };
-
-  const handleCategoryPointerMove = (event) => {
-    const track = categoryTrackRef.current;
-    const drag = categoryDragRef.current;
-
-    if (!track || drag.pointerId !== event.pointerId) return;
-
-    const distance = event.clientX - drag.startX;
-    if (Math.abs(distance) > 5) drag.moved = true;
-    track.scrollLeft = drag.startScrollLeft - distance;
-  };
-
-  const handleCategoryPointerEnd = (event) => {
-    const track = categoryTrackRef.current;
-    const drag = categoryDragRef.current;
-
-    if (track?.hasPointerCapture?.(event.pointerId)) {
-      track.releasePointerCapture(event.pointerId);
-    }
-
-    if (drag.pointerId === event.pointerId) {
-      drag.pointerId = null;
-    }
-
-    setIsCategorySliderPaused(false);
-
-    if (drag.moved) {
-      window.setTimeout(() => {
-        categoryDragRef.current.moved = false;
-      }, 0);
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      scrollToPreviousCategory();
     }
   };
-
-  const handleCategoryClickCapture = (event) => {
-    if (!categoryDragRef.current.moved) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-    categoryDragRef.current.moved = false;
-  };
-
-  const handleCategoryManualScrollIntent = () => {
-    isProgrammaticCategoryScrollRef.current = false;
-    programmaticCategoryTargetRef.current = null;
-    resetCategorySliderTimer();
-  };
-
-  useEffect(() => {
-    const track = categoryTrackRef.current;
-
-    if (!track || !("onscrollend" in track)) return undefined;
-
-    const handleScrollEnd = () => {
-      settleCategoryScroll({ fromScrollEnd: true });
-    };
-
-    track.addEventListener("scrollend", handleScrollEnd);
-
-    return () => {
-      track.removeEventListener("scrollend", handleScrollEnd);
-    };
-  }, [settleCategoryScroll, visibleCategories.length]);
 
   return (
     <>
@@ -626,42 +421,34 @@ const Home = () => {
 
               <div className="w-full min-w-0 max-w-[calc(100vw-2.5rem)] sm:max-w-[calc(100vw-3rem)] lg:hidden">
                 <div
-                  ref={categoryTrackRef}
-                  className="davinto-category-carousel relative flex w-full max-w-full flex-nowrap snap-x snap-mandatory gap-4 overflow-x-auto"
+                  ref={categoryViewportRef}
+                  className="davinto-category-carousel relative w-full max-w-full overflow-hidden touch-pan-y"
                   dir="ltr"
                   aria-label={t("categories.heading")}
-                  onScroll={handleCategoryTrackScroll}
-                  onWheel={handleCategoryManualScrollIntent}
-                  onKeyDown={handleCategoryManualScrollIntent}
-                  onPointerDown={handleCategoryPointerDown}
-                  onPointerMove={handleCategoryPointerMove}
-                  onPointerUp={handleCategoryPointerEnd}
-                  onPointerCancel={handleCategoryPointerEnd}
-                  onPointerLeave={(event) => {
-                    if (categoryDragRef.current.pointerId === event.pointerId) {
-                      handleCategoryPointerEnd(event);
-                    }
-                  }}
-                  onClickCapture={handleCategoryClickCapture}
+                  style={{ touchAction: "pan-y" }}
+                  onKeyDown={handleCategoryViewportKeyDown}
                 >
-                  {visibleCategories.map((category) => (
-                    <EditorialCategoryCard
-                      key={category._id || category.slug}
-                      category={category}
-                      label={t("categories.cardLabel")}
-                      cta={t("categories.cardCta")}
-                      isCarouselCard
-                      className="w-[82vw] flex-none shrink-0 snap-start sm:w-[76vw]"
-                      cardClassName="aspect-[4/5] min-h-0"
-                      style={{
-                        direction: language === "ar" ? "rtl" : "ltr",
-                      }}
-                    />
-                  ))}
-                  <div
-                    className="w-[18vw] flex-none shrink-0 sm:w-[24vw]"
-                    aria-hidden="true"
-                  />
+                  <div className="flex touch-pan-y gap-4">
+                    {visibleCategories.map((category) => (
+                      <div
+                        key={category._id || category.slug}
+                        className="w-[82vw] flex-none shrink-0 sm:w-[76vw]"
+                        data-home-category-slide="true"
+                      >
+                        <EditorialCategoryCard
+                          category={category}
+                          label={t("categories.cardLabel")}
+                          cta={t("categories.cardCta")}
+                          isCarouselCard
+                          className="w-full"
+                          cardClassName="aspect-[4/5] min-h-0"
+                          style={{
+                            direction: language === "ar" ? "rtl" : "ltr",
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 {visibleCategories.length > 1 && (
@@ -672,7 +459,7 @@ const Home = () => {
                   >
                     <button
                       type="button"
-                      onClick={() => handleCategorySlideChange("previous")}
+                      onClick={scrollToPreviousCategory}
                       className="flex h-10 w-10 items-center justify-center rounded-full border border-[#f5f0e8]/24 bg-[#050505]/12 text-[#f5f0e8] transition hover:border-[#c7a852] hover:bg-[#050505] hover:text-[#c7a852]"
                       aria-label={t("common:previous")}
                     >
@@ -688,7 +475,7 @@ const Home = () => {
 
                     <button
                       type="button"
-                      onClick={() => handleCategorySlideChange("next")}
+                      onClick={scrollToNextCategory}
                       className="flex h-10 w-10 items-center justify-center rounded-full border border-[#f5f0e8]/24 bg-[#050505]/12 text-[#f5f0e8] transition hover:border-[#c7a852] hover:bg-[#050505] hover:text-[#c7a852]"
                       aria-label={t("common:next")}
                     >

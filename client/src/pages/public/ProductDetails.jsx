@@ -45,11 +45,6 @@ const getActiveSizes = (color) => {
   return color.sizes.filter((size) => size.isActive !== false);
 };
 
-const getFirstAvailableSize = (color) => {
-  const sizes = getActiveSizes(color);
-  return sizes.find((size) => Number(size.stock || 0) > 0) || sizes[0] || null;
-};
-
 const hasProductAvailableStock = (product) => {
   return getActiveColors(product).some((color) =>
     getActiveSizes(color).some((size) => Number(size.stock || 0) > 0)
@@ -177,7 +172,10 @@ const ProductDetails = () => {
   });
 
   const [selectedColorId, setSelectedColorId] = useState("");
-  const [selectedSizeLabel, setSelectedSizeLabel] = useState("");
+  const [selectedSizeSelection, setSelectedSizeSelection] = useState({
+    productSlug: "",
+    label: "",
+  });
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [touchStartX, setTouchStartX] = useState(null);
   const [touchStartY, setTouchStartY] = useState(null);
@@ -185,6 +183,10 @@ const ProductDetails = () => {
   const [cartMessage, setCartMessage] = useState("");
   const [openInfoSection, setOpenInfoSection] = useState("");
   const [shareMessage, setShareMessage] = useState("");
+  const selectedSizeLabel =
+    selectedSizeSelection.productSlug === slug
+      ? selectedSizeSelection.label
+      : "";
 
   const selectedColor = useMemo(() => {
     return (
@@ -205,12 +207,8 @@ const ProductDetails = () => {
   );
 
   const selectedSize = useMemo(() => {
-    return (
-      selectedSizes.find((size) => size.label === selectedSizeLabel) ||
-      getFirstAvailableSize(selectedColor) ||
-      null
-    );
-  }, [selectedColor, selectedSizes, selectedSizeLabel]);
+    return selectedSizes.find((size) => size.label === selectedSizeLabel) || null;
+  }, [selectedSizes, selectedSizeLabel]);
 
   const images = useMemo(() => {
     return getProductGalleryImages(product, selectedColor);
@@ -258,7 +256,9 @@ const ProductDetails = () => {
           size: selectedSize.label,
         })
       : "",
-    isInStock
+    !selectedSize
+      ? t("catalog:product.chooseSizeFirst")
+      : isInStock
       ? t("catalog:product.detailStockAvailable", {
           count: selectedStock,
         })
@@ -299,10 +299,9 @@ const ProductDetails = () => {
 
   const handleColorChange = (color) => {
     const colorKey = color._id || color.slug || color.name;
-    const firstAvailableSize = getFirstAvailableSize(color);
 
     setSelectedColorId(colorKey);
-    setSelectedSizeLabel(firstAvailableSize?.label || "");
+    setSelectedSizeSelection({ productSlug: "", label: "" });
     setSelectedImageIndex(0);
     setQuantity(1);
     setCartMessage("");
@@ -706,19 +705,25 @@ const ProductDetails = () => {
                           <button
                             key={size.label}
                             type="button"
-                            disabled={disabled}
                             aria-pressed={isSelected}
                             aria-label={t("catalog:product.selectSizeName", {
                               size: size.label,
                             })}
                             onClick={() => {
-                              setSelectedSizeLabel(size.label);
+                              setSelectedSizeSelection({
+                                productSlug: slug || "",
+                                label: size.label,
+                              });
                               setQuantity(1);
                               setCartMessage("");
                             }}
-                            className={`min-h-12 min-w-14 border px-4 text-xs font-black uppercase tracking-[0.16em] transition disabled:cursor-not-allowed disabled:opacity-25 ${
+                            className={`min-h-12 min-w-14 border px-4 text-xs font-black uppercase tracking-[0.16em] transition ${
                               isSelected
-                                ? "border-[#f5f0e8] bg-[#f5f0e8] text-[#1c1917]"
+                                ? disabled
+                                  ? "border-[#b8585d] bg-[#882c30]/28 text-[#f5d7d8]"
+                                  : "border-[#f5f0e8] bg-[#f5f0e8] text-[#1c1917]"
+                                : disabled
+                                  ? "border-[#f5f0e8]/10 text-[#f5f0e8]/32 hover:border-[#b8585d]/55 hover:text-[#f5d7d8]"
                                 : "border-[#f5f0e8]/14 text-[#f5f0e8]/58 hover:border-[#c7a852] hover:text-[#f5f0e8]"
                             }`}
                           >
@@ -736,10 +741,16 @@ const ProductDetails = () => {
                       </p>
                       <p
                         className={`mt-2 text-sm font-bold ${
-                          isInStock ? "text-[#c7a852]" : "text-[#e8a3a6]"
+                          !selectedSize
+                            ? "text-[#f5f0e8]/62"
+                            : isInStock
+                              ? "text-[#c7a852]"
+                              : "text-[#e8a3a6]"
                         }`}
                       >
-                        {isInStock
+                        {!selectedSize
+                          ? t("catalog:product.chooseSizeFirst")
+                          : isInStock
                           ? t("catalog:product.stockAvailable", {
                               count: selectedStock,
                             })
@@ -779,13 +790,13 @@ const ProductDetails = () => {
                   <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
                     <Button
                       className="w-full gap-2"
-                      disabled={!isInStock}
+                      disabled={!selectedColor || !selectedSize || !isInStock}
                       onClick={handleAddToCart}
                     >
                       <ShoppingBag size={16} />
-                      {isInStock
-                        ? t("catalog:product.addToCart")
-                        : t("catalog:product.outOfStock")}
+                      {selectedSize && !isInStock
+                        ? t("catalog:product.outOfStock")
+                        : t("catalog:product.addToCart")}
                     </Button>
                     <Link to="/cart">
                       <Button variant="secondary" className="w-full">

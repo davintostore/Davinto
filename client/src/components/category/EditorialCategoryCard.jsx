@@ -42,13 +42,21 @@ const EditorialCategoryCard = ({
               src={visual.image}
               alt={visual.alt}
               onError={hideBrokenImage}
-              className="absolute inset-0 h-full w-full object-cover opacity-90 transition duration-700 group-hover:scale-[1.035]"
+              draggable={false}
+              onDragStart={(event) => event.preventDefault()}
+              className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover opacity-90"
               loading="lazy"
             />
           ) : (
             <div className="absolute inset-0 bg-[#28231f]" />
           )}
-
+          <span
+            className="absolute bottom-5 left-1/2 inline-flex min-h-11 min-w-[9.5rem] -translate-x-1/2 items-center justify-center gap-2 whitespace-nowrap border border-[#c7a852]/55 bg-[#0b0a09]/88 px-5 py-3 text-[0.64rem] font-black uppercase tracking-[0.1em] text-[#f5f0e8] shadow-xl backdrop-blur-sm transition group-hover:border-[#c7a852]/85 group-hover:bg-[#110f0e]/96 group-focus-visible:border-[#c7a852]/85 group-focus-visible:bg-[#110f0e]/96"
+            aria-hidden="true"
+          >
+            {cta}
+            <ArrowUpRight size={15} aria-hidden="true" />
+          </span>
         </div>
 
         <h3 className="mt-4 break-words font-serif text-2xl leading-tight text-[#f5f0e8] transition group-hover:text-[#c7a852] group-focus-visible:text-[#c7a852] sm:text-3xl">
