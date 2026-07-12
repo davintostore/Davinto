@@ -8,6 +8,8 @@ import Autoplay from "embla-carousel-autoplay";
 
 import EditorialCategoryCard from "../../components/category/EditorialCategoryCard";
 import ProductCard from "../../components/product/ProductCard";
+import RevealContent from "../../components/animation/RevealContent";
+import SplitText from "../../components/animation/SplitText";
 import SpinningDavintoLogo from "../../components/home/SpinningDavintoLogo";
 import Container from "../../components/ui/Container";
 import Button from "../../components/ui/Button";
@@ -173,10 +175,6 @@ const Home = () => {
   const { t, i18n } = useTranslation(["home", "common"]);
   const language = i18n.resolvedLanguage === "ar" ? "ar" : "en";
   const [statementRevealRef, statementRevealClass] = useScrollReveal();
-  const [categoriesTextRef, categoriesTextClass] = useScrollReveal();
-  const [categoriesGridRef, categoriesGridClass] = useScrollReveal();
-  const [bestSellerHeaderRef, bestSellerHeaderClass] = useScrollReveal();
-  const [ctaRevealRef, ctaRevealClass] = useScrollReveal();
 
   // SEO
   useSeo({
@@ -357,9 +355,14 @@ const Home = () => {
               {t("hero.label")}
             </SectionLabel>
 
-            <h1 className="editorial-heading display-heading hero-display-heading mx-auto max-w-5xl text-[#d6b35d]">
-              {t("hero.title")}
-            </h1>
+            <SplitText
+              as="h1"
+              text={t("hero.title")}
+              splitType="chars"
+              className="editorial-heading display-heading hero-display-heading mx-auto max-w-5xl text-[#d6b35d]"
+              from={{ opacity: 0, y: 32 }}
+              duration={0.92}
+            />
 
             <div className="mt-8 flex w-full max-w-4xl justify-center pt-6">
 
@@ -387,35 +390,36 @@ const Home = () => {
       <section className="border-b border-[#c7a852]/25 bg-[#882c30] py-14 sm:py-20">
         <Container>
           <div className="grid gap-10 lg:grid-cols-[minmax(13rem,0.65fr)_minmax(0,1.75fr)] lg:items-center">
-            <div
-              ref={categoriesTextRef}
-              className={`max-w-xl ${categoriesTextClass}`}
-            >
+            <div className="max-w-xl">
               <StickerLabel>{t("categories.label")}</StickerLabel>
-              <h2 className="editorial-heading section-display-title mt-4 text-[#f5f0e8]">
-                {t("categories.heading")}
-              </h2>
+              <SplitText
+                as="h2"
+                text={t("categories.heading")}
+                splitType="words"
+                className="editorial-heading section-display-title mt-4 text-[#f5f0e8]"
+              />
               <p className="mt-5 max-w-sm text-sm leading-7 text-[#f5f0e8]/64">
                 {t("categories.description")}
               </p>
             </div>
 
             <div className="max-lg:min-w-0">
-              <div
-                ref={categoriesGridRef}
-                className={`hidden gap-4 lg:grid lg:grid-cols-3 ${categoriesGridClass}`}
-              >
+              <div className="hidden gap-4 lg:grid lg:grid-cols-3">
                 {visibleCategories.map((category, index) => (
-                  <EditorialCategoryCard
+                  <RevealContent
                     key={category._id || category.slug}
-                    category={category}
-                    label={t("categories.cardLabel")}
-                    cta={t("categories.cardCta")}
-                    isHomeDesktopCard
-                    className="davinto-reveal-item"
-                    cardClassName="min-h-[20rem]"
-                    style={{ "--reveal-delay": `${Math.min(index, 5) * 55}ms` }}
-                  />
+                    delay={Math.min(index, 5) * 0.08}
+                    duration={0.74}
+                    distance={24}
+                  >
+                    <EditorialCategoryCard
+                      category={category}
+                      label={t("categories.cardLabel")}
+                      cta={t("categories.cardCta")}
+                      isHomeDesktopCard
+                      cardClassName="min-h-[20rem]"
+                    />
+                  </RevealContent>
                 ))}
               </div>
 
@@ -460,7 +464,7 @@ const Home = () => {
                     <button
                       type="button"
                       onClick={scrollToPreviousCategory}
-                      className="flex h-10 w-10 items-center justify-center rounded-full border border-[#f5f0e8]/24 bg-[#050505]/12 text-[#f5f0e8] transition hover:border-[#c7a852] hover:bg-[#050505] hover:text-[#c7a852]"
+                      className="davinto-press-icon flex h-10 w-10 items-center justify-center rounded-full border border-[#f5f0e8]/24 bg-[#050505]/12 text-[#f5f0e8] transition hover:border-[#c7a852] hover:bg-[#050505] hover:text-[#c7a852]"
                       aria-label={t("common:previous")}
                     >
                       <ChevronLeft size={19} aria-hidden="true" />
@@ -476,7 +480,7 @@ const Home = () => {
                     <button
                       type="button"
                       onClick={scrollToNextCategory}
-                      className="flex h-10 w-10 items-center justify-center rounded-full border border-[#f5f0e8]/24 bg-[#050505]/12 text-[#f5f0e8] transition hover:border-[#c7a852] hover:bg-[#050505] hover:text-[#c7a852]"
+                      className="davinto-press-icon flex h-10 w-10 items-center justify-center rounded-full border border-[#f5f0e8]/24 bg-[#050505]/12 text-[#f5f0e8] transition hover:border-[#c7a852] hover:bg-[#050505] hover:text-[#c7a852]"
                       aria-label={t("common:next")}
                     >
                       <ChevronRight size={19} aria-hidden="true" />
@@ -507,23 +511,27 @@ const Home = () => {
 
       <section className="fashion-section bg-[#050505]">
         <Container>
-          <div
-            ref={bestSellerHeaderRef}
-            className={`mb-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between ${bestSellerHeaderClass}`}
-          >
+          <div className="mb-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <StickerLabel>{t("bestSeller.label")}</StickerLabel>
-              <h2 className="editorial-heading section-display-title mt-4">
-                {t("bestSeller.title")}
-              </h2>
+              <SplitText
+                as="h2"
+                text={t("bestSeller.title")}
+                splitType="words"
+                className="editorial-heading section-display-title mt-4"
+              />
             </div>
           </div>
 
           {products.length > 0 ? (
             <>
               <div className="product-grid">
-                {products.map((product) => (
-                  <ProductCard key={product._id} product={product} />
+                {products.map((product, index) => (
+                  <ProductCard
+                    key={product._id}
+                    product={product}
+                    revealDelay={Math.min(index, 3) * 0.08}
+                  />
                 ))}
               </div>
 
@@ -551,13 +559,17 @@ const Home = () => {
 
       <section className="border-t border-[#c7a852]/25 bg-[#f5f0e8] py-12 text-[#1c1917] sm:py-16">
         <Container>
-          <div ref={ctaRevealRef} className={ctaRevealClass}>
+          <div>
             <div className="mx-auto max-w-5xl">
               <div className="mx-auto max-w-4xl text-left">
                 <StickerLabel>{t("cta.label")}</StickerLabel>
-                <h2 className="editorial-heading davinto-cta-heading mt-4 text-5xl sm:text-7xl lg:text-8xl">
-                  {t("cta.title")}
-                </h2>
+                <SplitText
+                  as="h2"
+                  text={t("cta.title")}
+                  splitType="words"
+                  className="editorial-heading davinto-cta-heading mt-4 text-5xl sm:text-7xl lg:text-8xl"
+                  from={{ opacity: 0, y: 30 }}
+                />
               </div>
               <div className="mt-8 text-center">
                 <Link to="/track-order">

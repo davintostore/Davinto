@@ -446,7 +446,7 @@ const PublicLayout = () => {
               ref={mobileMenuTriggerRef}
               type="button"
               onClick={() => setIsMenuOpen((current) => !current)}
-              className="flex h-11 w-11 items-center justify-center text-[#f5f0e8] transition hover:text-[#c7a852] lg:hidden"
+              className="davinto-press-icon flex h-11 w-11 items-center justify-center text-[#f5f0e8] transition hover:text-[#c7a852] lg:hidden"
               aria-label={
                 isMenuOpen ? t("closeNavigation") : t("openNavigation")
               }
@@ -459,7 +459,7 @@ const PublicLayout = () => {
             <button
               type="button"
               onClick={openSearchDrawer}
-              className="flex h-11 w-11 items-center justify-center text-[#f5f0e8] transition hover:text-[#c7a852] lg:hidden"
+              className="davinto-press-icon flex h-11 w-11 items-center justify-center text-[#f5f0e8] transition hover:text-[#c7a852] lg:hidden"
               aria-label={t("searchAria")}
             >
               <Search size={25} />
@@ -577,7 +577,7 @@ const PublicLayout = () => {
             <button
               type="button"
               onClick={openSearchDrawer}
-              className="hidden h-11 w-11 items-center justify-center text-[#f5f0e8]/76 transition hover:text-[#c7a852] lg:flex"
+              className="davinto-press-icon hidden h-11 w-11 items-center justify-center text-[#f5f0e8]/76 transition hover:text-[#c7a852] lg:flex"
               aria-label={t("searchAria")}
             >
               <Search size={21} />
@@ -587,7 +587,7 @@ const PublicLayout = () => {
               <Link
                 to={accountPath}
                 onClick={() => setIsMenuOpen(false)}
-                className="hidden h-11 w-11 items-center justify-center text-[#f5f0e8]/76 transition hover:text-[#c7a852] lg:flex"
+                className="davinto-press-icon hidden h-11 w-11 items-center justify-center text-[#f5f0e8]/76 transition hover:text-[#c7a852] lg:flex"
                 aria-label={accountLabel}
               >
                 <UserRound size={25} className="lg:h-[21px] lg:w-[21px]" />
@@ -598,7 +598,7 @@ const PublicLayout = () => {
               <Link
                 to="/admin"
                 onClick={() => setIsMenuOpen(false)}
-                className="hidden h-11 items-center gap-2 border border-[#c7a852]/45 px-4 text-[0.62rem] font-black uppercase tracking-[0.2em] text-[#c7a852] transition hover:border-[#c7a852] hover:text-[#f5f0e8] lg:flex"
+                className="davinto-press-gold hidden h-11 items-center gap-2 border border-[#c7a852]/45 px-4 text-[0.62rem] font-black uppercase tracking-[0.2em] text-[#c7a852] transition hover:border-[#c7a852] hover:text-[#f5f0e8] lg:flex"
               >
                 <LayoutDashboard size={15} />
                 {t("dashboard")}
@@ -611,7 +611,7 @@ const PublicLayout = () => {
                 setIsMenuOpen(false);
                 openCartDrawer();
               }}
-              className="relative flex h-11 w-11 items-center justify-center text-[#f5f0e8]/76 transition hover:text-[#c7a852] lg:w-auto lg:gap-2 lg:border lg:border-[#f5f0e8]/12 lg:px-4 lg:text-[0.62rem] lg:font-black lg:uppercase lg:tracking-[0.14em] lg:hover:border-[#c7a852]"
+              className="davinto-press-icon relative flex h-11 w-11 items-center justify-center text-[#f5f0e8]/76 transition hover:text-[#c7a852] lg:w-auto lg:gap-2 lg:border lg:border-[#f5f0e8]/12 lg:px-4 lg:text-[0.62rem] lg:font-black lg:uppercase lg:tracking-[0.14em] lg:hover:border-[#c7a852]"
               aria-label={t("cartLabel", { count: cartCount })}
             >
               <ShoppingCart size={26} className="lg:h-4 lg:w-4" />
@@ -627,7 +627,7 @@ const PublicLayout = () => {
               <button
                 type="button"
                 onClick={handleCustomerSignout}
-                className="hidden h-11 items-center gap-2 border border-[#f5f0e8]/15 px-4 text-[0.62rem] font-black uppercase tracking-[0.2em] text-[#f5f0e8]/65 transition hover:border-[#c7a852] hover:text-[#f5f0e8] lg:flex"
+                className="davinto-press-danger hidden h-11 items-center gap-2 border border-[#f5f0e8]/15 px-4 text-[0.62rem] font-black uppercase tracking-[0.2em] text-[#f5f0e8]/65 transition hover:border-[#c7a852] hover:text-[#f5f0e8] lg:flex"
               >
                 <LogOut size={15} />
                 {t("signOut")}
@@ -675,7 +675,7 @@ const PublicLayout = () => {
                   onClick={() =>
                     setIsMobileCategoriesOpen((current) => !current)
                   }
-                  className={`flex items-center justify-between border-b border-[#f5f0e8]/10 py-4 text-sm font-black uppercase tracking-[0.2em] ${
+                  className={`davinto-press-muted flex items-center justify-between border-b border-[#f5f0e8]/10 py-4 text-sm font-black uppercase tracking-[0.2em] ${
                     isCategoriesNavActive ? "text-[#c7a852]" : "text-[#f5f0e8]"
                   }`}
                 >
@@ -790,7 +790,7 @@ const PublicLayout = () => {
                 <button
                   type="button"
                   onClick={handleCustomerSignout}
-                  className="mt-5 flex w-full items-center justify-center gap-2 border border-[#f5f0e8]/15 px-5 py-3 text-[0.64rem] font-black uppercase tracking-[0.22em] text-[#f5f0e8]/70 transition hover:border-[#c7a852] hover:text-[#f5f0e8]"
+                  className="davinto-press-danger mt-5 flex w-full items-center justify-center gap-2 border border-[#f5f0e8]/15 px-5 py-3 text-[0.64rem] font-black uppercase tracking-[0.22em] text-[#f5f0e8]/70 transition hover:border-[#c7a852] hover:text-[#f5f0e8]"
                 >
                   <LogOut size={15} />
                   {t("signOut")} {customer?.name ? `/ ${customer.name}` : ""}

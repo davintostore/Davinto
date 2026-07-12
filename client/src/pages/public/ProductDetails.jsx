@@ -762,7 +762,7 @@ const ProductDetails = () => {
                       <button
                         type="button"
                         onClick={decreaseQuantity}
-                        className="flex h-full w-12 items-center justify-center text-[#f5f0e8]/65 transition hover:bg-[#f5f0e8]/8"
+                        className="davinto-press-icon flex h-full w-12 items-center justify-center text-[#f5f0e8]/65 transition hover:bg-[#f5f0e8]/8"
                         aria-label={t("catalog:product.decreaseQuantity")}
                       >
                         <Minus size={15} />
@@ -773,7 +773,7 @@ const ProductDetails = () => {
                       <button
                         type="button"
                         onClick={increaseQuantity}
-                        className="flex h-full w-12 items-center justify-center text-[#f5f0e8]/65 transition hover:bg-[#f5f0e8]/8"
+                        className="davinto-press-icon flex h-full w-12 items-center justify-center text-[#f5f0e8]/65 transition hover:bg-[#f5f0e8]/8"
                         aria-label={t("catalog:product.increaseQuantity")}
                       >
                         <Plus size={15} />
@@ -908,8 +908,12 @@ const ProductDetails = () => {
               </div>
 
               <div className="product-grid">
-                {relatedProducts.map((relatedProduct) => (
-                  <ProductCard key={relatedProduct._id} product={relatedProduct} />
+                {relatedProducts.map((relatedProduct, index) => (
+                  <ProductCard
+                    key={relatedProduct._id}
+                    product={relatedProduct}
+                    revealDelay={Math.min(index, 3) * 0.08}
+                  />
                 ))}
               </div>
             </div>

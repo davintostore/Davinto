@@ -121,8 +121,8 @@ const CartDrawer = () => {
         onClick={closeCartDrawer}
       />
 
-      <aside className="cart-drawer-panel absolute inset-y-0 right-0 flex w-[min(86vw,25rem)] flex-col border-l border-[#c7a852]/28 bg-[#0b0a09] shadow-2xl sm:w-full sm:max-w-[28rem]">
-        <div className="flex h-[4.5rem] items-center justify-between gap-4 border-b border-[#f5f0e8]/12 px-6">
+      <aside className="cart-drawer-panel absolute inset-y-0 right-0 flex h-[100dvh] w-[min(86vw,25rem)] flex-col overflow-hidden border-l border-[#c7a852]/28 bg-[#0b0a09] shadow-2xl sm:w-full sm:max-w-[28rem]">
+        <div className="flex h-[4.5rem] shrink-0 items-center justify-between gap-4 border-b border-[#f5f0e8]/12 px-6">
           <div>
             <p className="text-[0.56rem] font-black uppercase tracking-[0.26em] text-[#c7a852]">
               {t("cart:totalItems", { count: cartCount })}
@@ -138,7 +138,7 @@ const CartDrawer = () => {
           <button
             type="button"
             onClick={closeCartDrawer}
-            className="flex h-11 w-11 items-center justify-center border border-[#f5f0e8]/14 text-[#f5f0e8]/70 transition hover:border-[#c7a852] hover:text-[#f5f0e8]"
+            className="davinto-press-icon flex h-11 w-11 items-center justify-center border border-[#f5f0e8]/14 text-[#f5f0e8]/70 transition hover:border-[#c7a852] hover:text-[#f5f0e8]"
             aria-label={t("cart:closeDrawer")}
             data-autofocus
           >
@@ -147,7 +147,7 @@ const CartDrawer = () => {
         </div>
 
         {items.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center px-7 text-center">
+          <div className="cart-drawer-scroll flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-7 py-8 text-center">
             <p className="text-[0.62rem] font-black uppercase tracking-[0.26em] text-[#c7a852]">
               {t("cart:emptyLabel")}
             </p>
@@ -162,8 +162,8 @@ const CartDrawer = () => {
             </Link>
           </div>
         ) : (
-          <>
-            <div className="flex-1 overflow-y-auto px-6 py-4">
+          <div className="cart-drawer-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            <div className="px-6 py-4">
               {isQuoteError && (
                 <div className="mb-4 border border-[#b8585d]/45 bg-[#882c30]/18 px-4 py-3 text-xs text-[#f5d7d8]">
                   {quoteError?.friendlyMessage ||
@@ -278,7 +278,7 @@ const CartDrawer = () => {
                             <button
                               type="button"
                               onClick={() => decreaseQuantity(itemKey)}
-                              className="flex h-full w-9 items-center justify-center text-[#f5f0e8]/65 transition hover:bg-[#f5f0e8]/8"
+                              className="davinto-press-icon flex h-full w-9 items-center justify-center text-[#f5f0e8]/65 transition hover:bg-[#f5f0e8]/8"
                               aria-label={t("cart:decreaseItem", {
                                 name: item.name,
                               })}
@@ -292,7 +292,7 @@ const CartDrawer = () => {
                               type="button"
                               onClick={() => increaseQuantity(itemKey)}
                               disabled={!canIncrease}
-                              className="flex h-full w-9 items-center justify-center text-[#f5f0e8]/65 transition hover:bg-[#f5f0e8]/8 disabled:opacity-25"
+                              className="davinto-press-icon flex h-full w-9 items-center justify-center text-[#f5f0e8]/65 transition hover:bg-[#f5f0e8]/8 disabled:pointer-events-none disabled:opacity-25"
                               aria-label={t("cart:increaseItem", {
                                 name: item.name,
                               })}
@@ -304,7 +304,7 @@ const CartDrawer = () => {
                           <button
                             type="button"
                             onClick={() => removeItem(itemKey)}
-                            className="flex items-center gap-1.5 text-[0.55rem] font-black uppercase tracking-[0.16em] text-[#e8a3a6] transition hover:text-[#f5d7d8]"
+                            className="davinto-press-danger flex items-center gap-1.5 px-1 py-1 text-[0.55rem] font-black uppercase tracking-[0.16em] text-[#e8a3a6] transition hover:text-[#f5d7d8]"
                             aria-label={t("cart:removeItem", {
                               name: item.name,
                             })}
@@ -320,7 +320,7 @@ const CartDrawer = () => {
               </div>
             </div>
 
-            <div className="border-t border-[#c7a852]/20 bg-[#110f0e] px-6 py-5">
+            <div className="cart-drawer-scroll__summary border-t border-[#c7a852]/20 bg-[#110f0e] px-6 pt-5">
               {(isQuotePending || isQuoteRefreshing) && (
                 <p className="mb-3 text-xs text-[#f5f0e8]/45">
                   {isQuotePending
@@ -438,7 +438,7 @@ const CartDrawer = () => {
                   <button
                     type="button"
                     onClick={() => refetchQuote()}
-                    className="text-[0.58rem] font-black uppercase tracking-[0.14em] text-[#c7a852] transition hover:text-[#f5f0e8]"
+                    className="davinto-press-muted px-2 py-1 text-[0.58rem] font-black uppercase tracking-[0.14em] text-[#c7a852] transition hover:text-[#f5f0e8]"
                   >
                     {t("common:tryAgain")}
                   </button>
@@ -446,13 +446,13 @@ const CartDrawer = () => {
                 <button
                   type="button"
                   onClick={closeCartDrawer}
-                  className="text-[0.6rem] font-black uppercase tracking-[0.14em] text-[#f5f0e8]/52 transition hover:text-[#c7a852]"
+                  className="davinto-press-muted px-2 py-2 text-[0.6rem] font-black uppercase tracking-[0.14em] text-[#f5f0e8]/52 transition hover:text-[#c7a852]"
                 >
                   {t("cart:keepShopping")}
                 </button>
               </div>
             </div>
-          </>
+          </div>
         )}
       </aside>
     </div>

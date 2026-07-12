@@ -294,7 +294,7 @@ const Cart = () => {
                                   <button
                                     type="button"
                                     onClick={() => decreaseQuantity(itemKey)}
-                                    className="flex h-full w-9 items-center justify-center transition hover:bg-[#f5f0e8]/8"
+                                    className="davinto-press-icon flex h-full w-9 items-center justify-center transition hover:bg-[#f5f0e8]/8"
                                     aria-label={t("cart:decreaseItem", {
                                       name: item.name,
                                     })}
@@ -308,7 +308,7 @@ const Cart = () => {
                                     type="button"
                                     onClick={() => increaseQuantity(itemKey)}
                                     disabled={!canIncrease}
-                                    className="flex h-full w-9 items-center justify-center transition hover:bg-[#f5f0e8]/8 disabled:opacity-25"
+                                    className="davinto-press-icon flex h-full w-9 items-center justify-center transition hover:bg-[#f5f0e8]/8 disabled:pointer-events-none disabled:opacity-25"
                                     aria-label={t("cart:increaseItem", {
                                       name: item.name,
                                     })}
@@ -324,7 +324,7 @@ const Cart = () => {
                               <button
                                 type="button"
                                 onClick={() => removeItem(itemKey)}
-                                className="flex h-9 w-9 items-center justify-center border border-[#f5f0e8]/12 text-[#e8a3a6] transition hover:border-[#b8585d]/60 hover:text-[#f5d7d8]"
+                                className="davinto-press-danger flex h-9 w-9 items-center justify-center border border-[#f5f0e8]/12 text-[#e8a3a6] transition hover:border-[#b8585d]/60 hover:text-[#f5d7d8]"
                                 aria-label={t("cart:removeItem", {
                                   name: item.name,
                                 })}
@@ -360,7 +360,7 @@ const Cart = () => {
                             <button
                               type="button"
                               onClick={() => decreaseQuantity(itemKey)}
-                              className="flex h-full w-9 items-center justify-center transition hover:bg-[#f5f0e8]/8"
+                              className="davinto-press-icon flex h-full w-9 items-center justify-center transition hover:bg-[#f5f0e8]/8"
                               aria-label={t("cart:decreaseItem", {
                                 name: item.name,
                               })}
@@ -374,7 +374,7 @@ const Cart = () => {
                               type="button"
                               onClick={() => increaseQuantity(itemKey)}
                               disabled={!canIncrease}
-                              className="flex h-full w-9 items-center justify-center transition hover:bg-[#f5f0e8]/8 disabled:opacity-25"
+                              className="davinto-press-icon flex h-full w-9 items-center justify-center transition hover:bg-[#f5f0e8]/8 disabled:pointer-events-none disabled:opacity-25"
                               aria-label={t("cart:increaseItem", {
                                 name: item.name,
                               })}
@@ -390,7 +390,7 @@ const Cart = () => {
                         <button
                           type="button"
                           onClick={() => removeItem(itemKey)}
-                          className="hidden h-9 w-9 items-center justify-center justify-self-end border border-[#f5f0e8]/12 text-[#e8a3a6] transition hover:border-[#b8585d]/60 hover:text-[#f5d7d8] md:flex"
+                          className="davinto-press-danger hidden h-9 w-9 items-center justify-center justify-self-end border border-[#f5f0e8]/12 text-[#e8a3a6] transition hover:border-[#b8585d]/60 hover:text-[#f5d7d8] md:flex"
                           aria-label={t("cart:removeItem", {
                             name: item.name,
                           })}
@@ -406,7 +406,7 @@ const Cart = () => {
                   <button
                     type="button"
                     onClick={() => setIsClearConfirmOpen(true)}
-                    className="text-[0.58rem] font-black uppercase tracking-[0.18em] text-[#e8a3a6]/80 transition hover:text-[#f5d7d8]"
+                    className="davinto-press-danger px-2 py-1 text-[0.58rem] font-black uppercase tracking-[0.18em] text-[#e8a3a6]/80 transition hover:text-[#f5d7d8]"
                   >
                     {t("cart:clear")}
                   </button>

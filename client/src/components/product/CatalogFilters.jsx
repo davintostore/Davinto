@@ -102,7 +102,7 @@ const AccordionSection = ({ title, children, isOpen, onToggle }) => {
     <section className="border-b border-[#f5f0e8]/12 py-4">
       <button
         type="button"
-        className="flex w-full items-center justify-between gap-4 text-left text-[0.7rem] font-black uppercase tracking-[0.18em] text-[#c7a852]"
+        className="davinto-press-muted flex w-full items-center justify-between gap-4 px-1 py-1 text-left text-[0.7rem] font-black uppercase tracking-[0.18em] text-[#c7a852]"
         aria-expanded={isOpen}
         onClick={onToggle}
       >
@@ -393,7 +393,7 @@ const CatalogFilters = ({
           <div
             ref={filterDrawerRef}
             id="catalog-filter-drawer"
-            className="fixed inset-0 z-[150]"
+            className="davinto-public-portal fixed inset-0 z-[150]"
             role="dialog"
             aria-modal="true"
             aria-labelledby="catalog-filter-title"
@@ -425,7 +425,7 @@ const CatalogFilters = ({
 
                 <button
                   type="button"
-                  className="flex h-10 w-10 items-center justify-center text-[#f5f0e8]/72 transition hover:text-[#c7a852]"
+                  className="davinto-press-icon flex h-10 w-10 items-center justify-center text-[#f5f0e8]/72 transition hover:text-[#c7a852]"
                   aria-label={t("filters.close")}
                   onClick={closeFilterDrawer}
                   data-autofocus
@@ -685,7 +685,7 @@ const CatalogFilters = ({
           <div className="flex gap-2">
             <button
               type="button"
-              className="inline-flex h-11 items-center gap-2 border border-[#f5f0e8]/18 px-4 text-[0.66rem] font-black uppercase tracking-[0.18em] text-[#f5f0e8] transition hover:border-[#c7a852]"
+              className="davinto-press-gold inline-flex h-11 items-center gap-2 border border-[#f5f0e8]/18 px-4 text-[0.66rem] font-black uppercase tracking-[0.18em] text-[#f5f0e8] transition hover:border-[#c7a852]"
               onClick={openFilterDrawer}
               aria-expanded={isFilterOpen}
               aria-controls="catalog-filter-drawer"
@@ -703,7 +703,7 @@ const CatalogFilters = ({
                 aria-expanded={isSortMenuOpen}
                 aria-haspopup="menu"
                 aria-controls="catalog-sort-menu"
-                className="inline-flex h-11 items-center border border-[#f5f0e8]/18 px-4 text-[0.66rem] font-black uppercase tracking-[0.18em] text-[#f5f0e8] transition hover:border-[#c7a852]"
+                className="davinto-press-gold inline-flex h-11 items-center border border-[#f5f0e8]/18 px-4 text-[0.66rem] font-black uppercase tracking-[0.18em] text-[#f5f0e8] transition hover:border-[#c7a852]"
                 onClick={toggleSortMenu}
               >
                 {t("shop.sort")}
@@ -718,7 +718,7 @@ const CatalogFilters = ({
                     <button
                       key={option.value}
                       type="button"
-                      className={`block w-full px-3 py-3 text-left text-xs font-bold uppercase tracking-[0.12em] transition ${
+                      className={`davinto-press-muted block w-full px-3 py-3 text-left text-xs font-bold uppercase tracking-[0.12em] transition ${
                         selectedSort.value === option.value
                           ? "bg-[#c7a852] text-[#1c1917]"
                           : "text-[#f5f0e8]/70 hover:bg-[#f5f0e8]/8 hover:text-[#f5f0e8]"

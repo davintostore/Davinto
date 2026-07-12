@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import Container from "./Container";
 import SectionLabel from "./SectionLabel";
+import SplitText from "../animation/SplitText";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 
@@ -124,10 +125,14 @@ const PageHeader = ({
   backgroundImage = "",
   backgroundVideo = null,
   showMeta = null,
+  animateTitle = true,
 }) => {
   const { t } = useTranslation("navigation");
   const location = useLocation();
   const isAdminPage = location.pathname.startsWith("/admin");
+  const isAccountPage = ["/account", "/my-orders"].includes(
+    location.pathname
+  );
   const shouldShowMeta = showMeta ?? isAdminPage;
   const backgroundClass =
     isAdminPage && !backgroundImage ? "bg-[#882c30]" : "bg-[#050505]";
@@ -173,9 +178,20 @@ const PageHeader = ({
             {label && <SectionLabel>{label}</SectionLabel>}
 
             <div className="max-w-5xl">
-              <h1 className="editorial-heading page-display-title text-[#f5f0e8]">
-                {title}
-              </h1>
+              {!isAdminPage && !isAccountPage && animateTitle ? (
+                <SplitText
+                  as="h1"
+                  text={title}
+                  splitType="chars"
+                  className="editorial-heading page-display-title text-[#f5f0e8]"
+                  from={{ opacity: 0, y: 28 }}
+                  duration={0.84}
+                />
+              ) : (
+                <h1 className="editorial-heading page-display-title text-[#f5f0e8]">
+                  {title}
+                </h1>
+              )}
 
               {description && (
                 <p className="mt-7 max-w-2xl text-base leading-8 text-[#f5f0e8]/72 sm:text-lg">

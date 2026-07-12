@@ -5,7 +5,7 @@ import { formatCurrency } from "../../utils/translatedLabels";
 import { getLocalizedProduct } from "../../utils/localizedContent";
 import { hideBrokenImage } from "../../utils/imageFallback";
 import { getProductGalleryImages } from "../../utils/resolveLocalImages";
-import useScrollReveal from "../../hooks/useScrollReveal";
+import RevealContent from "../animation/RevealContent";
 import useOverlayBackClose from "../../hooks/useOverlayBackClose";
 
 const QuickProductModal = lazy(() => import("./QuickProductModal"));
@@ -36,10 +36,9 @@ const getSimpleBadge = (badge = "", t) => {
   return badge;
 };
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, revealDelay = 0 }) => {
   const { t, i18n } = useTranslation(["common", "catalog"]);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
-  const [revealRef, revealClassName] = useScrollReveal();
   useOverlayBackClose({
     isOpen: isQuickViewOpen,
     onClose: () => setIsQuickViewOpen(false),
@@ -83,7 +82,14 @@ const ProductCard = ({ product }) => {
   const openQuickOptions = () => setIsQuickViewOpen(true);
 
   return (
-      <article ref={revealRef} className={`group ${revealClassName}`}>
+    <>
+      <RevealContent
+        as="article"
+        className="group"
+        delay={revealDelay}
+        duration={0.74}
+        distance={26}
+      >
         <div className="relative">
           <Link
             to={`/product/${product.slug}`}
@@ -146,7 +152,7 @@ const ProductCard = ({ product }) => {
           <button
             type="button"
             onClick={openQuickOptions}
-            className="absolute inset-x-3 bottom-3 z-10 hidden min-h-10 items-center justify-center whitespace-nowrap border border-[#c7a852]/55 bg-[#110f0e]/92 px-3 py-2 text-[0.56rem] font-black uppercase tracking-[0.1em] text-[#f5f0e8] opacity-0 shadow-xl transition duration-300 hover:border-[#c7a852] hover:bg-[#882c30]/88 focus-visible:outline-offset-2 md:flex md:translate-y-4 md:group-hover:translate-y-0 md:group-hover:opacity-100 md:group-focus-within:translate-y-0 md:group-focus-within:opacity-100"
+            className="davinto-press-gold absolute inset-x-3 bottom-3 z-10 hidden min-h-10 items-center justify-center whitespace-nowrap border border-[#c7a852]/55 bg-[#110f0e]/92 px-3 py-2 text-[0.56rem] font-black uppercase tracking-[0.1em] text-[#f5f0e8] opacity-0 shadow-xl transition duration-300 hover:border-[#c7a852] hover:bg-[#882c30]/88 focus-visible:outline-offset-2 md:flex md:translate-y-4 md:group-hover:translate-y-0 md:group-hover:opacity-100 md:group-focus-within:translate-y-0 md:group-focus-within:opacity-100"
             aria-haspopup="dialog"
           >
             {t("catalog:product.chooseOptions")}
@@ -180,30 +186,31 @@ const ProductCard = ({ product }) => {
           <button
             type="button"
             onClick={openQuickOptions}
-            className="mt-3 flex min-h-11 w-full items-center justify-center whitespace-nowrap border border-[#c7a852]/38 px-2 py-1.5 text-[0.54rem] font-black uppercase tracking-[0.06em] text-[#f5f0e8]/82 transition hover:border-[#c7a852] hover:text-[#f5f0e8] md:hidden"
+            className="davinto-press-gold mt-3 flex min-h-11 w-full items-center justify-center whitespace-nowrap border border-[#c7a852]/38 px-2 py-1.5 text-[0.54rem] font-black uppercase tracking-[0.06em] text-[#f5f0e8]/82 transition hover:border-[#c7a852] hover:text-[#f5f0e8] md:hidden"
             aria-haspopup="dialog"
           >
             {t("catalog:product.chooseOptions")}
           </button>
         </div>
 
-        {isQuickViewOpen && (
-          <Suspense
-            fallback={
-              <QuickProductModalFallback
-                label={t("catalog:product.loadingQuickView")}
-                message={t("catalog:product.loadingOptions")}
-              />
-            }
-          >
-            <QuickProductModal
-              product={product}
-              isOpen={isQuickViewOpen}
-              onClose={() => setIsQuickViewOpen(false)}
+      </RevealContent>
+      {isQuickViewOpen && (
+        <Suspense
+          fallback={
+            <QuickProductModalFallback
+              label={t("catalog:product.loadingQuickView")}
+              message={t("catalog:product.loadingOptions")}
             />
-          </Suspense>
-        )}
-      </article>
+          }
+        >
+          <QuickProductModal
+            product={product}
+            isOpen={isQuickViewOpen}
+            onClose={() => setIsQuickViewOpen(false)}
+          />
+        </Suspense>
+      )}
+    </>
   );
 };
 

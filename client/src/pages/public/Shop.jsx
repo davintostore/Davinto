@@ -266,8 +266,12 @@ const Shop = () => {
           {!isLoadingProducts && !isProductsError && products.length > 0 && (
             <>
               <div className="product-grid">
-                {products.map((product) => (
-                  <ProductCard key={product._id} product={product} />
+                {products.map((product, index) => (
+                  <ProductCard
+                    key={product._id}
+                    product={product}
+                    revealDelay={Math.min(index, 7) * 0.07}
+                  />
                 ))}
               </div>
 

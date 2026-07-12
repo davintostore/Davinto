@@ -19,7 +19,8 @@ const Button = ({
   return (
     <button
       type={type}
-      className={`inline-flex min-h-12 items-center justify-center rounded-[0.2rem] px-6 py-3 text-[0.68rem] font-black uppercase tracking-[0.24em] transition duration-200 hover:-translate-y-0.5 focus-visible:outline-[#c7a852] disabled:pointer-events-none disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none ${variants[variant]} ${className}`}
+      data-variant={variant}
+      className={`davinto-button inline-flex min-h-12 items-center justify-center rounded-[0.2rem] px-6 py-3 text-[0.68rem] font-black uppercase tracking-[0.24em] transition duration-200 hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c7a852] disabled:pointer-events-none disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none ${variants[variant]} ${className}`}
       {...props}
     >
       {children}

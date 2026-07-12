@@ -3,9 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
 import EditorialCategoryCard from "../../components/category/EditorialCategoryCard";
+import RevealContent from "../../components/animation/RevealContent";
+import SplitText from "../../components/animation/SplitText";
 import Container from "../../components/ui/Container";
 import StickerLabel from "../../components/ui/StickerLabel";
-import useScrollReveal from "../../hooks/useScrollReveal";
 import useSeo from "../../hooks/useSeo";
 import { getPublicCategoriesRequest } from "../../services/categoryService";
 import { getLocalizedCategory } from "../../utils/localizedContent";
@@ -13,8 +14,6 @@ import { getLocalizedCategory } from "../../utils/localizedContent";
 const Categories = () => {
   const { t, i18n } = useTranslation(["catalog", "common"]);
   const language = i18n.resolvedLanguage === "ar" ? "ar" : "en";
-  const [headerRevealRef, headerRevealClassName] = useScrollReveal();
-  const [gridRevealRef, gridRevealClassName] = useScrollReveal();
 
   useSeo({
     title: t("catalog:categoriesPage.seoTitle"),
@@ -45,23 +44,20 @@ const Categories = () => {
     <>
       <section className="categories-page-section bg-[#050505]">
         <Container>
-          <div
-            ref={headerRevealRef}
-            className={`mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between ${headerRevealClassName}`}
-          >
+          <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <StickerLabel>{t("catalog:category.label")}</StickerLabel>
-              <h2 className="editorial-heading section-display-title mt-4">
-                {t("catalog:categoriesPage.gridTitle")}
-              </h2>
+              <SplitText
+                as="h1"
+                text={t("catalog:categoriesPage.gridTitle")}
+                splitType="chars"
+                className="editorial-heading section-display-title mt-4"
+              />
             </div>
           </div>
 
           {isLoading && (
-            <div
-              ref={gridRevealRef}
-              className={`grid gap-4 sm:grid-cols-2 lg:grid-cols-3 ${gridRevealClassName}`}
-            >
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 8 }).map((_, index) => (
                 <div key={index} className="catalog-skeleton min-h-[19rem]" />
               ))}
@@ -91,20 +87,21 @@ const Categories = () => {
           )}
 
           {!isLoading && !isError && categories.length > 0 && (
-            <div
-              ref={gridRevealRef}
-              className={`grid gap-4 sm:grid-cols-2 lg:grid-cols-3 ${gridRevealClassName}`}
-            >
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {categories.map((category, index) => (
-                <EditorialCategoryCard
+                <RevealContent
                   key={category._id || category.slug}
-                  category={category}
-                  label={t("catalog:category.label")}
-                  cta={t("catalog:categoriesPage.cardCta")}
-                  className="davinto-reveal-item"
-                  cardClassName="min-h-[20rem]"
-                  style={{ "--reveal-delay": `${Math.min(index, 8) * 45}ms` }}
-                />
+                  delay={Math.min(index, 8) * 0.07}
+                  duration={0.74}
+                  distance={26}
+                >
+                  <EditorialCategoryCard
+                    category={category}
+                    label={t("catalog:category.label")}
+                    cta={t("catalog:categoriesPage.cardCta")}
+                    cardClassName="min-h-[20rem]"
+                  />
+                </RevealContent>
               ))}
             </div>
           )}

@@ -51,7 +51,7 @@ const EditorialCategoryCard = ({
             <div className="absolute inset-0 bg-[#28231f]" />
           )}
           <span
-            className="absolute bottom-5 left-1/2 inline-flex min-h-11 min-w-[9.5rem] -translate-x-1/2 items-center justify-center gap-2 whitespace-nowrap border border-[#c7a852]/55 bg-[#0b0a09]/88 px-5 py-3 text-[0.64rem] font-black uppercase tracking-[0.1em] text-[#f5f0e8] shadow-xl backdrop-blur-sm transition group-hover:border-[#c7a852]/85 group-hover:bg-[#110f0e]/96 group-focus-visible:border-[#c7a852]/85 group-focus-visible:bg-[#110f0e]/96"
+            className="absolute bottom-5 left-1/2 inline-flex min-h-11 min-w-[9.5rem] -translate-x-1/2 items-center justify-center gap-2 whitespace-nowrap border border-[#c7a852]/55 bg-[#0b0a09]/88 px-5 py-3 text-[0.64rem] font-black uppercase tracking-[0.1em] text-[#f5f0e8] shadow-xl backdrop-blur-sm transition group-hover:border-[#c7a852]/85 group-hover:bg-[#110f0e]/96 group-focus-visible:border-[#c7a852]/85 group-focus-visible:bg-[#110f0e]/96 group-active:border-[#c7a852] group-active:bg-[#c7a852] group-active:text-[#15120f]"
             aria-hidden="true"
           >
             {cta}
@@ -102,7 +102,7 @@ const EditorialCategoryCard = ({
             {category.name}
           </h3>
           {!isHomeDesktopCard && (
-            <span className="mt-6 inline-flex w-fit items-center gap-2 border border-[#f5f0e8]/18 px-4 py-3 text-[0.62rem] font-black uppercase tracking-[0.16em] text-[#f5f0e8] transition group-hover:border-[#c7a852] group-hover:text-[#c7a852]">
+            <span className="mt-6 inline-flex w-fit items-center gap-2 border border-[#f5f0e8]/18 px-4 py-3 text-[0.62rem] font-black uppercase tracking-[0.16em] text-[#f5f0e8] transition group-hover:border-[#c7a852] group-hover:text-[#c7a852] group-active:border-[#c7a852] group-active:bg-[#c7a852] group-active:text-[#15120f]">
               {cta}
               <ArrowUpRight size={15} />
             </span>
@@ -110,7 +110,7 @@ const EditorialCategoryCard = ({
         </div>
 
         {isHomeDesktopCard && (
-          <span className="absolute bottom-5 left-1/2 inline-flex min-h-11 -translate-x-1/2 translate-y-2 items-center gap-2 whitespace-nowrap border border-[#c7a852]/65 bg-[#0b0a09]/90 px-4 py-3 text-[0.58rem] font-black uppercase tracking-[0.12em] text-[#f5f0e8] opacity-0 shadow-xl backdrop-blur-sm transition duration-300 group-hover:translate-y-0 group-hover:border-[#c7a852] group-hover:bg-[#c7a852] group-hover:text-[#15120f] group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:border-[#c7a852] group-focus-visible:bg-[#c7a852] group-focus-visible:text-[#15120f] group-focus-visible:opacity-100">
+          <span className="absolute bottom-5 left-1/2 inline-flex min-h-11 -translate-x-1/2 translate-y-2 items-center gap-2 whitespace-nowrap border border-[#c7a852]/65 bg-[#0b0a09]/90 px-4 py-3 text-[0.58rem] font-black uppercase tracking-[0.12em] text-[#f5f0e8] opacity-0 shadow-xl backdrop-blur-sm transition duration-300 group-hover:translate-y-0 group-hover:border-[#c7a852] group-hover:bg-[#c7a852] group-hover:text-[#15120f] group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:border-[#c7a852] group-focus-visible:bg-[#c7a852] group-focus-visible:text-[#15120f] group-focus-visible:opacity-100 group-active:translate-y-0 group-active:border-[#c7a852] group-active:bg-[#c7a852] group-active:text-[#15120f] group-active:opacity-100">
             {cta}
             <ArrowUpRight size={15} aria-hidden="true" />
           </span>

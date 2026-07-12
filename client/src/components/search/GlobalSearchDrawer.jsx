@@ -112,7 +112,7 @@ const GlobalSearchDrawer = ({ isOpen, onClose }) => {
   return createPortal(
     <div
       ref={drawerRef}
-      className="fixed inset-0 z-[140]"
+      className="davinto-public-portal fixed inset-0 z-[140]"
       role="dialog"
       aria-modal="true"
       aria-labelledby="global-search-title"
@@ -142,7 +142,7 @@ const GlobalSearchDrawer = ({ isOpen, onClose }) => {
 
           <button
             type="button"
-            className="flex h-11 w-11 items-center justify-center text-[#f5f0e8]/72 transition hover:text-[#c7a852]"
+            className="davinto-press-icon flex h-11 w-11 items-center justify-center text-[#f5f0e8]/72 transition hover:text-[#c7a852]"
             aria-label={t("close")}
             onClick={onClose}
           >
@@ -162,7 +162,7 @@ const GlobalSearchDrawer = ({ isOpen, onClose }) => {
             />
             <button
               type="submit"
-              className="absolute inset-y-0 end-3 flex items-center text-[#f5f0e8]/72 transition hover:text-[#c7a852]"
+              className="davinto-press-icon absolute inset-y-0 end-3 flex items-center px-2 text-[#f5f0e8]/72 transition hover:text-[#c7a852]"
               aria-label={t("search.submit")}
             >
               <Search size={23} />
@@ -180,7 +180,7 @@ const GlobalSearchDrawer = ({ isOpen, onClose }) => {
                     key={term}
                     type="button"
                     onClick={() => setQuery(term)}
-                    className="inline-flex min-h-11 items-center gap-2 border border-[#f5f0e8]/14 bg-[#f5f0e8]/4 px-4 text-sm text-[#f5f0e8]/78 transition hover:border-[#c7a852] hover:text-[#c7a852]"
+                    className="davinto-press-gold inline-flex min-h-11 items-center gap-2 border border-[#f5f0e8]/14 bg-[#f5f0e8]/4 px-4 text-sm text-[#f5f0e8]/78 transition hover:border-[#c7a852] hover:text-[#c7a852]"
                   >
                     <Search size={16} />
                     {term}
@@ -212,7 +212,7 @@ const GlobalSearchDrawer = ({ isOpen, onClose }) => {
                       key={product._id}
                       type="button"
                       onClick={() => closeAndNavigate(`/product/${product.slug}`)}
-                      className="grid grid-cols-[4rem_1fr] gap-3 border border-[#f5f0e8]/10 bg-[#f5f0e8]/4 p-2 text-left transition hover:border-[#c7a852]/55 hover:bg-[#c7a852]/8"
+                      className="davinto-press-muted grid grid-cols-[4rem_1fr] gap-3 border border-[#f5f0e8]/10 bg-[#f5f0e8]/4 p-2 text-left transition hover:border-[#c7a852]/55 hover:bg-[#c7a852]/8"
                     >
                       <div className="aspect-[3/4] overflow-hidden bg-[#28231f]">
                         {image ? (
@@ -260,7 +260,7 @@ const GlobalSearchDrawer = ({ isOpen, onClose }) => {
                     key={category._id || category.slug}
                     to={category.slug ? `/category/${category.slug}` : "/shop"}
                     onClick={onClose}
-                    className="flex items-center justify-between gap-4 border border-[#f5f0e8]/10 bg-[#f5f0e8]/4 px-4 py-3 text-sm font-bold text-[#f5f0e8]/76 transition hover:border-[#c7a852]/55 hover:text-[#c7a852]"
+                    className="davinto-press-muted flex items-center justify-between gap-4 border border-[#f5f0e8]/10 bg-[#f5f0e8]/4 px-4 py-3 text-sm font-bold text-[#f5f0e8]/76 transition hover:border-[#c7a852]/55 hover:text-[#c7a852]"
                   >
                     <span>{category.name}</span>
                     <Search size={15} />

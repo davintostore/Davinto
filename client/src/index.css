@@ -432,7 +432,6 @@ html[lang="ar"] .page-shell label {
     opacity 520ms ease,
     transform 520ms ease;
   transition-delay: var(--reveal-delay, 0ms);
-  will-change: opacity, transform;
 }
 
 .davinto-reveal--visible,
@@ -645,6 +644,69 @@ html[lang="ar"] .page-shell label {
 
 .cart-drawer-panel {
   animation: davintoDrawerEnter 260ms ease-out both;
+}
+
+.cart-drawer-scroll {
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cart-drawer-scroll__summary {
+  padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+}
+
+:is(.page-shell, .davinto-public-portal) .davinto-button,
+:is(.page-shell, .davinto-public-portal) .davinto-press-gold,
+:is(.page-shell, .davinto-public-portal) .davinto-press-icon,
+:is(.page-shell, .davinto-public-portal) .davinto-press-muted,
+:is(.page-shell, .davinto-public-portal) .davinto-press-danger {
+  transition-duration: 140ms;
+}
+
+:is(.page-shell, .davinto-public-portal) .davinto-button:not(:disabled):active,
+:is(.page-shell, .davinto-public-portal)
+  .davinto-press-gold:not(:disabled):active {
+  background-color: #c7a852;
+  border-color: #c7a852;
+  color: #15120f;
+  transform: translateY(1px) scale(0.99);
+}
+
+:is(.page-shell, .davinto-public-portal)
+  .davinto-button[data-variant="danger"]:not(:disabled):active,
+:is(.page-shell, .davinto-public-portal)
+  .davinto-press-danger:not(:disabled):active {
+  background-color: #6f2226;
+  border-color: #b8585d;
+  color: #f5f0e8;
+  transform: translateY(1px) scale(0.99);
+}
+
+:is(.page-shell, .davinto-public-portal)
+  .davinto-press-icon:not(:disabled):active {
+  background-color: #c7a852;
+  border-color: #c7a852;
+  color: #15120f;
+  transform: scale(0.97);
+}
+
+:is(.page-shell, .davinto-public-portal)
+  .davinto-press-muted:not(:disabled):active {
+  background-color: rgba(199, 168, 82, 0.14);
+  color: #c7a852;
+  transform: translateY(1px) scale(0.99);
+}
+
+:is(.page-shell, .davinto-public-portal)
+  :is(
+    .davinto-press-gold,
+    .davinto-press-icon,
+    .davinto-press-muted,
+    .davinto-press-danger
+  ):focus-visible {
+  outline: 2px solid #c7a852;
+  outline-offset: 2px;
 }
 
 .cart-toast-panel {

@@ -174,7 +174,7 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
   const modal = (
     <div
       ref={dialogRef}
-      className="fixed inset-0 z-[95] flex items-center justify-center p-3 sm:p-6"
+      className="davinto-public-portal fixed inset-0 z-[95] flex items-center justify-center p-3 sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-label={t("catalog:product.quickView")}
@@ -192,7 +192,7 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center border border-[#f5f0e8]/14 bg-[#110f0e]/80 text-[#f5f0e8]/70 transition hover:border-[#c7a852] hover:text-[#f5f0e8]"
+          className="davinto-press-icon absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center border border-[#f5f0e8]/14 bg-[#110f0e]/80 text-[#f5f0e8]/70 transition hover:border-[#c7a852] hover:text-[#f5f0e8]"
           aria-label={t("catalog:product.closeQuickView")}
           data-autofocus
         >
@@ -443,7 +443,7 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
                       onClick={() =>
                         setQuantity((current) => Math.max(1, current - 1))
                       }
-                      className="flex h-full w-11 items-center justify-center text-[#f5f0e8]/65 transition hover:bg-[#c7a852]/12 hover:text-[#c7a852]"
+                      className="davinto-press-icon flex h-full w-11 items-center justify-center text-[#f5f0e8]/65 transition hover:bg-[#c7a852]/12 hover:text-[#c7a852]"
                       aria-label={t("catalog:product.decreaseQuantity")}
                     >
                       <Minus size={14} />
@@ -458,7 +458,7 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
                           isInStock ? Math.min(selectedStock, current + 1) : 1
                         )
                       }
-                      className="flex h-full w-11 items-center justify-center text-[#f5f0e8]/65 transition hover:bg-[#c7a852]/12 hover:text-[#c7a852]"
+                      className="davinto-press-icon flex h-full w-11 items-center justify-center text-[#f5f0e8]/65 transition hover:bg-[#c7a852]/12 hover:text-[#c7a852]"
                       aria-label={t("catalog:product.increaseQuantity")}
                     >
                       <Plus size={14} />
