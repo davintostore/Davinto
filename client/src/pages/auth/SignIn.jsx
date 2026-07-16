@@ -109,7 +109,7 @@ const SignIn = () => {
             </p>
           </div>
 
-          <Card className="mx-auto w-full max-w-lg border-[#c7a852]/30 bg-[#110f0e] p-7 sm:p-10">
+          <Card className="mx-auto w-full max-w-lg border-[#c7a852]/30 bg-[#f5f0e8] p-7 sm:p-10">
             <p className="font-serif text-4xl font-semibold">
               {t("signin.title")}
             </p>

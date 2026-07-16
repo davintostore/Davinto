@@ -1,3 +1,5 @@
+import { getCategoryPresentation } from "../data/categoryPresentation";
+
 const isArabic = (language) =>
   String(language || "")
     .toLowerCase()
@@ -87,11 +89,14 @@ export const getLocalizedCategory = (category, language = "en") => {
     hasText(arabicName) &&
     normalizeCategoryKey(arabicName) !== normalizeCategoryKey(englishName);
   const fallbackArabicName = getArabicCategoryNameFallback(category);
+  const presentation = getCategoryPresentation(category);
 
   return {
     ...category,
     name:
-      isArabic(language) && shouldUseArabicName
+      presentation
+        ? presentation.labels[isArabic(language) ? "ar" : "en"]
+        : isArabic(language) && shouldUseArabicName
         ? arabicName
         : isArabic(language) && fallbackArabicName
           ? fallbackArabicName

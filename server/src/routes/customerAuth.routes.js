@@ -6,6 +6,7 @@ const {
   signoutCustomer,
   getCustomerMe,
   updateCustomerMe,
+  changeCustomerPassword,
   refreshCustomerToken,
 } = require("../controllers/customerAuth.controller");
 const {
@@ -14,6 +15,7 @@ const {
 const {
   authLimiter,
   refreshLimiter,
+  passwordChangeLimiter,
 } = require("../middleware/rateLimitMiddleware");
 
 const router = express.Router();
@@ -24,5 +26,11 @@ router.post("/refresh", refreshLimiter, refreshCustomerToken);
 router.post("/signout", protectCustomer, signoutCustomer);
 router.get("/me", protectCustomer, getCustomerMe);
 router.patch("/me", protectCustomer, updateCustomerMe);
+router.patch(
+  "/me/password",
+  passwordChangeLimiter,
+  protectCustomer,
+  changeCustomerPassword
+);
 
 module.exports = router;

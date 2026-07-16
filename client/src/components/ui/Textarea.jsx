@@ -8,7 +8,7 @@ const Textarea = ({ label, error, className = "", ...props }) => {
       )}
 
       <textarea
-        className={`min-h-32 w-full resize-y rounded-[0.2rem] border border-[#f5f0e8]/16 bg-[#f5f0e8]/5 px-4 py-3.5 text-sm text-[#f5f0e8] outline-none transition placeholder:text-[#8b8075] hover:border-[#f5f0e8]/25 focus:border-[#c7a852] focus:bg-[#f5f0e8]/8 ${className}`}
+        className={`davinto-textarea min-h-32 w-full resize-y rounded-[0.2rem] border border-[#f5f0e8]/16 bg-[#f5f0e8]/5 px-4 py-3.5 text-sm text-[#f5f0e8] outline-none transition placeholder:text-[#8b8075] hover:border-[#f5f0e8]/25 focus:border-[#c7a852] focus:bg-[#f5f0e8]/8 ${className}`}
         {...props}
       />
 

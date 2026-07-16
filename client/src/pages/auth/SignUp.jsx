@@ -127,7 +127,7 @@ const SignUp = () => {
 
       <Container className="relative">
         <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-          <Card className="order-2 mx-auto w-full max-w-xl border-[#c7a852]/30 bg-[#110f0e] p-7 sm:p-10 lg:order-1">
+          <Card className="order-2 mx-auto w-full max-w-xl border-[#c7a852]/30 bg-[#f5f0e8] p-7 sm:p-10 lg:order-1">
             <p className="font-serif text-4xl font-semibold">
               {t("signup.title")}
             </p>

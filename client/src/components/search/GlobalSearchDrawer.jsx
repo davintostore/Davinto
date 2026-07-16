@@ -120,13 +120,13 @@ const GlobalSearchDrawer = ({ isOpen, onClose }) => {
     >
       <button
         type="button"
-        className="absolute inset-0 bg-[#050505]/62"
+        className="absolute inset-0 bg-[#1c1917]/62"
         aria-label={t("close")}
         tabIndex={-1}
         onClick={onClose}
       />
 
-      <aside className="cart-drawer-panel absolute inset-y-0 right-0 flex w-[min(88vw,32rem)] max-w-[32rem] flex-col border-l border-[#c7a852]/24 bg-[#0b0a09] shadow-2xl sm:w-[30rem]">
+      <aside className="cart-drawer-panel absolute inset-y-0 right-0 flex w-[min(88vw,32rem)] max-w-[32rem] flex-col border-l border-[#c7a852]/24 bg-[#1c1917] shadow-2xl sm:w-[30rem]">
         <div className="flex h-20 shrink-0 items-center justify-between gap-4 border-b border-[#f5f0e8]/10 px-5 sm:px-6">
           <div>
             <p className="text-[0.58rem] font-black uppercase tracking-[0.22em] text-[#c7a852]">
@@ -214,7 +214,7 @@ const GlobalSearchDrawer = ({ isOpen, onClose }) => {
                       onClick={() => closeAndNavigate(`/product/${product.slug}`)}
                       className="davinto-press-muted grid grid-cols-[4rem_1fr] gap-3 border border-[#f5f0e8]/10 bg-[#f5f0e8]/4 p-2 text-left transition hover:border-[#c7a852]/55 hover:bg-[#c7a852]/8"
                     >
-                      <div className="aspect-[3/4] overflow-hidden bg-[#28231f]">
+                      <div className="aspect-[3/4] overflow-hidden bg-[#1c1917]">
                         {image ? (
                           <img
                             src={image}

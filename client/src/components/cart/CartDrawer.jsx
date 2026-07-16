@@ -115,13 +115,13 @@ const CartDrawer = () => {
     >
       <button
         type="button"
-        className="absolute inset-0 bg-[#050505]/45"
+        className="absolute inset-0 bg-[#1c1917]/45"
         aria-label={t("cart:closeDrawer")}
         tabIndex={-1}
         onClick={closeCartDrawer}
       />
 
-      <aside className="cart-drawer-panel absolute inset-y-0 right-0 flex h-[100dvh] w-[min(86vw,25rem)] flex-col overflow-hidden border-l border-[#c7a852]/28 bg-[#0b0a09] shadow-2xl sm:w-full sm:max-w-[28rem]">
+      <aside className="cart-drawer-panel absolute inset-y-0 right-0 flex h-[100dvh] w-[min(86vw,25rem)] flex-col overflow-hidden border-l border-[#c7a852]/28 bg-[#1c1917] shadow-2xl sm:w-full sm:max-w-[28rem]">
         <div className="flex h-[4.5rem] shrink-0 items-center justify-between gap-4 border-b border-[#f5f0e8]/12 px-6">
           <div>
             <p className="text-[0.56rem] font-black uppercase tracking-[0.26em] text-[#c7a852]">
@@ -217,7 +217,7 @@ const CartDrawer = () => {
                       <Link
                         to={`/product/${item.slug}`}
                         onClick={closeCartDrawer}
-                        className="overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f]"
+                        className="overflow-hidden border border-[#f5f0e8]/12 bg-[#1c1917]"
                         aria-label={t("cart:viewItem", {
                           name: item.name,
                         })}
@@ -320,7 +320,7 @@ const CartDrawer = () => {
               </div>
             </div>
 
-            <div className="cart-drawer-scroll__summary border-t border-[#c7a852]/20 bg-[#110f0e] px-6 pt-5">
+            <div className="cart-drawer-scroll__summary border-t border-[#c7a852]/20 bg-[#1c1917] px-6 pt-5 text-[#f5f0e8]">
               {(isQuotePending || isQuoteRefreshing) && (
                 <p className="mb-3 text-xs text-[#f5f0e8]/45">
                   {isQuotePending

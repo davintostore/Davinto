@@ -748,7 +748,7 @@ const Checkout = () => {
 
   return (
     <>
-      <div className="border-b border-[#c7a852]/20 bg-[#050505]">
+      <div className="border-b border-[#c7a852]/20 bg-[#f5f0e8]">
         <Container className="flex h-16 items-center justify-between gap-4">
           <Link
             to="/"
@@ -756,7 +756,7 @@ const Checkout = () => {
             className="flex h-11 w-28 items-center"
           >
             <img
-              src="/images/logo/logo-3.webp"
+              src="/images/logo/logo-4.webp"
               alt="Davinto"
               className="max-h-10 w-full object-contain"
             />
@@ -820,7 +820,7 @@ const Checkout = () => {
                   </div>
                 )}
 
-                <section className="border border-[#f5f0e8]/12 bg-[#0f0d0c] p-4 sm:p-5">
+                <section className="border border-[#8b8075]/30 bg-[#f5f0e8] p-4 sm:p-5">
                   <SectionLabel>{t("checkout:customer")}</SectionLabel>
 
                   <h2 className="mb-5 font-serif text-2xl font-semibold">
@@ -899,7 +899,7 @@ const Checkout = () => {
                   </div>
                 </section>
 
-                <section className="border border-[#f5f0e8]/12 bg-[#0f0d0c] p-4 sm:p-5">
+                <section className="border border-[#8b8075]/30 bg-[#f5f0e8] p-4 sm:p-5">
                   <SectionLabel>{t("checkout:payment")}</SectionLabel>
 
                   <h2 className="mb-5 font-serif text-2xl font-semibold">
@@ -1007,7 +1007,7 @@ const Checkout = () => {
               </div>
 
               <div className="lg:sticky lg:top-24">
-                <aside className="border border-[#f5f0e8]/12 bg-[#110f0e]/72 p-4 sm:p-5">
+                <aside className="border border-[#8b8075]/30 bg-[#f5f0e8] p-4 sm:p-5">
                   <div className="mb-4 flex items-center justify-between gap-4">
                     <h2 className="text-[0.64rem] font-black uppercase tracking-[0.24em] text-[#c7a852]">
                       {t("checkout:summary")}
@@ -1065,7 +1065,7 @@ const Checkout = () => {
                           key={itemKey}
                           className="flex gap-3 border-b border-[#f5f0e8]/10 pb-3"
                         >
-                          <div className="h-16 w-12 shrink-0 overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f]">
+                          <div className="h-16 w-12 shrink-0 overflow-hidden border border-[#8b8075]/30 bg-[#1c1917]">
                             {displayImage ? (
                               <img
                                 src={displayImage}

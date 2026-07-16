@@ -134,27 +134,30 @@ const PageHeader = ({
     location.pathname
   );
   const shouldShowMeta = showMeta ?? isAdminPage;
-  const backgroundClass =
-    isAdminPage && !backgroundImage ? "bg-[#882c30]" : "bg-[#050505]";
   const backgroundMediaImage = backgroundVideo ? "" : backgroundImage;
   const hasBackgroundMedia = Boolean(backgroundVideo || backgroundMediaImage);
+  const backgroundClass = isAdminPage
+    ? "bg-[#882c30]"
+    : hasBackgroundMedia
+      ? "bg-[#1c1917] text-[#f5f0e8]"
+      : "bg-[#f5f0e8] text-[#1c1917]";
   const overlayStyle = hasBackgroundMedia
     ? {
         background:
-          "linear-gradient(120deg, rgba(5,5,5,.86), rgba(5,5,5,.46) 58%, rgba(5,5,5,.18))",
+          "linear-gradient(120deg, rgba(28,25,23,.86), rgba(28,25,23,.46) 58%, rgba(28,25,23,.18))",
       }
     : {
         background:
-          "linear-gradient(120deg, rgba(17,15,14,.84), rgba(17,15,14,.34) 58%, transparent), radial-gradient(circle at 78% 18%, rgba(199,168,82,.12), transparent 24rem)",
+          "linear-gradient(120deg, rgba(28,25,23,.84), rgba(28,25,23,.34) 58%, transparent), radial-gradient(circle at 78% 18%, rgba(199,168,82,.12), transparent 24rem)",
       };
 
   return (
     <section
-      className={`relative overflow-hidden border-b border-[#c7a852]/25 ${backgroundClass} pt-16 pb-10 sm:pt-20 sm:pb-14 ${className}`}
+      className={`relative overflow-hidden border-b border-[#c7a852]/25 ${backgroundClass} ${hasBackgroundMedia ? "davinto-dark-section" : ""} pt-16 pb-10 sm:pt-20 sm:pb-14 ${className}`}
       style={
         backgroundMediaImage
           ? {
-              backgroundColor: "#050505",
+              backgroundColor: "#1c1917",
               backgroundImage: `url("${backgroundMediaImage}")`,
               backgroundPosition: "center",
               backgroundSize: "cover",
@@ -183,18 +186,18 @@ const PageHeader = ({
                   as="h1"
                   text={title}
                   splitType="chars"
-                  className="editorial-heading page-display-title text-[#f5f0e8]"
+                  className={`editorial-heading page-display-title ${isAdminPage || hasBackgroundMedia ? "text-[#f5f0e8]" : "text-[#1c1917]"}`}
                   from={{ opacity: 0, y: 28 }}
                   duration={0.84}
                 />
               ) : (
-                <h1 className="editorial-heading page-display-title text-[#f5f0e8]">
+                <h1 className={`editorial-heading page-display-title ${isAdminPage || hasBackgroundMedia ? "text-[#f5f0e8]" : "text-[#1c1917]"}`}>
                   {title}
                 </h1>
               )}
 
               {description && (
-                <p className="mt-7 max-w-2xl text-base leading-8 text-[#f5f0e8]/72 sm:text-lg">
+                <p className={`mt-7 max-w-2xl text-base leading-8 sm:text-lg ${isAdminPage || hasBackgroundMedia ? "text-[#f5f0e8]/72" : "text-[#8b8075]"}`}>
                   {description}
                 </p>
               )}

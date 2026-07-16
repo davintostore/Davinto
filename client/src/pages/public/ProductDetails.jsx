@@ -1,15 +1,17 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ArrowRight,
   Minus,
   Plus,
   Share2,
   ShoppingBag,
 } from "lucide-react";
+import useEmblaCarousel from "embla-carousel-react";
 import { useTranslation } from "react-i18next";
 
 import Button from "../../components/ui/Button";
@@ -63,10 +65,10 @@ const getSimpleBadge = (badge = "", t) => {
 
 const ProductInfoAccordion = ({ title, children, isOpen, onToggle }) => {
   return (
-    <section className="border-b border-[#f5f0e8]/12">
+    <section className="border-b border-[#8b8075]/30">
       <button
         type="button"
-        className="flex w-full items-center justify-between gap-4 py-5 text-left text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#f5f0e8]"
+        className="flex w-full items-center justify-between gap-4 py-5 text-left text-[0.68rem] font-black uppercase tracking-[0.2em] text-[#1c1917] transition hover:text-[#882c30]"
         aria-expanded={isOpen}
         onClick={onToggle}
       >
@@ -86,7 +88,7 @@ const ProductInfoAccordion = ({ title, children, isOpen, onToggle }) => {
         }`}
       >
         <div className="overflow-hidden">
-          <div className="pb-5 text-sm leading-7 text-[#f5f0e8]/62">
+          <div className="pb-5 text-sm leading-7 text-[#8b8075]">
             {children}
           </div>
         </div>
@@ -270,18 +272,49 @@ const ProductDetails = () => {
     queryFn: () =>
       getPublicProductsRequest({
         category: product.category.slug,
-        limit: 5,
+        limit: 9,
         sort: "newest",
       }),
     enabled: Boolean(product?.category?.slug),
   });
 
+  const { data: relatedFallbackData } = useQuery({
+    queryKey: ["related-products-fallback", product?._id],
+    queryFn: () => getPublicProductsRequest({ limit: 12, sort: "newest" }),
+    enabled: Boolean(product?._id),
+  });
+
   const relatedProducts = useMemo(
-    () =>
-      (relatedData?.products || [])
-        .filter((relatedProduct) => relatedProduct._id !== product?._id)
-        .slice(0, 4),
-    [relatedData, product?._id]
+    () => {
+      const seen = new Set([String(product?._id || "")]);
+      const mergedProducts = [];
+
+      [...(relatedData?.products || []), ...(relatedFallbackData?.products || [])]
+        .forEach((relatedProduct) => {
+          const id = String(relatedProduct?._id || "");
+          if (!id || seen.has(id) || mergedProducts.length >= 8) return;
+          seen.add(id);
+          mergedProducts.push(relatedProduct);
+        });
+
+      return mergedProducts;
+    },
+    [relatedData, relatedFallbackData, product?._id]
+  );
+  const [relatedViewportRef, relatedEmblaApi] = useEmblaCarousel({
+    align: "start",
+    containScroll: "trimSnaps",
+    direction: "ltr",
+    dragFree: false,
+    loop: false,
+    slidesToScroll: 1,
+  });
+  const scrollRelated = useCallback(
+    (direction) => {
+      if (direction === "previous") relatedEmblaApi?.scrollPrev();
+      else relatedEmblaApi?.scrollNext();
+    },
+    [relatedEmblaApi]
   );
 
   useEffect(() => {
@@ -484,7 +517,7 @@ const ProductDetails = () => {
 
   return (
     <>
-      <section className="border-b border-[#c7a852]/20 py-10 sm:py-14 lg:py-20">
+      <section className="border-b border-[#c7a852]/20 bg-[#f5f0e8] py-10 text-[#1c1917] sm:py-14 lg:py-20">
         <Container>
           <div className="mb-7 flex items-center justify-between border-b border-[#f5f0e8]/10 pb-4">
             <Link
@@ -535,7 +568,7 @@ const ProductDetails = () => {
               )}
 
               <div
-                className="order-1 relative overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f] touch-pan-y sm:order-2"
+                className="order-1 relative overflow-hidden border border-[#8b8075]/30 bg-[#1c1917] touch-pan-y sm:order-2"
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
               >
@@ -551,7 +584,7 @@ const ProductDetails = () => {
                     className="aspect-[4/5] w-full object-contain bg-[#1c1917]"
                   />
                 ) : (
-                  <div className="flex aspect-[4/5] flex-col items-center justify-center bg-[linear-gradient(145deg,#332c27,#1c1917)]">
+                  <div className="flex aspect-[4/5] flex-col items-center justify-center bg-[#1c1917]">
                     <span className="brand-wordmark text-8xl text-[#f5f0e8]/10">
                       D
                     </span>
@@ -580,7 +613,7 @@ const ProductDetails = () => {
                   <>
                     <button
                       type="button"
-                      className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-[#f5f0e8]/18 bg-[#110f0e]/78 text-[#f5f0e8] transition hover:border-[#c7a852]"
+                      className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-[#f5f0e8]/30 bg-[#1c1917]/78 text-[#f5f0e8] transition hover:border-[#c7a852] hover:text-[#c7a852]"
                       onClick={showPreviousImage}
                       aria-label={t("common:previous")}
                     >
@@ -588,7 +621,7 @@ const ProductDetails = () => {
                     </button>
                     <button
                       type="button"
-                      className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-[#f5f0e8]/18 bg-[#110f0e]/78 text-[#f5f0e8] transition hover:border-[#c7a852]"
+                      className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-[#f5f0e8]/30 bg-[#1c1917]/78 text-[#f5f0e8] transition hover:border-[#c7a852] hover:text-[#c7a852]"
                       onClick={showNextImage}
                       aria-label={t("common:next")}
                     >
@@ -600,7 +633,7 @@ const ProductDetails = () => {
             </div>
 
             <div className="lg:sticky lg:top-32">
-              <div className="border border-[#f5f0e8]/12 bg-[#110f0e] p-6 sm:p-9">
+              <div className="border border-[#8b8075]/30 bg-[#f5f0e8] p-6 sm:p-9">
                 <SectionLabel>
                   {localizedProduct.category?.name ||
                     t("common:davintoPiece")}
@@ -611,7 +644,7 @@ const ProductDetails = () => {
                 </h1>
 
                 <div className="mt-7 flex flex-wrap items-center gap-4 border-y border-[#f5f0e8]/12 py-5">
-                  <p className="font-serif text-4xl font-semibold text-[#f5f0e8] sm:text-5xl">
+                  <p className="font-serif text-4xl font-semibold text-[#1c1917] sm:text-5xl">
                     {formatMoney(displayPrice)}
                   </p>
                   {isOnSale && (
@@ -624,7 +657,7 @@ const ProductDetails = () => {
                 </div>
 
                 {localizedProduct.shortDescription && (
-                  <p className="mt-6 text-base leading-8 text-[#f5f0e8]/62">
+                  <p className="mt-6 text-base leading-8 text-[#8b8075]">
                     {localizedProduct.shortDescription}
                   </p>
                 )}
@@ -636,7 +669,7 @@ const ProductDetails = () => {
                         {t("catalog:product.selectColor")}
                       </legend>
                       {selectedColor && (
-                        <span className="text-sm text-[#f5f0e8]/65">
+                        <span className="text-sm text-[#1c1917]">
                           {localizedSelectedColor.name}
                         </span>
                       )}
@@ -667,13 +700,13 @@ const ProductDetails = () => {
                             )}
                             className={`flex min-h-11 items-center gap-2.5 border px-4 text-xs font-bold transition ${
                               isSelected
-                                ? "border-[#c7a852] bg-[#c7a852]/12 text-[#f5f0e8]"
-                                : "border-[#f5f0e8]/14 text-[#f5f0e8]/55 hover:border-[#f5f0e8]/35 hover:text-[#f5f0e8]"
+                                ? "border-[#c7a852] bg-[#c7a852]/12 text-[#1c1917]"
+                                : "border-[#8b8075]/35 text-[#8b8075] hover:border-[#c7a852] hover:text-[#1c1917]"
                             }`}
                           >
                             <span
                               className="h-4 w-4 rounded-full border border-[#f5f0e8]/35"
-                              style={{ backgroundColor: color.hex || "#777" }}
+                              style={{ backgroundColor: color.hex || "#8b8075" }}
                               aria-hidden="true"
                             />
                             {localizedColor.name}
@@ -689,7 +722,7 @@ const ProductDetails = () => {
                         {t("catalog:product.selectSize")}
                       </legend>
                       {selectedSize && (
-                        <span className="text-sm text-[#f5f0e8]/65">
+                        <span className="text-sm text-[#1c1917]">
                           {selectedSize.label}
                         </span>
                       )}
@@ -721,10 +754,10 @@ const ProductDetails = () => {
                               isSelected
                                 ? disabled
                                   ? "border-[#b8585d] bg-[#882c30]/28 text-[#f5d7d8]"
-                                  : "border-[#f5f0e8] bg-[#f5f0e8] text-[#1c1917]"
+                                  : "border-[#1c1917] bg-[#1c1917] text-[#f5f0e8]"
                                 : disabled
-                                  ? "border-[#f5f0e8]/10 text-[#f5f0e8]/32 hover:border-[#b8585d]/55 hover:text-[#f5d7d8]"
-                                : "border-[#f5f0e8]/14 text-[#f5f0e8]/58 hover:border-[#c7a852] hover:text-[#f5f0e8]"
+                                  ? "border-[#8b8075]/25 text-[#8b8075]/70 hover:border-[#882c30]/55 hover:text-[#882c30]"
+                                : "border-[#8b8075]/35 text-[#1c1917] hover:border-[#c7a852] hover:text-[#882c30]"
                             }`}
                           >
                             {size.label}
@@ -742,7 +775,7 @@ const ProductDetails = () => {
                       <p
                         className={`mt-2 text-sm font-bold ${
                           !selectedSize
-                            ? "text-[#f5f0e8]/62"
+                            ? "text-[#8b8075]"
                             : isInStock
                               ? "text-[#c7a852]"
                               : "text-[#e8a3a6]"
@@ -758,11 +791,11 @@ const ProductDetails = () => {
                       </p>
                     </div>
 
-                    <div className="flex h-12 w-fit items-center border border-[#f5f0e8]/16">
+                    <div className="flex h-12 w-fit items-center border border-[#8b8075]/35">
                       <button
                         type="button"
                         onClick={decreaseQuantity}
-                        className="davinto-press-icon flex h-full w-12 items-center justify-center text-[#f5f0e8]/65 transition hover:bg-[#f5f0e8]/8"
+                        className="davinto-press-icon flex h-full w-12 items-center justify-center text-[#1c1917] transition hover:bg-[#c7a852]/15 hover:text-[#882c30]"
                         aria-label={t("catalog:product.decreaseQuantity")}
                       >
                         <Minus size={15} />
@@ -773,7 +806,7 @@ const ProductDetails = () => {
                       <button
                         type="button"
                         onClick={increaseQuantity}
-                        className="davinto-press-icon flex h-full w-12 items-center justify-center text-[#f5f0e8]/65 transition hover:bg-[#f5f0e8]/8"
+                        className="davinto-press-icon flex h-full w-12 items-center justify-center text-[#1c1917] transition hover:bg-[#c7a852]/15 hover:text-[#882c30]"
                         aria-label={t("catalog:product.increaseQuantity")}
                       >
                         <Plus size={15} />
@@ -782,7 +815,7 @@ const ProductDetails = () => {
                   </div>
 
                   {cartMessage && (
-                    <div className="border border-[#c7a852]/35 bg-[#c7a852]/10 px-4 py-3 text-sm text-[#f5f0e8]">
+                    <div className="border border-[#c7a852]/45 bg-[#c7a852]/10 px-4 py-3 text-sm text-[#1c1917]">
                       {cartMessage}
                     </div>
                   )}
@@ -811,7 +844,7 @@ const ProductDetails = () => {
         </Container>
       </section>
 
-      <section className="fashion-section bg-[#050505]">
+      <section className="fashion-section bg-[#f5f0e8] text-[#1c1917]">
         <Container>
           <div className="grid gap-10 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
             <div>
@@ -821,13 +854,13 @@ const ProductDetails = () => {
               </h2>
             </div>
 
-            <div className="border-t border-[#f5f0e8]/12">
-              <p className="py-6 text-base leading-8 text-[#f5f0e8]/70">
+            <div className="border-t border-[#8b8075]/30">
+              <p className="py-6 text-base leading-8 text-[#8b8075]">
                 {productDescription}
               </p>
 
               {detailBullets.length > 0 && (
-                <ul className="mb-2 grid gap-3 border-y border-[#f5f0e8]/12 py-5 text-sm text-[#f5f0e8]/62 sm:grid-cols-2">
+                <ul className="mb-2 grid gap-3 border-y border-[#8b8075]/30 py-5 text-sm text-[#1c1917] sm:grid-cols-2">
                   {detailBullets.map((detail) => (
                     <li key={detail} className="flex gap-3">
                       <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#c7a852]" />
@@ -858,7 +891,7 @@ const ProductDetails = () => {
                 {t("catalog:product.shippingReturnsDescription")}{" "}
                 <Link
                   to="/shipping-policy"
-                  className="font-bold text-[#c7a852] transition hover:text-[#f5f0e8]"
+                  className="font-bold text-[#882c30] transition hover:text-[#1c1917]"
                 >
                   {t("catalog:product.shippingPolicyLink")}
                 </Link>
@@ -872,17 +905,17 @@ const ProductDetails = () => {
                 {careText}
               </ProductInfoAccordion>
 
-              <div className="flex flex-wrap items-center gap-3 border-b border-[#f5f0e8]/12 py-5">
+              <div className="flex flex-wrap items-center gap-3 border-b border-[#8b8075]/30 py-5">
                 <button
                   type="button"
                   onClick={handleShare}
-                  className="inline-flex items-center gap-2 text-[0.64rem] font-black uppercase tracking-[0.2em] text-[#c7a852] transition hover:text-[#f5f0e8]"
+                  className="inline-flex items-center gap-2 text-[0.64rem] font-black uppercase tracking-[0.2em] text-[#882c30] transition hover:text-[#1c1917]"
                 >
                   <Share2 size={15} />
                   {t("catalog:product.share")}
                 </button>
                 {shareMessage && (
-                  <span className="text-xs text-[#f5f0e8]/45">
+                  <span className="text-xs text-[#8b8075]">
                     {shareMessage}
                   </span>
                 )}
@@ -901,20 +934,44 @@ const ProductDetails = () => {
                 </div>
                 <Link
                   to="/shop"
-                  className="hidden text-[0.62rem] font-black uppercase tracking-[0.2em] text-[#c7a852] transition hover:text-[#f5f0e8] sm:block"
+                  className="group hidden items-center gap-2 text-[0.62rem] font-black uppercase tracking-[0.2em] text-[#882c30] transition hover:text-[#1c1917] sm:flex"
                 >
                   {t("catalog:product.shopAll")}
+                  <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
                 </Link>
               </div>
 
-              <div className="product-grid">
-                {relatedProducts.map((relatedProduct, index) => (
-                  <ProductCard
-                    key={relatedProduct._id}
-                    product={relatedProduct}
-                    revealDelay={Math.min(index, 3) * 0.08}
-                  />
-                ))}
+              <div ref={relatedViewportRef} className="overflow-hidden touch-pan-y" dir="ltr">
+                <div className="flex touch-pan-y gap-4 sm:gap-5">
+                  {relatedProducts.map((relatedProduct) => (
+                    <div
+                      key={relatedProduct._id}
+                      className="min-w-0 flex-[0_0_78%] sm:flex-[0_0_46%] md:flex-[0_0_32%] xl:flex-[0_0_24%]"
+                      style={{ direction: language === "ar" ? "rtl" : "ltr" }}
+                    >
+                      <ProductCard product={relatedProduct} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-7 flex items-center justify-end gap-3" dir="ltr">
+                <button
+                  type="button"
+                  onClick={() => scrollRelated("previous")}
+                  className="davinto-press-icon flex h-11 w-11 items-center justify-center rounded-full border border-[#8b8075]/40 text-[#1c1917] transition hover:border-[#c7a852] hover:text-[#882c30]"
+                  aria-label={t("common:previous")}
+                >
+                  <ChevronLeft size={19} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollRelated("next")}
+                  className="davinto-press-icon flex h-11 w-11 items-center justify-center rounded-full border border-[#8b8075]/40 text-[#1c1917] transition hover:border-[#c7a852] hover:text-[#882c30]"
+                  aria-label={t("common:next")}
+                >
+                  <ChevronRight size={19} />
+                </button>
               </div>
             </div>
           )}

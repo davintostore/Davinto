@@ -12,35 +12,32 @@
     "shop": "Shop Now",
     "track": "Track Order"
   },
-  "features": {
-    "line": "Wear the art \u00b7 Built to last"
-  },
-  "latest": {
-    "label": "Latest pieces",
-    "title": "Latest Pieces",
-    "viewAll": "View all",
-    "shopAll": "Shop All",
-    "emptyTitle": "Products coming soon",
-    "emptyDescription": "Active products will appear here when they are published."
-  },
   "categories": {
     "label": "Collection",
     "heading": "Shop by Category",
     "description": "Explore Davinto edits by category.",
     "cardLabel": "Collection",
     "cardCta": "Shop Collection",
-    "viewAll": "View All"
+    "viewAll": "View All Categories",
+    "empty": "Categories will appear here when active database records are available."
   },
-  "cta": {
-    "label": "Davinto",
-    "title": "Built for daily rotation.",
-    "button": "Shop"
+  "ourStory": {
+    "eyebrow": "Our Story",
+    "title": "More Than Just a\nT-Shirt",
+    "body": "At Davinto, we believe in designs that speak, inspire and last. Every piece is crafted with passion and purpose.",
+    "button": "Shop Collection"
   },
   "bestSeller": {
     "label": "Collection",
     "title": "Best Seller",
     "shopAll": "Shop All",
     "emptyTitle": "Best sellers coming soon",
-    "emptyDescription": "Products marked as Best Seller in admin will appear here. Until then, latest active products are used."
+    "emptyDescription": "Products marked as Best Seller will appear here. Until then, latest active products are used."
+  },
+  "trackOrder": {
+    "eyebrow": "Davinto",
+    "title": "Built for daily rotation.",
+    "body": "Timeless pieces designed to move with you from day to night.",
+    "button": "Track Order"
   }
 }

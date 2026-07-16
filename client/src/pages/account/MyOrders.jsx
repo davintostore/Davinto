@@ -144,7 +144,7 @@ const OrderDetail = ({ orderId }) => {
   );
 
   return (
-    <div className="border-t border-[#c7a852]/22 bg-[#110f0e] px-5 py-7 sm:px-7">
+    <div className="border-t border-[#c7a852]/22 bg-[#f5f0e8] px-5 py-7 sm:px-7">
       <div className="grid gap-7 xl:grid-cols-[1fr_340px]">
         <div className="space-y-7">
           <div>
@@ -163,7 +163,7 @@ const OrderDetail = ({ orderId }) => {
                     }
                     className="flex gap-4 py-5"
                   >
-                    <div className="h-28 w-20 shrink-0 overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f]">
+                    <div className="h-28 w-20 shrink-0 overflow-hidden border border-[#8b8075]/30 bg-[#1c1917]">
                       {displayImage ? (
                         <img
                           src={displayImage}
@@ -565,7 +565,7 @@ const MyOrders = () => {
                 return (
                   <article
                     key={order.id}
-                    className="overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f]"
+                    className="overflow-hidden border border-[#8b8075]/30 bg-[#1c1917]"
                   >
                     <div className="p-5 sm:p-7">
                       <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">

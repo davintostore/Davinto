@@ -387,6 +387,53 @@ const updateCustomerMe = asyncHandler(async (req, res) => {
   sendCustomerAuthResponse(res, 200, req.customer);
 });
 
+const changeCustomerPassword = asyncHandler(async (req, res) => {
+  const currentPassword =
+    typeof req.body?.currentPassword === "string" ? req.body.currentPassword : "";
+  const newPassword =
+    typeof req.body?.newPassword === "string" ? req.body.newPassword : "";
+  const confirmation =
+    typeof req.body?.confirmation === "string" ? req.body.confirmation : "";
+
+  if (!currentPassword || !newPassword || !confirmation) {
+    throw createHttpError(
+      "Current password, new password, and confirmation are required."
+    );
+  }
+
+  if (newPassword.length < 8 || newPassword.length > 128) {
+    throw createHttpError("New password must be between 8 and 128 characters.");
+  }
+
+  if (!/\p{L}/u.test(newPassword) || !/\p{N}/u.test(newPassword)) {
+    throw createHttpError(
+      "New password must include at least one letter and one number."
+    );
+  }
+
+  if (newPassword !== confirmation) {
+    throw createHttpError("New password and confirmation do not match.");
+  }
+
+  if (newPassword === currentPassword) {
+    throw createHttpError("New password must be different from the current password.");
+  }
+
+  const customer = await Customer.findById(req.customer._id).select(
+    "+password +sessionVersion"
+  );
+
+  if (!customer || !(await customer.matchPassword(currentPassword))) {
+    throw createHttpError("Current password is incorrect.", 401);
+  }
+
+  customer.password = newPassword;
+  await customer.save();
+
+  const tokens = generateCustomerTokenPair(customer);
+  sendCustomerAuthResponse(res, 200, customer, tokens);
+});
+
 const refreshCustomerToken = asyncHandler(async (req, res) => {
   const refreshToken = normalizeText(req.body?.refreshToken);
 
@@ -432,5 +479,6 @@ module.exports = {
   signoutCustomer,
   getCustomerMe,
   updateCustomerMe,
+  changeCustomerPassword,
   refreshCustomerToken,
 };

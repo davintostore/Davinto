@@ -8,7 +8,7 @@ const Select = ({ label, error, children, className = "", ...props }) => {
       )}
 
       <select
-        className={`w-full rounded-[0.2rem] border border-[#f5f0e8]/16 bg-[#28231f] px-4 py-3.5 text-sm text-[#f5f0e8] outline-none transition hover:border-[#f5f0e8]/25 focus:border-[#c7a852] ${className}`}
+        className={`davinto-select w-full rounded-[0.2rem] border border-[#f5f0e8]/16 bg-[#1c1917] px-4 py-3.5 text-sm text-[#f5f0e8] outline-none transition hover:border-[#f5f0e8]/25 focus:border-[#c7a852] ${className}`}
         {...props}
       >
         {children}

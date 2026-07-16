@@ -51,8 +51,16 @@
       "beige": "Beige",
       "pink": "Pink",
       "blanks": "Blanks",
-      "art-and-history": "Art and History"
+      "art-history": "Art and History"
     }
+  },
+  "categoryLabels": {
+    "nature-botanical": "Nature & Botanical",
+    "music-culture": "Music & Culture",
+    "words": "Words",
+    "graphic-design": "Graphic Design",
+    "blanks": "Blanks",
+    "art-history": "Art and History"
   },
   "category": {
     "label": "Collection",

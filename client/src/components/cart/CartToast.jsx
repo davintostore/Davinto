@@ -10,7 +10,7 @@ const CartToast = () => {
 
   return createPortal(
     <div
-      className="cart-toast-panel fixed left-auto right-4 top-[7rem] z-[130] flex min-h-11 w-fit max-w-[calc(100vw-2rem)] items-center justify-center gap-2 whitespace-nowrap border border-[#c7a852]/25 bg-[#080706]/95 px-4 py-2.5 text-[#f5f0e8] shadow-[0_18px_50px_rgba(0,0,0,0.32)] backdrop-blur sm:right-6 sm:w-auto sm:min-w-[10.5rem] sm:max-w-[18rem]"
+      className="cart-toast-panel fixed left-auto right-4 top-[7rem] z-[130] flex min-h-11 w-fit max-w-[calc(100vw-2rem)] items-center justify-center gap-2 whitespace-nowrap border border-[#c7a852]/25 bg-[#1c1917]/95 px-4 py-2.5 text-[#f5f0e8] shadow-[0_18px_50px_rgba(0,0,0,0.32)] backdrop-blur sm:right-6 sm:w-auto sm:min-w-[10.5rem] sm:max-w-[18rem]"
       role="status"
       aria-live="polite"
     >

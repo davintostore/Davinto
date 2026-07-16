@@ -15,6 +15,7 @@ import {
   signoutCustomerRequest,
   signupCustomerRequest,
   updateCustomerMeRequest,
+  changeCustomerPasswordRequest,
 } from "../services/customerAuthService";
 import {
   AUTH_SESSION_EVENTS,
@@ -181,6 +182,14 @@ export const CustomerAuthProvider = ({ children }) => {
     [refreshSession, refreshToken]
   );
 
+  const changePassword = useCallback(
+    async (payload) => {
+      const response = await changeCustomerPasswordRequest(payload);
+      return setSession(response);
+    },
+    [setSession]
+  );
+
   useEffect(() => {
     if (bootstrapStartedRef.current) return;
     bootstrapStartedRef.current = true;
@@ -269,6 +278,7 @@ export const CustomerAuthProvider = ({ children }) => {
       signout,
       refreshSession,
       updateProfile,
+      changePassword,
       setCustomer,
       clearSession,
     }),
@@ -283,6 +293,7 @@ export const CustomerAuthProvider = ({ children }) => {
       signout,
       refreshSession,
       updateProfile,
+      changePassword,
       clearSession,
     ]
   );

@@ -40,6 +40,11 @@ const refreshLimiter = createLimiter({
   message: "Too many token refresh attempts. Please try again later.",
 });
 
+const passwordChangeLimiter = createLimiter({
+  max: getPositiveInteger("PASSWORD_CHANGE_RATE_LIMIT_MAX", 5),
+  message: "Too many password change attempts. Please try again later.",
+});
+
 const trackingLimiter = createLimiter({
   max: getPositiveInteger("TRACKING_RATE_LIMIT_MAX", 20),
   message: "Too many order tracking attempts. Please try again later.",
@@ -63,6 +68,7 @@ const paymentRetryLimiter = createLimiter({
 module.exports = {
   authLimiter,
   refreshLimiter,
+  passwordChangeLimiter,
   trackingLimiter,
   orderCreateLimiter,
   quoteLimiter,

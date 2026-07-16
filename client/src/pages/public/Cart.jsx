@@ -118,7 +118,7 @@ const Cart = () => {
 
   return (
     <>
-      <div className="border-b border-[#c7a852]/20 bg-[#050505]">
+      <div className="border-b border-[#c7a852]/20 bg-[#f5f0e8]">
         <Container className="flex h-16 items-center justify-between gap-4">
           <Link
             to="/"
@@ -126,7 +126,7 @@ const Cart = () => {
             className="flex h-11 w-28 items-center"
           >
             <img
-              src="/images/logo/logo-3.webp"
+              src="/images/logo/logo-4.webp"
               alt="Davinto"
               className="max-h-10 w-full object-contain"
             />
@@ -140,7 +140,7 @@ const Cart = () => {
         </Container>
       </div>
 
-      <section className="cart-page-section bg-[#050505]">
+      <section className="cart-page-section bg-[#f5f0e8] text-[#1c1917]">
         <Container>
           <div className="mb-6 flex flex-col gap-3 border-b border-[#f5f0e8]/12 pb-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -233,7 +233,7 @@ const Cart = () => {
                         <div className="flex min-w-0 flex-1 gap-3">
                           <Link
                             to={`/product/${item.slug}`}
-                            className="h-24 w-20 shrink-0 overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f] sm:w-[4.5rem]"
+                            className="h-24 w-20 shrink-0 overflow-hidden border border-[#8b8075]/30 bg-[#1c1917] sm:w-[4.5rem]"
                           >
                             {displayImage ? (
                               <img
@@ -413,7 +413,7 @@ const Cart = () => {
                 </div>
               </div>
 
-              <aside className="border border-[#f5f0e8]/12 bg-[#110f0e]/72 p-5 lg:sticky lg:top-24">
+              <aside className="border border-[#8b8075]/30 bg-[#f5f0e8] p-5 lg:sticky lg:top-24">
                 <h2 className="text-[0.64rem] font-black uppercase tracking-[0.24em] text-[#c7a852]">
                   {t("cart:summary")}
                 </h2>
@@ -570,14 +570,14 @@ const Cart = () => {
       {isClearConfirmOpen && (
         <div
           ref={clearConfirmRef}
-          className="fixed inset-0 z-[90] grid place-items-center bg-[#050505]/78 p-4"
+          className="fixed inset-0 z-[90] grid place-items-center bg-[#1c1917]/78 p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="clear-cart-dialog-title"
           aria-describedby="clear-cart-dialog-message"
           tabIndex={-1}
         >
-          <div className="w-full max-w-md border border-[#c7a852]/28 bg-[#110f0e] p-6 shadow-2xl">
+          <div className="w-full max-w-md border border-[#c7a852]/28 bg-[#1c1917] p-6 text-[#f5f0e8] shadow-2xl">
             <p
               id="clear-cart-dialog-title"
               className="font-serif text-3xl font-semibold text-[#f5f0e8]"

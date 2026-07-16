@@ -13,6 +13,7 @@ import useSeo from "../../hooks/useSeo";
 import { getPublicProductsRequest } from "../../services/productService";
 import api from "../../api/axios";
 import { getLocalizedCategory } from "../../utils/localizedContent";
+import { getCategoryPresentation } from "../../data/categoryPresentation";
 
 const PRODUCTS_PER_PAGE = 10;
 
@@ -39,8 +40,16 @@ const Category = () => {
   });
 
   const localizedCategory = useMemo(
-    () => getLocalizedCategory(categoryData?.category, language),
-    [categoryData, language]
+    () => {
+      const localized = getLocalizedCategory(categoryData?.category, language);
+      const presentation = getCategoryPresentation(categoryData?.category || slug);
+      if (!localized || !presentation) return localized;
+      return {
+        ...localized,
+        name: presentation.labels[language] || presentation.labels.en,
+      };
+    },
+    [categoryData, language, slug]
   );
 
   // SEO
@@ -91,10 +100,7 @@ const Category = () => {
     placeholderData: (previousData) => previousData,
   });
 
-  const category = useMemo(
-    () => getLocalizedCategory(categoryData?.category, language),
-    [categoryData, language]
-  );
+  const category = localizedCategory;
   // Arabic slugs and language-prefixed routes remain deferred to Phase 4C.
   const products = useMemo(
     () => productsData?.products || [],

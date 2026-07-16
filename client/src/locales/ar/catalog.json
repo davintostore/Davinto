@@ -51,8 +51,16 @@
       "beige": "بيج",
       "pink": "وردي",
       "blanks": "أساسيات سادة",
-      "art-and-history": "فن وتاريخ"
+      "art-history": "فن وتاريخ"
     }
+  },
+  "categoryLabels": {
+    "nature-botanical": "طبيعة ونباتات",
+    "music-culture": "موسيقى وثقافة",
+    "words": "كلمات",
+    "graphic-design": "تصميم جرافيك",
+    "blanks": "أساسيات سادة",
+    "art-history": "فن وتاريخ"
   },
   "category": {
     "label": "المجموعة",

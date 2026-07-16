@@ -90,3 +90,12 @@ export const updateCustomerMeRequest = async (payload) => {
   );
   return data;
 };
+
+export const changeCustomerPasswordRequest = async (payload) => {
+  const { data } = await customerAuthApi.patch(
+    "/customer-auth/me/password",
+    payload,
+    withCustomerAuthorization()
+  );
+  return data;
+};

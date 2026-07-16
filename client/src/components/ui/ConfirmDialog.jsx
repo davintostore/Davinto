@@ -28,7 +28,7 @@ const ConfirmDialog = ({
   return (
     <div
       ref={dialogRef}
-      className="fixed inset-0 z-[140] grid place-items-center bg-[#050505]/78 p-4"
+      className="fixed inset-0 z-[140] grid place-items-center bg-[#1c1917]/78 p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-dialog-title"
@@ -44,7 +44,7 @@ const ConfirmDialog = ({
         onClick={onCancel}
       />
 
-      <div className="relative w-full max-w-md border border-[#c7a852]/28 bg-[#110f0e] p-6 shadow-2xl">
+      <div className="relative w-full max-w-md border border-[#c7a852]/28 bg-[#1c1917] p-6 text-[#f5f0e8] shadow-2xl">
         {eyebrow && (
           <p className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-[#c7a852]">
             {eyebrow}

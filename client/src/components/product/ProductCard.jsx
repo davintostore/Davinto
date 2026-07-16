@@ -12,12 +12,12 @@ const QuickProductModal = lazy(() => import("./QuickProductModal"));
 
 const QuickProductModalFallback = ({ label, message }) => (
   <div
-    className="fixed inset-0 z-[95] flex items-center justify-center bg-[#050505]/52 p-3 text-center text-[#f5f0e8] sm:p-6"
+    className="fixed inset-0 z-[95] flex items-center justify-center bg-[#1c1917]/52 p-3 text-center text-[#f5f0e8] sm:p-6"
     role="dialog"
     aria-modal="true"
     aria-label={label}
   >
-    <div className="border border-[#c7a852]/25 bg-[#110f0e] px-6 py-5 shadow-2xl">
+    <div className="border border-[#c7a852]/25 bg-[#1c1917] px-6 py-5 shadow-2xl">
       <p className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-[#c7a852]">
         Davinto
       </p>
@@ -85,7 +85,7 @@ const ProductCard = ({ product, revealDelay = 0 }) => {
     <>
       <RevealContent
         as="article"
-        className="group"
+        className="product-card group"
         delay={revealDelay}
         duration={0.74}
         distance={26}
@@ -96,7 +96,7 @@ const ProductCard = ({ product, revealDelay = 0 }) => {
             className="block focus-visible:outline-offset-4"
             aria-label={localizedProduct.name}
           >
-        <div className="relative aspect-[3/4] overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f]">
+        <div className="relative aspect-[3/4] overflow-hidden border border-[#8b8075]/30 bg-[#1c1917]">
           {primaryImage ? (
             <img
               src={primaryImage}
@@ -110,7 +110,7 @@ const ProductCard = ({ product, revealDelay = 0 }) => {
               loading="lazy"
             />
           ) : (
-            <div className="flex h-full flex-col items-center justify-center bg-[linear-gradient(145deg,#332c27,#1c1917)] text-center">
+            <div className="flex h-full flex-col items-center justify-center bg-[#1c1917] text-center">
               <span className="brand-wordmark text-5xl text-[#f5f0e8]/10">
                 D
               </span>
@@ -130,7 +130,7 @@ const ProductCard = ({ product, revealDelay = 0 }) => {
             />
           )}
 
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#110f0e]/45 via-transparent to-transparent opacity-55" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#1c1917]/45 via-transparent to-transparent opacity-55" />
 
           <div className="absolute left-0 top-0 flex flex-wrap">
             {displayBadges.map((badge) => (
@@ -152,7 +152,7 @@ const ProductCard = ({ product, revealDelay = 0 }) => {
           <button
             type="button"
             onClick={openQuickOptions}
-            className="davinto-press-gold absolute inset-x-3 bottom-3 z-10 hidden min-h-10 items-center justify-center whitespace-nowrap border border-[#c7a852]/55 bg-[#110f0e]/92 px-3 py-2 text-[0.56rem] font-black uppercase tracking-[0.1em] text-[#f5f0e8] opacity-0 shadow-xl transition duration-300 hover:border-[#c7a852] hover:bg-[#882c30]/88 focus-visible:outline-offset-2 md:flex md:translate-y-4 md:group-hover:translate-y-0 md:group-hover:opacity-100 md:group-focus-within:translate-y-0 md:group-focus-within:opacity-100"
+            className="davinto-press-gold absolute inset-x-3 bottom-3 z-10 hidden min-h-10 items-center justify-center whitespace-nowrap border border-[#c7a852]/55 bg-[#1c1917]/92 px-3 py-2 text-[0.56rem] font-black uppercase tracking-[0.1em] text-[#f5f0e8] opacity-0 shadow-xl transition duration-300 hover:border-[#c7a852] hover:bg-[#882c30]/88 focus-visible:outline-offset-2 md:flex md:translate-y-4 md:group-hover:translate-y-0 md:group-hover:opacity-100 md:group-focus-within:translate-y-0 md:group-focus-within:opacity-100"
             aria-haspopup="dialog"
           >
             {t("catalog:product.chooseOptions")}
@@ -163,14 +163,14 @@ const ProductCard = ({ product, revealDelay = 0 }) => {
           <div className="flex items-start justify-between gap-2 sm:gap-5">
             <div className="min-w-0">
               <Link to={`/product/${product.slug}`}>
-                <h3 className="truncate font-serif text-base font-semibold text-[#f5f0e8] transition hover:text-[#c7a852] sm:text-xl">
+                <h3 className="truncate font-serif text-base font-semibold text-[#1c1917] transition hover:text-[#882c30] sm:text-xl">
                   {localizedProduct.name}
                 </h3>
               </Link>
             </div>
 
             <div className="shrink-0 text-right">
-              <p className="text-xs font-black text-[#f5f0e8] sm:text-sm">
+              <p className="text-xs font-black text-[#1c1917] sm:text-sm">
                 {formatMoney(displayPrice)}
               </p>
               {isOnSale && (
@@ -186,7 +186,7 @@ const ProductCard = ({ product, revealDelay = 0 }) => {
           <button
             type="button"
             onClick={openQuickOptions}
-            className="davinto-press-gold mt-3 flex min-h-11 w-full items-center justify-center whitespace-nowrap border border-[#c7a852]/38 px-2 py-1.5 text-[0.54rem] font-black uppercase tracking-[0.06em] text-[#f5f0e8]/82 transition hover:border-[#c7a852] hover:text-[#f5f0e8] md:hidden"
+            className="davinto-press-gold mt-3 flex min-h-11 w-full items-center justify-center whitespace-nowrap rounded-lg border border-[#882c30] px-2 py-1.5 text-[0.54rem] font-black uppercase tracking-[0.06em] text-[#882c30] transition hover:bg-[#882c30] hover:text-[#f5f0e8] md:hidden"
             aria-haspopup="dialog"
           >
             {t("catalog:product.chooseOptions")}

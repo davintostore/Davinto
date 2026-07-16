@@ -7,7 +7,7 @@ import Button from "../ui/Button";
 import Input from "../ui/Input";
 import useFocusTrap from "../../hooks/useFocusTrap";
 import useOverlayBackClose from "../../hooks/useOverlayBackClose";
-import { getLocalizedCategory } from "../../utils/localizedContent";
+import { getPresentedCategories } from "../../data/categoryPresentation";
 
 const fallbackColors = [
   {
@@ -189,33 +189,16 @@ const CatalogFilters = ({
       if (colorsBySlug.has(slug)) return;
 
       const fallbackColor = fallbackColors.find((color) => color.slug === slug);
-      colorsBySlug.set(slug, fallbackColor || { slug, name: slug, hex: "#777" });
+      colorsBySlug.set(slug, fallbackColor || { slug, name: slug, hex: "#8b8075" });
     });
 
     return sortColors(Array.from(colorsBySlug.values()));
   }, [metadata, selectedColors]);
 
-  const localizedCategories = useMemo(() => {
-    const categoriesByKey = new Map();
-
-    categories.forEach((category) => {
-      const localizedCategory = getLocalizedCategory(category, language);
-      const key = String(
-        localizedCategory.slug ||
-          localizedCategory._id ||
-          localizedCategory.name ||
-          ""
-      )
-        .trim()
-        .toLowerCase();
-
-      if (!key || categoriesByKey.has(key)) return;
-
-      categoriesByKey.set(key, localizedCategory);
-    });
-
-    return Array.from(categoriesByKey.values());
-  }, [categories, language]);
+  const localizedCategories = useMemo(
+    () => getPresentedCategories(categories, language),
+    [categories, language]
+  );
   const selectedSort =
     sortOptions.find((option) => option.value === filters.sort) ||
     sortOptions[0];
@@ -401,13 +384,13 @@ const CatalogFilters = ({
           >
             <button
               type="button"
-              className="fixed inset-0 bg-[#050505]/58"
+              className="fixed inset-0 bg-[#1c1917]/58"
               aria-label={t("filters.close")}
               tabIndex={-1}
               onClick={closeFilterDrawer}
             />
 
-            <aside className="cart-drawer-panel fixed bottom-0 right-0 top-0 flex w-[min(88vw,28rem)] max-w-[28rem] flex-col overflow-hidden border-l border-[#c7a852]/30 bg-[#110f0e] shadow-2xl sm:w-[26rem] lg:w-[28rem]">
+            <aside className="cart-drawer-panel fixed bottom-0 right-0 top-0 flex w-[min(88vw,28rem)] max-w-[28rem] flex-col overflow-hidden border-l border-[#c7a852]/30 bg-[#1c1917] text-[#f5f0e8] shadow-2xl sm:w-[26rem] lg:w-[28rem]">
               <div className="flex shrink-0 items-center justify-between border-b border-[#f5f0e8]/12 p-5">
                 <div>
                   <p
@@ -628,7 +611,7 @@ const CatalogFilters = ({
                           />
                           <span
                             className="h-3.5 w-3.5 rounded-full border border-[#f5f0e8]/40 ring-1 ring-[#1c1917]"
-                            style={{ backgroundColor: color.hex || "#777" }}
+                            style={{ backgroundColor: color.hex || "#8b8075" }}
                             aria-hidden="true"
                           />
                           <span>{label}</span>
@@ -685,7 +668,7 @@ const CatalogFilters = ({
           <div className="flex gap-2">
             <button
               type="button"
-              className="davinto-press-gold inline-flex h-11 items-center gap-2 border border-[#f5f0e8]/18 px-4 text-[0.66rem] font-black uppercase tracking-[0.18em] text-[#f5f0e8] transition hover:border-[#c7a852]"
+              className="catalog-toolbar-control davinto-press-gold inline-flex h-11 items-center gap-2 border px-4 text-[0.66rem] font-black uppercase tracking-[0.18em] transition"
               onClick={openFilterDrawer}
               aria-expanded={isFilterOpen}
               aria-controls="catalog-filter-drawer"
@@ -703,7 +686,7 @@ const CatalogFilters = ({
                 aria-expanded={isSortMenuOpen}
                 aria-haspopup="menu"
                 aria-controls="catalog-sort-menu"
-                className="davinto-press-gold inline-flex h-11 items-center border border-[#f5f0e8]/18 px-4 text-[0.66rem] font-black uppercase tracking-[0.18em] text-[#f5f0e8] transition hover:border-[#c7a852]"
+                className="catalog-toolbar-control davinto-press-gold inline-flex h-11 items-center border px-4 text-[0.66rem] font-black uppercase tracking-[0.18em] transition"
                 onClick={toggleSortMenu}
               >
                 {t("shop.sort")}
@@ -712,16 +695,19 @@ const CatalogFilters = ({
               {isSortMenuOpen && (
                 <div
                   id="catalog-sort-menu"
-                  className="absolute right-0 z-30 mt-2 w-56 border border-[#c7a852]/30 bg-[#110f0e] p-2 shadow-2xl"
+                  className="catalog-sort-menu absolute end-0 z-30 mt-2 w-56 border p-2 shadow-[0_1rem_2.5rem_rgba(28,25,23,0.16)]"
+                  role="menu"
                 >
                   {sortOptions.map((option) => (
                     <button
                       key={option.value}
                       type="button"
-                      className={`davinto-press-muted block w-full px-3 py-3 text-left text-xs font-bold uppercase tracking-[0.12em] transition ${
+                      role="menuitemradio"
+                      aria-checked={selectedSort.value === option.value}
+                      className={`catalog-sort-option davinto-press-muted block w-full px-3 py-3 text-start text-xs font-bold uppercase tracking-[0.12em] transition ${
                         selectedSort.value === option.value
-                          ? "bg-[#c7a852] text-[#1c1917]"
-                          : "text-[#f5f0e8]/70 hover:bg-[#f5f0e8]/8 hover:text-[#f5f0e8]"
+                          ? "catalog-sort-option--selected"
+                          : ""
                       }`}
                       onClick={() => {
                         onSortChange(option.value);

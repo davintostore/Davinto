@@ -49,18 +49,23 @@
 }
 
 :root {
+  --davinto-warm-grey: #8b8075;
+  --davinto-cream: #f5f0e8;
+  --davinto-gold: #c7a852;
+  --davinto-maroon: #882c30;
+  --davinto-near-black: #1c1917;
   --davinto-ink: #1c1917;
-  --davinto-ink-deep: #110f0e;
-  --davinto-ink-soft: #28231f;
+  --davinto-ink-deep: #1c1917;
+  --davinto-ink-soft: #1c1917;
   --davinto-oxblood: #882c30;
-  --davinto-oxblood-dark: #5f1f23;
+  --davinto-oxblood-dark: #882c30;
   --davinto-gold: #c7a852;
   --davinto-paper: #f5f0e8;
-  --davinto-paper-muted: #dfd6ca;
+  --davinto-paper-muted: #f5f0e8;
   --davinto-taupe: #8b8075;
   --davinto-border: rgba(245, 240, 232, 0.16);
   --davinto-border-strong: rgba(199, 168, 82, 0.48);
-  --davinto-surface: rgba(40, 35, 31, 0.92);
+  --davinto-surface: rgba(28, 25, 23, 0.92);
   --davinto-surface-soft: rgba(245, 240, 232, 0.055);
   --davinto-display: "Swantime", "Iowan Old Style", "Palatino Linotype",
     Palatino, "Book Antiqua", Baskerville, "Times New Roman", serif;
@@ -72,7 +77,7 @@
 
   font-family: var(--davinto-sans);
   color: var(--davinto-paper);
-  background: #050505;
+  background: var(--davinto-near-black);
   font-synthesis: weight;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -85,7 +90,7 @@
 
 html {
   scroll-behavior: auto;
-  background: #050505;
+  background: var(--davinto-near-black);
   font-family: var(--davinto-sans);
 }
 
@@ -93,7 +98,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: #050505;
+  background: var(--davinto-near-black);
   color: var(--davinto-paper);
   font-family: var(--davinto-sans);
 }
@@ -233,7 +238,8 @@ img {
 .page-shell {
   min-height: 100vh;
   overflow: clip;
-  background: #050505;
+  background: var(--davinto-cream);
+  color: var(--davinto-near-black);
 }
 
 .davinto-route-transition {
@@ -407,7 +413,7 @@ html[lang="ar"] .page-shell label {
 }
 
 .davinto-hero-poster {
-  background-color: #050505;
+  background-color: var(--davinto-near-black);
   background-position: center;
   background-size: cover;
   opacity: 1;
@@ -568,7 +574,7 @@ html[lang="ar"] .page-shell label {
     linear-gradient(145deg, rgba(245, 240, 232, 0.035), transparent 54%),
     var(--davinto-surface);
   border: 1px solid var(--davinto-border);
-  box-shadow: 0 24px 70px rgba(17, 15, 14, 0.22);
+  box-shadow: 0 24px 70px rgba(28, 25, 23, 0.22);
 }
 
 .fashion-section {
@@ -633,13 +639,13 @@ html[lang="ar"] .page-shell label {
 .cart-page-section {
   padding-block: clamp(1.75rem, 4vw, 3.25rem);
   min-height: calc(100vh - 4rem);
-  background: #050505;
+  background: var(--davinto-cream);
 }
 
 .checkout-section {
   padding-block: clamp(1.25rem, 3vw, 2.5rem);
   min-height: calc(100vh - 4rem);
-  background: #050505;
+  background: var(--davinto-cream);
 }
 
 .cart-drawer-panel {
@@ -667,9 +673,9 @@ html[lang="ar"] .page-shell label {
 :is(.page-shell, .davinto-public-portal) .davinto-button:not(:disabled):active,
 :is(.page-shell, .davinto-public-portal)
   .davinto-press-gold:not(:disabled):active {
-  background-color: #c7a852;
-  border-color: #c7a852;
-  color: #15120f;
+  background-color: #a33a3f;
+  border-color: #a33a3f;
+  color: #f5f0e8;
   transform: translateY(1px) scale(0.99);
 }
 
@@ -687,7 +693,7 @@ html[lang="ar"] .page-shell label {
   .davinto-press-icon:not(:disabled):active {
   background-color: #c7a852;
   border-color: #c7a852;
-  color: #15120f;
+  color: #1c1917;
   transform: scale(0.97);
 }
 
@@ -812,10 +818,332 @@ html[lang="ar"] .page-shell label {
   }
 }
 
+/* Owner-approved public Cream theme. Admin is intentionally outside .page-shell. */
+.page-shell main {
+  background: var(--davinto-cream);
+  color: var(--davinto-near-black);
+}
+
+.page-shell .glass-card,
+.page-shell .fashion-card {
+  background: var(--davinto-cream);
+  border-color: rgba(139, 128, 117, 0.3);
+  color: var(--davinto-near-black);
+  box-shadow: 0 18px 48px rgba(28, 25, 23, 0.08);
+}
+
+.page-shell .davinto-input,
+.page-shell .davinto-select,
+.page-shell .davinto-textarea {
+  border-color: rgba(139, 128, 117, 0.45);
+  border-radius: 0.5rem;
+  background: var(--davinto-cream);
+  color: var(--davinto-near-black);
+}
+
+.page-shell .davinto-input:focus,
+.page-shell .davinto-select:focus,
+.page-shell .davinto-textarea:focus {
+  border-color: var(--davinto-gold);
+  background: var(--davinto-cream);
+  box-shadow: 0 0 0 2px rgba(199, 168, 82, 0.2);
+}
+
+.page-shell .davinto-input:disabled {
+  background: rgba(139, 128, 117, 0.12);
+  color: var(--davinto-warm-grey);
+}
+
+.page-shell .davinto-button[data-variant="primary"] {
+  border-color: var(--davinto-maroon);
+  background: var(--davinto-maroon);
+  color: var(--davinto-cream);
+}
+
+.page-shell .davinto-button[data-variant="primary"]:not(:disabled):hover {
+  border-color: #a33a3f;
+  background: #a33a3f;
+  color: var(--davinto-cream);
+  box-shadow: 0 0.75rem 1.75rem rgba(136, 44, 48, 0.2);
+}
+
+.page-shell .davinto-button[data-variant="secondary"] {
+  border-color: var(--davinto-near-black);
+  background: transparent;
+  color: var(--davinto-near-black) !important;
+}
+
+.page-shell .davinto-button[data-variant="secondary"]:not(:disabled):hover {
+  border-color: var(--davinto-near-black);
+  background: var(--davinto-near-black);
+  color: var(--davinto-cream) !important;
+}
+
+.page-shell .davinto-button[data-variant="secondary"]:not(:disabled):active {
+  border-color: var(--davinto-near-black);
+  background: var(--davinto-near-black);
+  color: var(--davinto-cream) !important;
+  transform: translateY(1px) scale(0.99);
+}
+
+.public-navbar-signout {
+  border-color: rgba(245, 240, 232, 0.46);
+  background: transparent;
+  color: var(--davinto-cream);
+}
+
+.public-navbar-signout:not(:disabled):hover {
+  border-color: var(--davinto-maroon);
+  background: var(--davinto-maroon);
+  color: var(--davinto-cream);
+}
+
+.public-navbar-signout:not(:disabled):active {
+  border-color: #a33a3f !important;
+  background: #a33a3f !important;
+  color: var(--davinto-cream) !important;
+}
+
+.catalog-toolbar-control {
+  border-color: rgba(139, 128, 117, 0.48);
+  background: var(--davinto-cream);
+  color: var(--davinto-near-black) !important;
+}
+
+.catalog-toolbar-control:not(:disabled):hover,
+.catalog-toolbar-control[aria-expanded="true"] {
+  border-color: var(--davinto-near-black);
+  background: var(--davinto-near-black);
+  color: var(--davinto-cream) !important;
+}
+
+.catalog-toolbar-control:not(:disabled):active {
+  border-color: var(--davinto-maroon) !important;
+  background: var(--davinto-maroon) !important;
+  color: var(--davinto-cream) !important;
+}
+
+.catalog-sort-menu {
+  border-color: rgba(139, 128, 117, 0.38);
+  background: #fbf7f0;
+  color: var(--davinto-near-black);
+}
+
+.catalog-sort-option {
+  color: var(--davinto-near-black) !important;
+}
+
+.catalog-sort-option:not(.catalog-sort-option--selected):hover,
+.catalog-sort-option:not(.catalog-sort-option--selected):focus-visible {
+  background: rgba(199, 168, 82, 0.2);
+  color: var(--davinto-near-black) !important;
+}
+
+.catalog-sort-option--selected,
+.catalog-sort-option--selected:hover,
+.catalog-sort-option--selected:focus-visible {
+  background: var(--davinto-gold) !important;
+  color: var(--davinto-near-black) !important;
+}
+
+.page-shell main section:not(.davinto-dark-section) {
+  color: var(--davinto-near-black);
+}
+
+.page-shell
+  main
+  section:not(.davinto-dark-section)
+  [class*="text-[#f5f0e8]"]:not([data-variant="danger"]) {
+  color: var(--davinto-near-black) !important;
+}
+
+.page-shell main section:not(.davinto-dark-section) [class*="text-[#f5d7d8]"],
+.page-shell main section:not(.davinto-dark-section) [class*="text-[#e8a3a6]"] {
+  color: var(--davinto-maroon) !important;
+}
+
+.page-shell main section:not(.davinto-dark-section) [class*="border-[#f5f0e8]"] {
+  border-color: rgba(139, 128, 117, 0.3) !important;
+}
+
+.page-shell main section:not(.davinto-dark-section)
+  [class*="bg-[#882c30]"][class*="text-[#f5f0e8]"]:not(
+    [data-variant="danger"]
+  ) {
+  color: var(--davinto-cream) !important;
+}
+
+.page-shell .davinto-button[data-variant="danger"] {
+  border-color: rgba(136, 44, 48, 0.48);
+  background: var(--davinto-cream);
+  color: var(--davinto-maroon) !important;
+}
+
+.page-shell .davinto-button[data-variant="danger"]:not(:disabled):hover,
+.page-shell .davinto-button[data-variant="danger"]:not(:disabled):active {
+  border-color: var(--davinto-maroon);
+  background: var(--davinto-maroon);
+  color: var(--davinto-cream) !important;
+}
+
+.page-shell .product-card .davinto-press-gold {
+  border-color: var(--davinto-maroon) !important;
+  background: var(--davinto-maroon) !important;
+  color: var(--davinto-cream) !important;
+}
+
+.davinto-dark-section .product-card h3,
+.davinto-dark-section .product-card p:not([class*="text-[#8b8075]"]) {
+  color: var(--davinto-cream);
+}
+
+.owner-category-card__image {
+  z-index: 0;
+  transform: scale(1);
+  transition: transform 650ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.owner-category-card__content {
+  position: relative;
+}
+
+.category-card-eyebrow,
+.category-card-icon {
+  color: var(--davinto-gold);
+}
+
+.category-card-title,
+.category-card-cta {
+  color: var(--davinto-cream);
+}
+
+.category-card-arrow {
+  color: currentColor;
+}
+
+.owner-category-card__overlay {
+  transition: background-color 350ms ease;
+}
+
+.owner-category-card__icon,
+.owner-category-card__arrow {
+  transition: color 250ms ease, border-color 250ms ease, background-color 250ms ease,
+    transform 250ms ease;
+}
+
+.owner-category-card:hover .owner-category-card__image,
+.owner-category-card:focus-visible .owner-category-card__image {
+  transform: scale(1.05);
+}
+
+.owner-category-card:hover .owner-category-card__overlay,
+.owner-category-card:focus-visible .owner-category-card__overlay {
+  background-color: rgba(0, 0, 0, 0.34);
+}
+
+.owner-category-card:hover .owner-category-card__icon,
+.owner-category-card:focus-visible .owner-category-card__icon {
+  border-color: var(--davinto-gold);
+  background: var(--davinto-gold);
+  color: var(--davinto-near-black);
+}
+
+.owner-category-card:hover .owner-category-card__arrow,
+.owner-category-card:focus-visible .owner-category-card__arrow {
+  transform: translateX(0.3rem);
+}
+
+html[dir="rtl"] .owner-category-card:hover .owner-category-card__arrow,
+html[dir="rtl"] .owner-category-card:focus-visible .owner-category-card__arrow {
+  transform: translateX(-0.3rem) rotate(180deg);
+}
+
+html[dir="rtl"] .owner-category-card__arrow {
+  transform: rotate(180deg);
+}
+
+.owner-home-banner__overlay {
+  background: linear-gradient(
+    90deg,
+    rgba(245, 240, 232, 0.94) 0%,
+    rgba(245, 240, 232, 0.8) 34%,
+    rgba(245, 240, 232, 0.16) 66%,
+    transparent 82%
+  );
+}
+
+.owner-home-banner__overlay--rtl {
+  background: linear-gradient(
+    270deg,
+    rgba(245, 240, 232, 0.94) 0%,
+    rgba(245, 240, 232, 0.8) 34%,
+    rgba(245, 240, 232, 0.16) 66%,
+    transparent 82%
+  );
+}
+
+.owner-home-banner__copy--ltr {
+  text-align: left;
+}
+
+html[dir="rtl"] .page-shell .owner-home-banner__copy--rtl {
+  text-align: right;
+}
+
+@media (max-width: 63.999rem) {
+  .public-mobile-controls {
+    left: 1rem;
+    z-index: 1;
+  }
+
+  .public-mobile-controls button {
+    color: var(--davinto-cream) !important;
+  }
+
+  .public-commerce-controls {
+    right: 1rem;
+  }
+
+  html[dir="rtl"] .public-mobile-controls {
+    right: 1rem;
+    left: auto;
+  }
+
+  html[dir="rtl"] .public-commerce-controls {
+    right: auto;
+    left: 1rem;
+  }
+}
+
+@media (max-width: 39.999rem) {
+  .owner-home-banner {
+    background-position: center;
+  }
+
+  .owner-home-banner__overlay,
+  .owner-home-banner__overlay--rtl {
+    transform: none;
+    background: linear-gradient(
+      0deg,
+      rgba(245, 240, 232, 0.96) 0%,
+      rgba(245, 240, 232, 0.78) 38%,
+      rgba(245, 240, 232, 0.08) 72%,
+      transparent 100%
+    );
+  }
+}
+
+@media (min-width: 64rem) {
+  .owner-home-banner--story,
+  .owner-home-banner--track {
+    background-position: center;
+  }
+}
+
 .catalog-section {
   padding-block: clamp(2.5rem, 5vw, 4.75rem);
   min-height: calc(100vh - 6.5rem);
-  background: #050505;
+  background: var(--davinto-cream);
 }
 
 .product-grid {
@@ -828,6 +1156,12 @@ html[lang="ar"] .page-shell label {
 .fashion-panel {
   border: 1px solid var(--davinto-border);
   background: var(--davinto-surface-soft);
+}
+
+.page-shell .fashion-panel {
+  border-color: rgba(139, 128, 117, 0.3);
+  background: var(--davinto-cream);
+  color: var(--davinto-near-black);
 }
 
 .fashion-panel-paper {
@@ -928,7 +1262,7 @@ html[lang="ar"] .page-shell label {
   border: 2px solid var(--davinto-paper);
   border-radius: 999px;
   background: var(--davinto-gold);
-  box-shadow: 0 0 0 0.22rem rgba(5, 5, 5, 0.78);
+  box-shadow: 0 0 0 0.22rem rgba(28, 25, 23, 0.78);
   pointer-events: auto;
 }
 
@@ -938,7 +1272,7 @@ html[lang="ar"] .page-shell label {
   border: 2px solid var(--davinto-paper);
   border-radius: 999px;
   background: var(--davinto-gold);
-  box-shadow: 0 0 0 0.22rem rgba(5, 5, 5, 0.78);
+  box-shadow: 0 0 0 0.22rem rgba(28, 25, 23, 0.78);
   pointer-events: auto;
 }
 

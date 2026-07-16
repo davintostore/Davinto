@@ -9,7 +9,7 @@ import Container from "../../components/ui/Container";
 import StickerLabel from "../../components/ui/StickerLabel";
 import useSeo from "../../hooks/useSeo";
 import { getPublicCategoriesRequest } from "../../services/categoryService";
-import { getLocalizedCategory } from "../../utils/localizedContent";
+import { getPresentedCategories } from "../../data/categoryPresentation";
 
 const Categories = () => {
   const { t, i18n } = useTranslation(["catalog", "common"]);
@@ -34,15 +34,13 @@ const Categories = () => {
 
   const categories = useMemo(
     () =>
-      (categoriesData?.categories || []).map((category) =>
-        getLocalizedCategory(category, language)
-      ),
+      getPresentedCategories(categoriesData?.categories || [], language),
     [categoriesData, language]
   );
 
   return (
     <>
-      <section className="categories-page-section bg-[#050505]">
+      <section className="categories-page-section bg-[#f5f0e8] text-[#1c1917]">
         <Container>
           <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -51,7 +49,7 @@ const Categories = () => {
                 as="h1"
                 text={t("catalog:categoriesPage.gridTitle")}
                 splitType="chars"
-                className="editorial-heading section-display-title mt-4"
+                className="editorial-heading section-display-title mt-4 text-[#1c1917]"
               />
             </div>
           </div>

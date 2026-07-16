@@ -147,13 +147,13 @@ const TrackOrder = () => {
         backgroundVideo={{
           mp4: "/videos/track-order/track-order.mp4",
         }}
-        className="bg-[#050505]"
+        className="bg-[#f5f0e8] text-[#1c1917]"
       />
 
       <section className="fashion-section">
         <Container>
           <div className="grid gap-6 lg:grid-cols-[420px_1fr] lg:items-start">
-            <Card className="border-[#c7a852]/28 bg-[#110f0e] p-6 sm:p-8">
+            <Card className="border-[#c7a852]/28 bg-[#f5f0e8] p-6 sm:p-8">
               <SectionLabel>{t("orders:track.label")}</SectionLabel>
 
               <h2 className="mb-7 font-serif text-3xl font-semibold">
@@ -500,7 +500,7 @@ const TrackOrder = () => {
                           }
                           className="flex gap-3 border-b border-[#f5f0e8]/10 pb-4 last:border-b-0 last:pb-0"
                         >
-                          <div className="h-20 w-16 shrink-0 overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f]">
+                          <div className="h-20 w-16 shrink-0 overflow-hidden border border-[#8b8075]/30 bg-[#1c1917]">
                             {displayImage ? (
                               <img
                                 src={displayImage}

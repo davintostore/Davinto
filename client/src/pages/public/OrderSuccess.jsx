@@ -373,7 +373,7 @@ const OrderSuccess = () => {
               </Card>
 
               {order && (
-                <Card className="border-[#c7a852]/30 bg-[#110f0e] p-6">
+                <Card className="border-[#c7a852]/30 bg-[#f5f0e8] p-6">
                   <SectionLabel>{t("orders:success.summary")}</SectionLabel>
 
                   <div className="space-y-4">
@@ -389,7 +389,7 @@ const OrderSuccess = () => {
                           }
                           className="flex gap-3 border-b border-[#f5f0e8]/10 pb-4"
                         >
-                          <div className="h-20 w-16 shrink-0 overflow-hidden border border-[#f5f0e8]/12 bg-[#28231f]">
+                          <div className="h-20 w-16 shrink-0 overflow-hidden border border-[#8b8075]/30 bg-[#1c1917]">
                             {displayImage ? (
                               <img
                                 src={displayImage}

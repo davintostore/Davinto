@@ -19,6 +19,8 @@ import CartDrawer from "../cart/CartDrawer";
 import CartToast from "../cart/CartToast";
 import LanguageSwitcher from "../i18n/LanguageSwitcher";
 import GlobalSearchDrawer from "../search/GlobalSearchDrawer";
+import CategoryIcon from "../category/CategoryIcon";
+import { getPresentedCategories } from "../../data/categoryPresentation";
 import { socialLinks } from "../../constants/socialLinks";
 import { useAdminAuth } from "../../context/adminAuthContext";
 import { useCart } from "../../context/cartContext";
@@ -28,7 +30,6 @@ import useOverlayBackClose from "../../hooks/useOverlayBackClose";
 import { getPublicCategoriesRequest } from "../../services/categoryService";
 import { getPublicSettingsRequest } from "../../services/settingsService";
 import {
-  getLocalizedCategory,
   getLocalizedSettings,
 } from "../../utils/localizedContent";
 
@@ -124,41 +125,12 @@ const PublicLayout = () => {
     language
   );
   const navCategories = useMemo(
-    () => {
-      const seenCategories = new Set();
-
-      return (categoriesData?.categories || [])
-        .map((category) => getLocalizedCategory(category, language))
-        .filter((category) => {
-          const key = String(
-            category?.slug || category?._id || category?.name || ""
-          )
-            .trim()
-            .toLowerCase();
-          const normalizedName = String(category?.name || "")
-            .trim()
-            .toLowerCase();
-
-          if (
-            !key ||
-            key === "all-categories" ||
-            normalizedName === "all categories" ||
-            normalizedName === "كل الفئات" ||
-            seenCategories.has(key)
-          ) {
-            return false;
-          }
-
-          seenCategories.add(key);
-          return true;
-        });
-    },
+    () => getPresentedCategories(categoriesData?.categories || [], language),
     [categoriesData, language]
   );
   const storeAddress = localizedSettings?.store?.address || "";
   const announcementText = t("announcement");
   const navLinks = [
-    { label: t("home"), path: "/" },
     { label: t("shop"), path: "/shop" },
     { label: t("trackOrder"), path: "/track-order" },
   ];
@@ -175,7 +147,7 @@ const PublicLayout = () => {
     `relative py-2 text-[0.66rem] font-black uppercase tracking-[0.24em] transition after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:bg-[#c7a852] after:transition-transform ${
       isActive
         ? "text-[#f5f0e8] after:scale-x-100"
-        : "text-[#f5f0e8]/52 after:scale-x-0 hover:text-[#f5f0e8] hover:after:scale-x-100"
+        : "text-[#f5f0e8] after:scale-x-0 hover:text-[#c7a852] hover:after:scale-x-100"
     }`;
   const desktopCategoriesTriggerClass = (isActive = false) =>
     `relative py-2 text-[0.62rem] font-black uppercase tracking-[0.16em] transition after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:bg-[#c7a852] after:transition-transform ${
@@ -419,7 +391,7 @@ const PublicLayout = () => {
     <div className="page-shell">
       {!isFocusedRoute && (
       <header
-        className={`fixed inset-x-0 top-0 z-50 bg-[#050505] transition-transform duration-300 ease-out ${
+        className={`fixed inset-x-0 top-0 z-50 bg-[#1c1917] text-[#f5f0e8] transition-transform duration-300 ease-out ${
           isHeaderHidden ? "-translate-y-full" : "translate-y-0"
         }`}
       >
@@ -441,7 +413,7 @@ const PublicLayout = () => {
         </div>
 
         <Container className="relative flex h-[4.75rem] items-center justify-between">
-          <div className="flex flex-1 items-center gap-1 lg:flex-none">
+          <div className="public-mobile-controls absolute flex items-center gap-1 lg:static lg:flex-none">
             <button
               ref={mobileMenuTriggerRef}
               type="button"
@@ -479,8 +451,8 @@ const PublicLayout = () => {
             />
           </Link>
 
-          <nav className="hidden items-center gap-5 lg:flex xl:gap-8">
-            {navLinks.slice(0, 2).map((link) => (
+          <nav className="hidden items-center gap-5 lg:flex xl:gap-7">
+            {navLinks.slice(0, 1).map((link) => (
               <NavLink
                 key={link.path}
                 to={link.path}
@@ -515,7 +487,7 @@ const PublicLayout = () => {
               {isCategoriesOpen && (
                 <div
                   id="desktop-categories-menu"
-                  className="absolute left-1/2 top-full z-50 mt-4 w-64 -translate-x-1/2 border border-[#c7a852]/28 bg-[#0b0a09] p-2 shadow-2xl"
+                  className="absolute left-1/2 top-full z-50 mt-4 w-64 -translate-x-1/2 border border-[#c7a852]/28 bg-[#1c1917] p-2 shadow-2xl"
                   role="menu"
                   aria-labelledby="desktop-categories-trigger"
                 >
@@ -524,8 +496,9 @@ const PublicLayout = () => {
                       to="/categories"
                       role="menuitem"
                       onClick={() => setIsCategoriesOpen(false)}
-                      className="block border-b border-[#c7a852]/22 px-3 py-3 text-sm font-black text-[#c7a852] transition hover:bg-[#c7a852]/10 hover:text-[#f5f0e8]"
+                      className="flex items-center gap-3 border-b border-[#c7a852]/22 px-3 py-3 text-sm font-black text-[#c7a852] transition hover:bg-[#c7a852]/10 hover:text-[#f5f0e8]"
                     >
+                      <CategoryIcon category="all-categories" size={18} />
                       {t("allCategories")}
                     </Link>
                     {navCategories.length > 0 ? (
@@ -535,8 +508,9 @@ const PublicLayout = () => {
                           to={category.slug ? `/category/${category.slug}` : "/shop"}
                           role="menuitem"
                           onClick={() => setIsCategoriesOpen(false)}
-                          className="block border-b border-[#f5f0e8]/8 px-3 py-3 text-sm font-bold text-[#f5f0e8]/70 transition last:border-b-0 hover:bg-[#f5f0e8]/5 hover:text-[#c7a852]"
+                          className="flex items-center gap-3 border-b border-[#f5f0e8]/8 px-3 py-3 text-sm font-bold text-[#f5f0e8]/70 transition last:border-b-0 hover:bg-[#f5f0e8]/5 hover:text-[#c7a852]"
                         >
+                          <CategoryIcon category={category} size={18} className="shrink-0 text-[#c7a852]" />
                           {category.name}
                         </Link>
                       ))
@@ -550,7 +524,7 @@ const PublicLayout = () => {
               )}
             </div>
 
-            {navLinks.slice(2).map((link) => (
+            {navLinks.slice(1).map((link) => (
               <NavLink
                 key={link.path}
                 to={link.path}
@@ -573,7 +547,7 @@ const PublicLayout = () => {
             )}
           </nav>
 
-          <div className="flex flex-1 items-center justify-end gap-1 sm:gap-2 lg:flex-none lg:gap-3">
+          <div className="public-commerce-controls absolute flex items-center justify-end gap-1 sm:gap-2 lg:static lg:flex-none lg:gap-3">
             <button
               type="button"
               onClick={openSearchDrawer}
@@ -617,7 +591,7 @@ const PublicLayout = () => {
               <ShoppingCart size={26} className="lg:h-4 lg:w-4" />
               <span className="hidden lg:inline">{t("cart")}</span>
               {cartCount > 0 && (
-                <span className="absolute -right-2 -top-2 flex min-h-5 min-w-5 items-center justify-center rounded-full border border-[#050505] bg-[#c7a852] px-1.5 text-[0.58rem] font-black leading-none tracking-normal text-[#1c1917]">
+                <span className="absolute -right-2 -top-2 flex min-h-5 min-w-5 items-center justify-center rounded-full border border-[#1c1917] bg-[#c7a852] px-1.5 text-[0.58rem] font-black leading-none tracking-normal text-[#1c1917]">
                   {cartCount > 99 ? "99+" : cartCount}
                 </span>
               )}
@@ -627,7 +601,7 @@ const PublicLayout = () => {
               <button
                 type="button"
                 onClick={handleCustomerSignout}
-                className="davinto-press-danger hidden h-11 items-center gap-2 border border-[#f5f0e8]/15 px-4 text-[0.62rem] font-black uppercase tracking-[0.2em] text-[#f5f0e8]/65 transition hover:border-[#c7a852] hover:text-[#f5f0e8] lg:flex"
+                className="public-navbar-signout davinto-press-danger hidden h-11 items-center gap-2 border px-4 text-[0.62rem] font-black uppercase tracking-[0.2em] transition lg:flex"
               >
                 <LogOut size={15} />
                 {t("signOut")}
@@ -644,7 +618,7 @@ const PublicLayout = () => {
           <div
             ref={mobileMenuRef}
             id="public-mobile-navigation"
-            className="max-h-[calc(100svh-6.5rem)] overflow-y-auto border-t border-[#f5f0e8]/10 bg-[#050505] lg:hidden"
+            className="max-h-[calc(100svh-6.5rem)] overflow-y-auto border-t border-[#f5f0e8]/10 bg-[#1c1917] lg:hidden"
             tabIndex={-1}
           >
             <Container className="py-5">
@@ -652,7 +626,7 @@ const PublicLayout = () => {
                 className="grid"
                 aria-label={t("mobileNavigation")}
               >
-                {navLinks.slice(0, 2).map((link) => (
+                {navLinks.slice(0, 1).map((link) => (
                   <NavLink
                     key={link.path}
                     to={link.path}
@@ -660,7 +634,7 @@ const PublicLayout = () => {
                     onClick={() => setIsMenuOpen(false)}
                     className={({ isActive }) =>
                       `flex items-center justify-between border-b border-[#f5f0e8]/10 py-4 text-sm font-black uppercase tracking-[0.2em] ${
-                        isActive ? "text-[#c7a852]" : "text-[#f5f0e8]/72"
+                        isActive ? "text-[#c7a852]" : "text-[#f5f0e8]"
                       }`
                     }
                   >
@@ -700,8 +674,9 @@ const PublicLayout = () => {
                         setIsMenuOpen(false);
                         setIsMobileCategoriesOpen(false);
                       }}
-                      className="block border-b border-[#c7a852]/18 px-4 py-3 text-sm font-black text-[#c7a852] transition hover:bg-[#c7a852]/8 hover:text-[#f5f0e8]"
+                      className="flex items-center gap-3 border-b border-[#c7a852]/18 px-4 py-3 text-sm font-black text-[#c7a852] transition hover:bg-[#c7a852]/8 hover:text-[#f5f0e8]"
                     >
+                      <CategoryIcon category="all-categories" size={18} />
                       {t("allCategories")}
                     </Link>
                     {navCategories.length > 0 ? (
@@ -713,8 +688,9 @@ const PublicLayout = () => {
                             setIsMenuOpen(false);
                             setIsMobileCategoriesOpen(false);
                           }}
-                          className="block px-4 py-3 text-sm font-bold text-[#f5f0e8]/64 transition hover:text-[#c7a852]"
+                          className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-[#f5f0e8] transition hover:bg-[#c7a852]/10 hover:text-[#c7a852]"
                         >
+                          <CategoryIcon category={category} size={18} className="shrink-0 text-[#c7a852]" />
                           {category.name}
                         </Link>
                       ))
@@ -726,7 +702,7 @@ const PublicLayout = () => {
                   </div>
                 )}
 
-                {navLinks.slice(2).map((link) => (
+                {navLinks.slice(1).map((link) => (
                   <NavLink
                     key={link.path}
                     to={link.path}
@@ -734,7 +710,7 @@ const PublicLayout = () => {
                     onClick={() => setIsMenuOpen(false)}
                     className={({ isActive }) =>
                       `flex items-center justify-between border-b border-[#f5f0e8]/10 py-4 text-sm font-black uppercase tracking-[0.2em] ${
-                        isActive ? "text-[#c7a852]" : "text-[#f5f0e8]/72"
+                        isActive ? "text-[#c7a852]" : "text-[#f5f0e8]"
                       }`
                     }
                   >
@@ -790,7 +766,7 @@ const PublicLayout = () => {
                 <button
                   type="button"
                   onClick={handleCustomerSignout}
-                  className="davinto-press-danger mt-5 flex w-full items-center justify-center gap-2 border border-[#f5f0e8]/15 px-5 py-3 text-[0.64rem] font-black uppercase tracking-[0.22em] text-[#f5f0e8]/70 transition hover:border-[#c7a852] hover:text-[#f5f0e8]"
+                  className="public-navbar-signout davinto-press-danger mt-5 flex w-full items-center justify-center gap-2 border px-5 py-3 text-[0.64rem] font-black uppercase tracking-[0.22em] transition"
                 >
                   <LogOut size={15} />
                   {t("signOut")} {customer?.name ? `/ ${customer.name}` : ""}
@@ -841,7 +817,7 @@ const PublicLayout = () => {
         )}
 
       {!hideFooter && (
-      <footer className="border-t border-[#c7a852]/25 bg-[#050505]">
+      <footer className="border-t border-[#c7a852]/25 bg-[#1c1917] text-[#f5f0e8]">
         <Container className="py-16 sm:py-20">
           <div className="grid gap-12 lg:grid-cols-[1.2fr_0.8fr_0.8fr]">
             <div>

@@ -205,7 +205,7 @@ const Shop = () => {
   );
 
   return (
-    <section className="catalog-section bg-[#050505]" ref={resultsRef}>
+    <section className="catalog-section bg-[#f5f0e8] text-[#1c1917]" ref={resultsRef}>
       <Container>
         <h1 className="sr-only">{t("catalog:shop.title")}</h1>
 

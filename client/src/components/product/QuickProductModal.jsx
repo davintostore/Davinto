@@ -182,17 +182,17 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
     >
       <button
         type="button"
-        className="absolute inset-0 bg-[#050505]/52"
+        className="absolute inset-0 bg-[#1c1917]/52"
         aria-label={t("catalog:product.closeQuickView")}
         tabIndex={-1}
         onClick={onClose}
       />
 
-      <div className="quick-product-panel relative z-10 max-h-[90vh] w-full max-w-[58rem] overflow-y-auto border border-[#c7a852]/28 bg-[#0b0a09] shadow-2xl">
+      <div className="quick-product-panel relative z-10 max-h-[90vh] w-full max-w-[58rem] overflow-y-auto border border-[#c7a852]/28 bg-[#1c1917] shadow-2xl">
         <button
           type="button"
           onClick={onClose}
-          className="davinto-press-icon absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center border border-[#f5f0e8]/14 bg-[#110f0e]/80 text-[#f5f0e8]/70 transition hover:border-[#c7a852] hover:text-[#f5f0e8]"
+          className="davinto-press-icon absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center border border-[#f5f0e8]/14 bg-[#1c1917]/80 text-[#f5f0e8]/85 transition hover:border-[#c7a852] hover:text-[#c7a852]"
           aria-label={t("catalog:product.closeQuickView")}
           data-autofocus
         >
@@ -235,7 +235,7 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
                     className="aspect-[4/5] w-full object-contain"
                   />
                 ) : (
-                  <div className="flex aspect-[4/5] flex-col items-center justify-center bg-[#28231f]">
+                  <div className="flex aspect-[4/5] flex-col items-center justify-center bg-[#1c1917]">
                     <span className="brand-wordmark text-7xl text-[#f5f0e8]/10">
                       D
                     </span>
@@ -346,7 +346,7 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
                         >
                           <span
                             className="h-3.5 w-3.5 rounded-full border border-[#f5f0e8]/35"
-                            style={{ backgroundColor: color.hex || "#777" }}
+                            style={{ backgroundColor: color.hex || "#8b8075" }}
                             aria-hidden="true"
                           />
                           {localizedColor.name}
