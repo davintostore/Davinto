@@ -568,7 +568,7 @@ const ProductDetails = () => {
               )}
 
               <div
-                className="order-1 relative overflow-hidden border border-[#8b8075]/30 bg-[#1c1917] touch-pan-y sm:order-2"
+                className="order-1 relative overflow-hidden bg-[#1c1917] touch-pan-y sm:order-2"
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
               >
@@ -613,7 +613,7 @@ const ProductDetails = () => {
                   <>
                     <button
                       type="button"
-                      className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-[#f5f0e8]/30 bg-[#1c1917]/78 text-[#f5f0e8] transition hover:border-[#c7a852] hover:text-[#c7a852]"
+                      className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-white bg-white text-[#1c1917] transition hover:border-[#c7a852] hover:text-[#882c30]"
                       onClick={showPreviousImage}
                       aria-label={t("common:previous")}
                     >
@@ -621,7 +621,7 @@ const ProductDetails = () => {
                     </button>
                     <button
                       type="button"
-                      className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-[#f5f0e8]/30 bg-[#1c1917]/78 text-[#f5f0e8] transition hover:border-[#c7a852] hover:text-[#c7a852]"
+                      className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-white bg-white text-[#1c1917] transition hover:border-[#c7a852] hover:text-[#882c30]"
                       onClick={showNextImage}
                       aria-label={t("common:next")}
                     >
@@ -754,7 +754,7 @@ const ProductDetails = () => {
                               isSelected
                                 ? disabled
                                   ? "border-[#b8585d] bg-[#882c30]/28 text-[#f5d7d8]"
-                                  : "border-[#1c1917] bg-[#1c1917] text-[#f5f0e8]"
+                                  : "product-size-option--selected border-[#1c1917] bg-[#1c1917]"
                                 : disabled
                                   ? "border-[#8b8075]/25 text-[#8b8075]/70 hover:border-[#882c30]/55 hover:text-[#882c30]"
                                 : "border-[#8b8075]/35 text-[#1c1917] hover:border-[#c7a852] hover:text-[#882c30]"

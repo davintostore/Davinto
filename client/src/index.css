@@ -1102,6 +1102,13 @@ html[dir="rtl"] .cart-drawer-panel--physical-right {
   color: var(--davinto-cream) !important;
 }
 
+.page-shell
+  main
+  section:not(.davinto-dark-section)
+  button.product-size-option--selected[aria-pressed="true"] {
+  color: var(--davinto-cream) !important;
+}
+
 .page-shell .davinto-button[data-variant="danger"] {
   border-color: rgba(136, 44, 48, 0.48);
   background: var(--davinto-cream);

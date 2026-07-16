@@ -233,7 +233,7 @@ const Cart = () => {
                         <div className="flex min-w-0 flex-1 gap-3">
                           <Link
                             to={`/product/${item.slug}`}
-                            className="h-24 w-20 shrink-0 overflow-hidden border border-[#8b8075]/30 bg-[#1c1917] sm:w-[4.5rem]"
+                            className="h-24 w-20 shrink-0 overflow-hidden bg-[#1c1917] sm:w-[4.5rem]"
                           >
                             {displayImage ? (
                               <img

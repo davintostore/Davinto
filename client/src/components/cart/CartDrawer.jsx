@@ -217,7 +217,7 @@ const CartDrawer = () => {
                       <Link
                         to={`/product/${item.slug}`}
                         onClick={closeCartDrawer}
-                        className="overflow-hidden border border-[#f5f0e8]/12 bg-[#1c1917]"
+                        className="overflow-hidden bg-[#1c1917]"
                         aria-label={t("cart:viewItem", {
                           name: item.name,
                         })}
