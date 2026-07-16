@@ -126,7 +126,7 @@ const GlobalSearchDrawer = ({ isOpen, onClose }) => {
         onClick={onClose}
       />
 
-      <aside className="cart-drawer-panel absolute inset-y-0 right-0 flex w-[min(88vw,32rem)] max-w-[32rem] flex-col border-l border-[#c7a852]/24 bg-[#1c1917] shadow-2xl sm:w-[30rem]">
+      <aside className="public-cream-panel cart-drawer-panel absolute inset-y-0 right-0 flex w-[min(88vw,32rem)] max-w-[32rem] flex-col border-l shadow-2xl sm:w-[30rem]">
         <div className="flex h-20 shrink-0 items-center justify-between gap-4 border-b border-[#f5f0e8]/10 px-5 sm:px-6">
           <div>
             <p className="text-[0.58rem] font-black uppercase tracking-[0.22em] text-[#c7a852]">
@@ -142,7 +142,7 @@ const GlobalSearchDrawer = ({ isOpen, onClose }) => {
 
           <button
             type="button"
-            className="davinto-press-icon flex h-11 w-11 items-center justify-center text-[#f5f0e8]/72 transition hover:text-[#c7a852]"
+            className="public-cream-close davinto-press-icon flex h-11 w-11 items-center justify-center border transition"
             aria-label={t("close")}
             onClick={onClose}
           >
@@ -157,7 +157,7 @@ const GlobalSearchDrawer = ({ isOpen, onClose }) => {
               onChange={(event) => setQuery(event.target.value)}
               placeholder={t("search.placeholder")}
               aria-label={t("search.search")}
-              className="h-14 w-full rounded-[0.2rem] border border-[#f5f0e8]/16 bg-[#f5f0e8]/6 ps-4 pe-12 text-base text-[#f5f0e8] outline-none transition placeholder:text-[#8b8075] hover:border-[#f5f0e8]/25 focus:border-[#c7a852]"
+              className="public-cream-control h-14 w-full rounded-[0.2rem] border ps-4 pe-12 text-base outline-none transition placeholder:text-[#8b8075] focus:border-[#c7a852]"
               data-autofocus
             />
             <button
@@ -180,7 +180,7 @@ const GlobalSearchDrawer = ({ isOpen, onClose }) => {
                     key={term}
                     type="button"
                     onClick={() => setQuery(term)}
-                    className="davinto-press-gold inline-flex min-h-11 items-center gap-2 border border-[#f5f0e8]/14 bg-[#f5f0e8]/4 px-4 text-sm text-[#f5f0e8]/78 transition hover:border-[#c7a852] hover:text-[#c7a852]"
+                    className="public-cream-card davinto-press-gold inline-flex min-h-11 items-center gap-2 border px-4 text-sm transition hover:border-[#c7a852] hover:text-[#882c30]"
                   >
                     <Search size={16} />
                     {term}
@@ -212,7 +212,7 @@ const GlobalSearchDrawer = ({ isOpen, onClose }) => {
                       key={product._id}
                       type="button"
                       onClick={() => closeAndNavigate(`/product/${product.slug}`)}
-                      className="davinto-press-muted grid grid-cols-[4rem_1fr] gap-3 border border-[#f5f0e8]/10 bg-[#f5f0e8]/4 p-2 text-left transition hover:border-[#c7a852]/55 hover:bg-[#c7a852]/8"
+                      className="public-cream-card davinto-press-muted grid grid-cols-[4rem_1fr] gap-3 border p-2 text-left transition hover:border-[#c7a852]/55 hover:bg-[#c7a852]/8"
                     >
                       <div className="aspect-[3/4] overflow-hidden bg-[#1c1917]">
                         {image ? (
@@ -260,7 +260,7 @@ const GlobalSearchDrawer = ({ isOpen, onClose }) => {
                     key={category._id || category.slug}
                     to={category.slug ? `/category/${category.slug}` : "/shop"}
                     onClick={onClose}
-                    className="davinto-press-muted flex items-center justify-between gap-4 border border-[#f5f0e8]/10 bg-[#f5f0e8]/4 px-4 py-3 text-sm font-bold text-[#f5f0e8]/76 transition hover:border-[#c7a852]/55 hover:text-[#c7a852]"
+                    className="public-cream-card davinto-press-muted flex items-center justify-between gap-4 border px-4 py-3 text-sm font-bold transition hover:border-[#c7a852]/55 hover:text-[#882c30]"
                   >
                     <span>{category.name}</span>
                     <Search size={15} />

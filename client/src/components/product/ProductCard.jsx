@@ -17,11 +17,11 @@ const QuickProductModalFallback = ({ label, message }) => (
     aria-modal="true"
     aria-label={label}
   >
-    <div className="border border-[#c7a852]/25 bg-[#1c1917] px-6 py-5 shadow-2xl">
+    <div className="public-cream-panel border px-6 py-5 shadow-2xl">
       <p className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-[#c7a852]">
         Davinto
       </p>
-      <p className="mt-3 text-sm text-[#f5f0e8]/65">{message}</p>
+      <p className="mt-3 text-sm text-[#8b8075]">{message}</p>
     </div>
   </div>
 );
@@ -96,7 +96,7 @@ const ProductCard = ({ product, revealDelay = 0 }) => {
             className="block focus-visible:outline-offset-4"
             aria-label={localizedProduct.name}
           >
-        <div className="relative aspect-[3/4] overflow-hidden border border-[#8b8075]/30 bg-[#1c1917]">
+        <div className="relative aspect-[3/4] overflow-hidden bg-[#1c1917]">
           {primaryImage ? (
             <img
               src={primaryImage}
@@ -152,7 +152,7 @@ const ProductCard = ({ product, revealDelay = 0 }) => {
           <button
             type="button"
             onClick={openQuickOptions}
-            className="davinto-press-gold absolute inset-x-3 bottom-3 z-10 hidden min-h-10 items-center justify-center whitespace-nowrap border border-[#c7a852]/55 bg-[#1c1917]/92 px-3 py-2 text-[0.56rem] font-black uppercase tracking-[0.1em] text-[#f5f0e8] opacity-0 shadow-xl transition duration-300 hover:border-[#c7a852] hover:bg-[#882c30]/88 focus-visible:outline-offset-2 md:flex md:translate-y-4 md:group-hover:translate-y-0 md:group-hover:opacity-100 md:group-focus-within:translate-y-0 md:group-focus-within:opacity-100"
+            className="davinto-primary-action absolute inset-x-3 bottom-3 z-10 hidden min-h-10 items-center justify-center whitespace-nowrap border px-3 py-2 text-[0.56rem] font-black uppercase tracking-[0.1em] opacity-0 shadow-xl transition duration-300 focus-visible:outline-offset-2 md:flex md:translate-y-4 md:group-hover:translate-y-0 md:group-hover:opacity-100 md:group-focus-within:translate-y-0 md:group-focus-within:opacity-100"
             aria-haspopup="dialog"
           >
             {t("catalog:product.chooseOptions")}
@@ -186,7 +186,7 @@ const ProductCard = ({ product, revealDelay = 0 }) => {
           <button
             type="button"
             onClick={openQuickOptions}
-            className="davinto-press-gold mt-3 flex min-h-11 w-full items-center justify-center whitespace-nowrap rounded-lg border border-[#882c30] px-2 py-1.5 text-[0.54rem] font-black uppercase tracking-[0.06em] text-[#882c30] transition hover:bg-[#882c30] hover:text-[#f5f0e8] md:hidden"
+            className="davinto-primary-action mt-3 flex min-h-11 w-full items-center justify-center whitespace-nowrap rounded-lg border px-2 py-1.5 text-[0.54rem] font-black uppercase tracking-[0.06em] transition md:hidden"
             aria-haspopup="dialog"
           >
             {t("catalog:product.chooseOptions")}

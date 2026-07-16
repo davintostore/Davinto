@@ -121,7 +121,7 @@ const CartDrawer = () => {
         onClick={closeCartDrawer}
       />
 
-      <aside className="cart-drawer-panel absolute inset-y-0 right-0 flex h-[100dvh] w-[min(86vw,25rem)] flex-col overflow-hidden border-l border-[#c7a852]/28 bg-[#1c1917] shadow-2xl sm:w-full sm:max-w-[28rem]">
+      <aside className="public-cream-panel cart-drawer-panel cart-drawer-panel--physical-right absolute inset-y-0 right-0 flex h-[100dvh] w-[min(86vw,25rem)] flex-col overflow-hidden border-l shadow-2xl sm:w-full sm:max-w-[28rem]">
         <div className="flex h-[4.5rem] shrink-0 items-center justify-between gap-4 border-b border-[#f5f0e8]/12 px-6">
           <div>
             <p className="text-[0.56rem] font-black uppercase tracking-[0.26em] text-[#c7a852]">
@@ -138,7 +138,7 @@ const CartDrawer = () => {
           <button
             type="button"
             onClick={closeCartDrawer}
-            className="davinto-press-icon flex h-11 w-11 items-center justify-center border border-[#f5f0e8]/14 text-[#f5f0e8]/70 transition hover:border-[#c7a852] hover:text-[#f5f0e8]"
+            className="public-cream-close davinto-press-icon flex h-11 w-11 items-center justify-center border transition"
             aria-label={t("cart:closeDrawer")}
             data-autofocus
           >
@@ -274,7 +274,7 @@ const CartDrawer = () => {
                         )}
 
                         <div className="mt-4 flex items-center justify-between gap-3">
-                          <div className="flex h-9 items-center border border-[#f5f0e8]/14">
+                          <div className="public-cream-control flex h-9 items-center border">
                             <button
                               type="button"
                               onClick={() => decreaseQuantity(itemKey)}
@@ -320,7 +320,7 @@ const CartDrawer = () => {
               </div>
             </div>
 
-            <div className="cart-drawer-scroll__summary border-t border-[#c7a852]/20 bg-[#1c1917] px-6 pt-5 text-[#f5f0e8]">
+            <div className="cart-drawer-scroll__summary border-t border-[#c7a852]/20 bg-[#f5f0e8] px-6 pt-5 text-[#1c1917]">
               {(isQuotePending || isQuoteRefreshing) && (
                 <p className="mb-3 text-xs text-[#f5f0e8]/45">
                   {isQuotePending
@@ -413,26 +413,24 @@ const CartDrawer = () => {
               </div>
 
               <div className="mt-5 grid gap-3">
+                <Link to="/cart" onClick={closeCartDrawer}>
+                  <Button
+                    variant="secondary"
+                    className="w-full tracking-[0.14em]"
+                  >
+                    {t("cart:viewCartPage")}
+                  </Button>
+                </Link>
                 {isQuotePending ? (
                   <Button className="w-full" disabled>
-                    {t("common:updatingTotals")}
+                    {t("cart:checkout")}
                   </Button>
                 ) : (
-                  <>
-                    <Link to="/cart" onClick={closeCartDrawer}>
-                      <Button
-                        variant="secondary"
-                        className="w-full tracking-[0.14em]"
-                      >
-                        {t("cart:viewCartPage")}
-                      </Button>
-                    </Link>
                     <Link to="/checkout" onClick={closeCartDrawer}>
                       <Button className="w-full tracking-[0.14em]">
                         {t("cart:checkout")}
                       </Button>
                     </Link>
-                  </>
                 )}
                 {isQuoteError && !isQuotePending && (
                   <button

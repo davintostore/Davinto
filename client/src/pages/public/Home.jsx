@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 
@@ -145,45 +145,56 @@ const HomeEditorialBanner = ({
   type,
 }) => (
   <section
-    className={`owner-home-banner owner-home-banner--${type} relative flex min-h-[32rem] overflow-hidden bg-cover bg-center bg-no-repeat text-[#1c1917] sm:min-h-[38rem] lg:min-h-[42rem]`}
+    className={`owner-home-banner owner-home-banner--${type} relative flex overflow-hidden bg-cover bg-no-repeat text-[#1c1917]`}
     style={{ backgroundImage: `url("${image}")` }}
     aria-label={title}
   >
-    <div
-      className={`owner-home-banner__overlay pointer-events-none absolute inset-0 ${
-        language === "ar" ? "owner-home-banner__overlay--rtl" : ""
-      }`}
-      aria-hidden="true"
-    />
-    <Container className="relative flex w-full items-end py-10 sm:items-center sm:py-14">
+    {type === "story" && (
+      <div
+        className={`owner-home-banner__overlay pointer-events-none absolute inset-0 ${
+          language === "ar" ? "owner-home-banner__overlay--rtl" : ""
+        }`}
+        aria-hidden="true"
+      />
+    )}
+    <Container className="owner-home-banner__container relative flex w-full items-center">
       <div
         dir={language === "ar" ? "rtl" : "ltr"}
-        className={`owner-home-banner__copy flex w-full max-w-[31rem] flex-col ${
+        className={`owner-home-banner__copy flex w-full flex-col ${
           language === "ar"
-            ? "owner-home-banner__copy--rtl ml-auto items-start"
+            ? "owner-home-banner__copy--rtl ml-auto items-end text-right"
             : "owner-home-banner__copy--ltr mr-auto items-start"
         }`}
       >
-          <StickerLabel className="self-start">
+          <StickerLabel className="owner-home-banner__sticker">
             {eyebrow}
           </StickerLabel>
           <SplitText
             as="h2"
             text={title}
             splitType={title.includes("\n") ? "lines" : "words"}
-            className="mt-4 font-serif text-4xl leading-[0.98] sm:text-5xl lg:text-6xl"
+            className="owner-home-banner__title font-serif"
             textAlign={language === "ar" ? "right" : "left"}
           />
-          <p className="mt-5 w-full max-w-lg text-sm leading-7 text-[#8b8075] sm:text-base">
+          <p className="owner-home-banner__body text-[#8b8075]">
             {body}
           </p>
           <Link
             to={to}
-            className="mt-7 inline-block self-start"
+            className="owner-home-banner__action inline-block"
           >
-            <Button>
+            <Button
+              variant={type === "story" ? "ghost" : "primary"}
+              className="owner-home-banner__button"
+            >
               {button}
-              <ArrowRight className="ms-2" size={16} aria-hidden="true" />
+              {type === "story" && (
+                <ArrowRight
+                  className="owner-home-banner__story-arrow ms-2"
+                  size={13}
+                  aria-hidden="true"
+                />
+              )}
             </Button>
           </Link>
       </div>
@@ -258,7 +269,7 @@ const Home = () => {
       typeof window === "undefined" ||
       window.matchMedia("(max-width: 1023px)").matches
   );
-  const [categoryViewportRef, categoryEmblaApi] = useEmblaCarousel(
+  const [categoryViewportRef] = useEmblaCarousel(
     {
       active: isMobileCategoryCarousel,
       align: "start",
@@ -271,12 +282,6 @@ const Home = () => {
     },
     [categoryAutoplay]
   );
-  const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
-  const syncSelectedCategory = useCallback(
-    (emblaApi) => setActiveCategoryIndex(emblaApi.selectedScrollSnap()),
-    []
-  );
-
   useEffect(() => {
     const mobileCategoryQuery = window.matchMedia("(max-width: 1023px)");
     const syncMobileCategoryCarousel = () =>
@@ -290,25 +295,6 @@ const Home = () => {
         syncMobileCategoryCarousel
       );
   }, []);
-
-  useEffect(() => {
-    if (!categoryEmblaApi) return undefined;
-    categoryEmblaApi.on("select", syncSelectedCategory);
-    categoryEmblaApi.on("reInit", syncSelectedCategory);
-    return () => {
-      categoryEmblaApi.off("select", syncSelectedCategory);
-      categoryEmblaApi.off("reInit", syncSelectedCategory);
-    };
-  }, [categoryEmblaApi, syncSelectedCategory]);
-
-  const scrollCategories = useCallback(
-    (direction) => {
-      if (direction === "previous") categoryEmblaApi?.scrollPrev();
-      else categoryEmblaApi?.scrollNext();
-      categoryAutoplay.reset();
-    },
-    [categoryAutoplay, categoryEmblaApi]
-  );
 
   return (
     <>
@@ -366,7 +352,6 @@ const Home = () => {
               <EditorialCategoryCard
                 key={category.slug}
                 category={category}
-                label={t("categories.cardLabel")}
                 cta={t("categories.cardCta")}
                 cardClassName="aspect-[1.45/1] min-h-[17rem]"
               />
@@ -381,9 +366,12 @@ const Home = () => {
               style={{ touchAction: "pan-y" }}
               aria-label={t("categories.heading")}
             >
-              <div className="flex gap-4 touch-pan-y">
+              <div className="davinto-category-carousel__track flex touch-pan-y">
                 {categories.map((category) => (
-                  <div key={category.slug} className="w-[82vw] flex-none sm:w-[62vw]">
+                  <div
+                    key={category.slug}
+                    className="davinto-category-carousel__slide w-[82vw] flex-none sm:w-[62vw]"
+                  >
                     <EditorialCategoryCard
                       category={category}
                       label={t("categories.cardLabel")}
@@ -395,27 +383,6 @@ const Home = () => {
                   </div>
                 ))}
               </div>
-            </div>
-            <div className="mt-6 flex items-center justify-between" dir="ltr">
-              <button
-                type="button"
-                onClick={() => scrollCategories("previous")}
-                className="davinto-press-icon flex h-11 w-11 items-center justify-center rounded-full border border-[#8b8075]/40 text-[#1c1917] hover:border-[#c7a852] hover:text-[#882c30]"
-                aria-label={t("common:previous")}
-              >
-                <ChevronLeft size={19} />
-              </button>
-              <span className="text-sm font-black tabular-nums text-[#1c1917]">
-                {activeCategoryIndex + 1}/{categories.length}
-              </span>
-              <button
-                type="button"
-                onClick={() => scrollCategories("next")}
-                className="davinto-press-icon flex h-11 w-11 items-center justify-center rounded-full border border-[#8b8075]/40 text-[#1c1917] hover:border-[#c7a852] hover:text-[#882c30]"
-                aria-label={t("common:next")}
-              >
-                <ChevronRight size={19} />
-              </button>
             </div>
             <Link to="/categories" className="mt-7 flex justify-center">
               <Button variant="secondary">{t("categories.viewAll")}</Button>

@@ -59,8 +59,8 @@ const EditorialCategoryCard = ({
             <CategoryIcon category={category} size={21} />
           </span>
 
-          <div className="text-start">
-            {label && (
+          <div className="owner-category-card__lower text-start">
+            {label && !isCarouselCard && (
               <p className="category-card-eyebrow mb-3 text-[0.58rem] font-black uppercase tracking-[0.22em]">
                 {label}
               </p>
@@ -70,11 +70,13 @@ const EditorialCategoryCard = ({
             </h3>
             <span className="category-card-cta mt-4 inline-flex items-center gap-2 text-[0.62rem] font-black uppercase tracking-[0.16em]">
               {cta}
-              <ArrowRight
-                size={15}
-                className="category-card-arrow owner-category-card__arrow"
-                aria-hidden="true"
-              />
+              {!isCarouselCard && (
+                <ArrowRight
+                  size={15}
+                  className="category-card-arrow owner-category-card__arrow"
+                  aria-hidden="true"
+                />
+              )}
             </span>
           </div>
         </div>

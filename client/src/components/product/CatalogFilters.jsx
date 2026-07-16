@@ -390,7 +390,7 @@ const CatalogFilters = ({
               onClick={closeFilterDrawer}
             />
 
-            <aside className="cart-drawer-panel fixed bottom-0 right-0 top-0 flex w-[min(88vw,28rem)] max-w-[28rem] flex-col overflow-hidden border-l border-[#c7a852]/30 bg-[#1c1917] text-[#f5f0e8] shadow-2xl sm:w-[26rem] lg:w-[28rem]">
+            <aside className="public-cream-panel cart-drawer-panel fixed bottom-0 right-0 top-0 flex w-[min(88vw,28rem)] max-w-[28rem] flex-col overflow-hidden border-l shadow-2xl sm:w-[26rem] lg:w-[28rem]">
               <div className="flex shrink-0 items-center justify-between border-b border-[#f5f0e8]/12 p-5">
                 <div>
                   <p
@@ -408,7 +408,7 @@ const CatalogFilters = ({
 
                 <button
                   type="button"
-                  className="davinto-press-icon flex h-10 w-10 items-center justify-center text-[#f5f0e8]/72 transition hover:text-[#c7a852]"
+                  className="public-cream-close davinto-press-icon flex h-10 w-10 items-center justify-center border transition"
                   aria-label={t("filters.close")}
                   onClick={closeFilterDrawer}
                   data-autofocus
@@ -427,7 +427,7 @@ const CatalogFilters = ({
                     {["all", "inStock", "outOfStock"].map((value) => (
                       <label
                         key={value}
-                        className="flex cursor-pointer items-center justify-between gap-3 text-sm text-[#f5f0e8]/72"
+                        className="flex cursor-pointer items-center justify-between gap-3 text-sm text-[#1c1917]"
                       >
                         <span className="flex items-center gap-3">
                           <input
@@ -541,12 +541,12 @@ const CatalogFilters = ({
                   onToggle={() => toggleFilterSection("productType")}
                 >
                   {currentCategory ? (
-                    <p className="text-sm text-[#f5f0e8]/62">
+                    <p className="text-sm text-[#1c1917]">
                       {currentCategory.name}
                     </p>
                   ) : (
                     <div className="grid gap-2">
-                      <label className="flex cursor-pointer items-center justify-between gap-3 text-sm text-[#f5f0e8]/72">
+                      <label className="flex cursor-pointer items-center justify-between gap-3 text-sm text-[#1c1917]">
                         <span className="flex items-center gap-3">
                         <input
                           type="radio"
@@ -565,7 +565,7 @@ const CatalogFilters = ({
                       {localizedCategories.map((category) => (
                         <label
                           key={category._id || category.slug}
-                          className="flex cursor-pointer items-center gap-3 text-sm text-[#f5f0e8]/72"
+                          className="flex cursor-pointer items-center gap-3 text-sm text-[#1c1917]"
                         >
                           <input
                             type="radio"
@@ -597,7 +597,7 @@ const CatalogFilters = ({
                           className={`inline-flex cursor-pointer items-center gap-2 border px-3 py-2 text-xs transition focus-within:border-[#c7a852] ${
                             isSelected
                               ? "border-[#c7a852] bg-[#c7a852]/14 text-[#f5f0e8]"
-                              : "border-[#f5f0e8]/14 bg-[#f5f0e8]/5 text-[#f5f0e8]/70 hover:border-[#f5f0e8]/28"
+                              : "border-[#f5f0e8]/14 bg-[#f5f0e8]/5 text-[#1c1917] hover:border-[#8b8075]/55"
                           }`}
                         >
                           <input

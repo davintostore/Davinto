@@ -188,11 +188,11 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
         onClick={onClose}
       />
 
-      <div className="quick-product-panel relative z-10 max-h-[90vh] w-full max-w-[58rem] overflow-y-auto border border-[#c7a852]/28 bg-[#1c1917] shadow-2xl">
+      <div className="public-cream-panel quick-product-panel relative z-10 max-h-[90vh] w-full max-w-[58rem] overflow-y-auto border shadow-2xl">
         <button
           type="button"
           onClick={onClose}
-          className="davinto-press-icon absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center border border-[#f5f0e8]/14 bg-[#1c1917]/80 text-[#f5f0e8]/85 transition hover:border-[#c7a852] hover:text-[#c7a852]"
+          className="public-cream-close davinto-press-icon absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center border transition"
           aria-label={t("catalog:product.closeQuickView")}
           data-autofocus
         >
@@ -221,7 +221,7 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
           </div>
         ) : (
           <div className="grid gap-0 md:grid-cols-[0.92fr_1.08fr]">
-            <div className="bg-[#1c1917]">
+            <div className="bg-[#f5f0e8]">
               <div className="relative">
                 {selectedImage?.url ? (
                   <img
@@ -338,10 +338,10 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
                           aria-label={t("catalog:product.selectColorName", {
                             color: localizedColor.name,
                           })}
-                          className={`flex min-h-10 items-center gap-2 border px-3 text-xs font-bold transition ${
+                          className={`quick-product-option flex min-h-10 items-center gap-2 border px-3 text-xs font-bold transition ${
                             isSelected
-                              ? "border-[#c7a852] bg-[#c7a852]/12 text-[#f5f0e8]"
-                              : "border-[#f5f0e8]/14 text-[#f5f0e8]/55 hover:border-[#f5f0e8]/35 hover:text-[#f5f0e8]"
+                              ? "quick-product-option--gold-selected border-[#c7a852] bg-[#c7a852]/12"
+                              : "hover:border-[#c7a852]"
                           }`}
                         >
                           <span
@@ -396,14 +396,14 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
                             setQuantity(1);
                             setErrorMessage("");
                           }}
-                          className={`min-h-11 min-w-12 border px-3 text-xs font-black uppercase tracking-[0.14em] transition ${
+                          className={`quick-product-option min-h-11 min-w-12 border px-3 text-xs font-black uppercase tracking-[0.14em] transition ${
                             isSelected
                               ? disabled
-                                ? "border-[#b8585d] bg-[#882c30]/28 text-[#f5d7d8]"
-                                : "border-[#f5f0e8] bg-[#f5f0e8] text-[#1c1917]"
+                                ? "quick-product-option--disabled border-[#b8585d]"
+                                : "quick-product-option--selected"
                               : disabled
-                                ? "border-[#f5f0e8]/10 text-[#f5f0e8]/32 hover:border-[#b8585d]/55 hover:text-[#f5d7d8]"
-                              : "border-[#f5f0e8]/14 text-[#f5f0e8]/58 hover:border-[#c7a852] hover:text-[#f5f0e8]"
+                                ? "quick-product-option--disabled"
+                              : "hover:border-[#c7a852]"
                           }`}
                         >
                           {size.label}
@@ -437,7 +437,7 @@ const QuickProductModal = ({ product: previewProduct, isOpen, onClose }) => {
                     </p>
                   </div>
 
-                  <div className="flex h-11 items-center border border-[#f5f0e8]/16">
+                  <div className="public-cream-control flex h-11 items-center border">
                     <button
                       type="button"
                       onClick={() =>
