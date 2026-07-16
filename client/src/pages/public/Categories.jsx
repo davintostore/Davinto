@@ -47,7 +47,6 @@ const Categories = () => {
               <StickerLabel>{t("catalog:category.label")}</StickerLabel>
               <SplitText
                 as="h1"
-                text={t("catalog:categoriesPage.gridTitle")}
                 splitType="chars"
                 className="editorial-heading section-display-title mt-4 text-[#1c1917]"
               />
