@@ -181,21 +181,14 @@ const HomeEditorialBanner = ({
           </p>
           <Link
             to={to}
-            className="owner-home-banner__action inline-block"
+            className="owner-home-banner__action owner-home-banner__inline-cta inline-flex items-center"
           >
-            <Button
-              variant={type === "story" ? "ghost" : "primary"}
-              className="owner-home-banner__button"
-            >
-              {button}
-              {type === "story" && (
-                <ArrowRight
-                  className="owner-home-banner__story-arrow ms-2"
-                  size={13}
-                  aria-hidden="true"
-                />
-              )}
-            </Button>
+            {button}
+            <ArrowRight
+              className="owner-home-banner__cta-arrow ms-2"
+              size={13}
+              aria-hidden="true"
+            />
           </Link>
       </div>
     </Container>

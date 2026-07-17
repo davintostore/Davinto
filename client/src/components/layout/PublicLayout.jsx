@@ -618,7 +618,7 @@ const PublicLayout = () => {
           <div
             ref={mobileMenuRef}
             id="public-mobile-navigation"
-            className="max-h-[calc(100svh-6.5rem)] overflow-y-auto border-t border-[#f5f0e8]/10 bg-[#1c1917] lg:hidden"
+            className="public-mobile-menu max-h-[calc(100svh-6.5rem)] overflow-y-auto border-t border-[#8b8075]/20 bg-[#f5f0e8] text-[#1c1917] lg:hidden"
             tabIndex={-1}
           >
             <Container className="py-5">
@@ -633,8 +633,8 @@ const PublicLayout = () => {
                     end={link.path === "/"}
                     onClick={() => setIsMenuOpen(false)}
                     className={({ isActive }) =>
-                      `flex items-center justify-between border-b border-[#f5f0e8]/10 py-4 text-sm font-black uppercase tracking-[0.2em] ${
-                        isActive ? "text-[#c7a852]" : "text-[#f5f0e8]"
+                      `flex items-center justify-between border-b border-[#8b8075]/20 py-4 text-sm font-black uppercase tracking-[0.2em] transition hover:text-[#882c30] ${
+                        isActive ? "text-[#882c30]" : "text-[#1c1917]"
                       }`
                     }
                   >
@@ -649,8 +649,8 @@ const PublicLayout = () => {
                   onClick={() =>
                     setIsMobileCategoriesOpen((current) => !current)
                   }
-                  className={`davinto-press-muted flex items-center justify-between border-b border-[#f5f0e8]/10 py-4 text-sm font-black uppercase tracking-[0.2em] ${
-                    isCategoriesNavActive ? "text-[#c7a852]" : "text-[#f5f0e8]"
+                  className={`davinto-press-muted flex items-center justify-between border-b border-[#8b8075]/20 py-4 text-sm font-black uppercase tracking-[0.2em] hover:text-[#882c30] ${
+                    isCategoriesNavActive ? "text-[#882c30]" : "text-[#1c1917]"
                   }`}
                 >
                   <span>{t("categories")}</span>
@@ -666,7 +666,7 @@ const PublicLayout = () => {
                 {isMobileCategoriesOpen && (
                   <div
                     id="mobile-categories-menu"
-                    className="davinto-mobile-categories-list border-b border-[#f5f0e8]/10 bg-[#f5f0e8]/[0.025] py-2"
+                    className="davinto-mobile-categories-list border-b border-[#8b8075]/20 bg-[#8b8075]/[0.08] py-2"
                   >
                     <Link
                       to="/categories"
@@ -674,7 +674,7 @@ const PublicLayout = () => {
                         setIsMenuOpen(false);
                         setIsMobileCategoriesOpen(false);
                       }}
-                      className="flex items-center gap-3 border-b border-[#c7a852]/18 px-4 py-3 text-sm font-black text-[#c7a852] transition hover:bg-[#c7a852]/8 hover:text-[#f5f0e8]"
+                      className="flex items-center gap-3 border-b border-[#c7a852]/25 px-4 py-3 text-sm font-black text-[#882c30] transition hover:bg-[#c7a852]/20 hover:text-[#1c1917]"
                     >
                       <CategoryIcon category="all-categories" size={18} />
                       {t("allCategories")}
@@ -688,14 +688,14 @@ const PublicLayout = () => {
                             setIsMenuOpen(false);
                             setIsMobileCategoriesOpen(false);
                           }}
-                          className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-[#f5f0e8] transition hover:bg-[#c7a852]/10 hover:text-[#c7a852]"
+                          className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-[#1c1917] transition hover:bg-[#c7a852]/15 hover:text-[#882c30]"
                         >
                           <CategoryIcon category={category} size={18} className="shrink-0 text-[#c7a852]" />
                           {category.name}
                         </Link>
                       ))
                     ) : (
-                      <p className="px-4 py-3 text-xs leading-6 text-[#f5f0e8]/42">
+                      <p className="px-4 py-3 text-xs leading-6 text-[#8b8075]">
                         {t("categoriesEmpty")}
                       </p>
                     )}
@@ -709,8 +709,8 @@ const PublicLayout = () => {
                     end={link.path === "/"}
                     onClick={() => setIsMenuOpen(false)}
                     className={({ isActive }) =>
-                      `flex items-center justify-between border-b border-[#f5f0e8]/10 py-4 text-sm font-black uppercase tracking-[0.2em] ${
-                        isActive ? "text-[#c7a852]" : "text-[#f5f0e8]"
+                      `flex items-center justify-between border-b border-[#8b8075]/20 py-4 text-sm font-black uppercase tracking-[0.2em] transition hover:text-[#882c30] ${
+                        isActive ? "text-[#882c30]" : "text-[#1c1917]"
                       }`
                     }
                   >
@@ -722,7 +722,7 @@ const PublicLayout = () => {
                   <Link
                     to="/admin"
                     onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center justify-between border-b border-[#f5f0e8]/10 py-4 text-sm font-black uppercase tracking-[0.2em] text-[#c7a852]"
+                    className="flex items-center justify-between border-b border-[#8b8075]/20 py-4 text-sm font-black uppercase tracking-[0.2em] text-[#882c30] transition hover:text-[#1c1917]"
                   >
                     <span>{t("dashboard")}</span>
                     <LayoutDashboard size={16} />
@@ -736,7 +736,7 @@ const PublicLayout = () => {
                       <Link
                         to="/account"
                         onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center justify-between border-b border-[#f5f0e8]/10 py-4 text-sm font-black uppercase tracking-[0.2em] text-[#c7a852]"
+                        className="flex items-center justify-between border-b border-[#8b8075]/20 py-4 text-sm font-black uppercase tracking-[0.2em] text-[#882c30] transition hover:text-[#1c1917]"
                       >
                         <span>{t("account")}</span>
                         <UserRound size={16} />
@@ -744,7 +744,7 @@ const PublicLayout = () => {
                       <Link
                         to="/my-orders"
                         onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center justify-between border-b border-[#f5f0e8]/10 py-4 text-sm font-black uppercase tracking-[0.2em] text-[#c7a852]"
+                        className="flex items-center justify-between border-b border-[#8b8075]/20 py-4 text-sm font-black uppercase tracking-[0.2em] text-[#882c30] transition hover:text-[#1c1917]"
                       >
                         <span>{t("myOrders")}</span>
                         <ShoppingCart size={16} />
@@ -754,7 +754,7 @@ const PublicLayout = () => {
                     <Link
                       to="/signin"
                       onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center justify-between border-b border-[#f5f0e8]/10 py-4 text-sm font-black uppercase tracking-[0.2em] text-[#c7a852]"
+                      className="flex items-center justify-between border-b border-[#8b8075]/20 py-4 text-sm font-black uppercase tracking-[0.2em] text-[#882c30] transition hover:text-[#1c1917]"
                     >
                       <span>{t("signIn")}</span>
                       <UserRound size={16} />
@@ -766,7 +766,7 @@ const PublicLayout = () => {
                 <button
                   type="button"
                   onClick={handleCustomerSignout}
-                  className="public-navbar-signout davinto-press-danger mt-5 flex w-full items-center justify-center gap-2 border px-5 py-3 text-[0.64rem] font-black uppercase tracking-[0.22em] transition"
+                  className="public-navbar-signout davinto-press-danger public-mobile-signout mt-5 flex w-full items-center justify-center gap-2 border px-5 py-3 text-[0.64rem] font-black uppercase tracking-[0.22em] transition"
                 >
                   <LogOut size={15} />
                   {t("signOut")} {customer?.name ? `/ ${customer.name}` : ""}
@@ -817,11 +817,11 @@ const PublicLayout = () => {
         )}
 
       {!hideFooter && (
-      <footer className="border-t border-[#c7a852]/25 bg-[#1c1917] text-[#f5f0e8]">
+      <footer className="public-footer border-t border-[#c7a852]/25 bg-[#1c1917] text-[#f5f0e8]">
         <Container className="py-16 sm:py-20">
           <div className="grid gap-12 lg:grid-cols-[1.2fr_0.8fr_0.8fr]">
             <div>
-              <Link to="/" aria-label={t("homeAria")} className="mb-6 block w-fit">
+              <Link to="/" aria-label={t("homeAria")} className="public-footer-logo-link mb-6 block w-fit">
                 <img
                   src="/images/logo/logo-5.webp"
                   alt={t("footer.logoAlt")}
@@ -843,7 +843,7 @@ const PublicLayout = () => {
                   <Link
                     key={link.path}
                     to={link.path}
-                    className="w-fit transition hover:text-[#f5f0e8]"
+                    className="w-fit transition hover:text-[#c7a852] focus-visible:text-[#c7a852]"
                   >
                     {t(`footer.policyLinks.${link.key}`)}
                   </Link>
@@ -863,7 +863,7 @@ const PublicLayout = () => {
                     target="_blank"
                     rel="noreferrer noopener"
                     aria-label={link.ariaLabel}
-                    className="flex h-11 w-11 items-center justify-center transition hover:text-[#c7a852]"
+                    className="flex h-11 w-11 items-center justify-center transition hover:text-[#c7a852] focus-visible:text-[#c7a852]"
                   >
                     <SocialIcon label={link.label} />
                   </a>

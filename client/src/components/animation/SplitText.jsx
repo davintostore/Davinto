@@ -64,27 +64,57 @@ const SplitText = ({
 
   const content = useMemo(() => {
     if (safeSplitType === "lines") {
-      return value.split("\n").map((line, index) => (
-        <span
-          key={`line-${index}-${line}`}
-          className="block"
-          data-split-segment="true"
-        >
-          {line || "\u00a0"}
-        </span>
-      ));
+      return value.split("\n").map((line, index) => {
+        const lineTokens = splitWordsAndSpaces(line);
+
+        return (
+          <span
+            key={`line-${index}-${line}`}
+            className="block"
+            data-split-line="true"
+            data-split-segment="true"
+          >
+            {lineTokens.length > 0
+              ? lineTokens.map((token, tokenIndex) =>
+                  /^\s+$/u.test(token) ? (
+                    <span
+                      key={`line-space-${index}-${tokenIndex}`}
+                      data-split-space="true"
+                    >
+                      {" "}
+                    </span>
+                  ) : (
+                    <span
+                      key={`line-word-${index}-${tokenIndex}-${token}`}
+                      data-split-word="true"
+                    >
+                      {token}
+                    </span>
+                  )
+                )
+              : "\u00a0"}
+          </span>
+        );
+      });
     }
 
     const tokens = splitWordsAndSpaces(value);
 
     if (safeSplitType === "chars") {
       return tokens.map((token, tokenIndex) => {
-        if (/^\s+$/u.test(token)) return token;
+        if (/^\s+$/u.test(token)) {
+          return (
+            <span key={`space-${tokenIndex}`} data-split-space="true">
+              {" "}
+            </span>
+          );
+        }
 
         return (
           <span
             key={`word-${tokenIndex}-${token}`}
             className="inline-block whitespace-nowrap"
+            data-split-word="true"
           >
             {splitGraphemes(token, language).map((character, charIndex) => (
               <span
@@ -102,12 +132,15 @@ const SplitText = ({
 
     return tokens.map((token, index) =>
       /^\s+$/u.test(token) ? (
-        token
+        <span key={`space-${index}`} data-split-space="true">
+          {" "}
+        </span>
       ) : (
         <span
           key={`word-${index}-${token}`}
           className="inline-block"
           data-split-segment="true"
+          data-split-word="true"
         >
           {token}
         </span>
