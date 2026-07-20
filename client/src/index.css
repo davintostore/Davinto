@@ -1124,6 +1124,59 @@ html[dir="rtl"] .cart-drawer-panel--physical-right {
   color: var(--davinto-cream);
 }
 
+.public-mobile-menu,
+html[dir="rtl"] .public-mobile-menu,
+html[lang="ar"] .public-mobile-menu {
+  right: auto !important;
+  left: 0 !important;
+  animation: davintoMobileMenuEnter 260ms ease-out both;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.public-mobile-menu-backdrop {
+  animation: davintoMobileMenuBackdropEnter 180ms ease-out both;
+}
+
+.public-mobile-menu__primary-link {
+  width: 100%;
+  appearance: none;
+  margin: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  line-height: 1.25rem;
+  text-transform: uppercase;
+}
+
+html[dir="rtl"] .page-shell .public-mobile-menu__primary-link,
+html[lang="ar"] .page-shell .public-mobile-menu__primary-link {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+@keyframes davintoMobileMenuEnter {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes davintoMobileMenuBackdropEnter {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
 .public-footer a:not(.public-footer-logo-link):hover,
 .public-footer a:not(.public-footer-logo-link):focus-visible {
   color: var(--davinto-gold) !important;
@@ -1359,6 +1412,7 @@ html[dir="rtl"] .owner-category-card__arrow {
 
 .owner-home-banner {
   min-height: clamp(36rem, 53vw, 48rem);
+  background-image: var(--owner-home-banner-image);
   background-size: cover;
   background-position: center;
 }
@@ -1614,6 +1668,7 @@ html[lang="ar"] .page-shell .owner-home-banner__title {
 @media (max-width: 39.999rem) {
   .owner-home-banner {
     min-height: 36rem;
+    background-image: var(--owner-home-banner-mobile-image);
   }
 
   .owner-home-banner--story {
@@ -1730,6 +1785,15 @@ html[lang="ar"] .page-shell .owner-home-banner__title {
       rgba(245, 240, 232, 0.08) 72%,
       transparent 100%
     );
+  }
+}
+
+@media (max-width: 63.999rem) {
+  [data-home-category-card="true"]
+    .owner-category-card__title--arabic-mobile {
+    max-width: 100%;
+    font-size: clamp(1.35rem, 7vw, 2rem);
+    white-space: nowrap;
   }
 }
 

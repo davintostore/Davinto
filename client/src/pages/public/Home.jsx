@@ -136,6 +136,7 @@ const HeroBackgroundVideo = () => {
 
 const HomeEditorialBanner = ({
   image,
+  mobileImage,
   eyebrow,
   title,
   body,
@@ -146,7 +147,10 @@ const HomeEditorialBanner = ({
 }) => (
   <section
     className={`owner-home-banner owner-home-banner--${type} relative flex overflow-hidden bg-cover bg-no-repeat text-[#1c1917]`}
-    style={{ backgroundImage: `url("${image}")` }}
+    style={{
+      "--owner-home-banner-image": `url("${image}")`,
+      "--owner-home-banner-mobile-image": `url("${mobileImage}")`,
+    }}
     aria-label={title}
   >
     {type === "story" && (
@@ -297,7 +301,9 @@ const Home = () => {
         <Container className="relative flex min-h-[clamp(36rem,74svh,46rem)] items-end justify-center pb-14 pt-32 text-center sm:pb-16 sm:pt-36 lg:items-center lg:py-24">
           <div className="mx-auto flex max-w-6xl flex-col items-center">
             <SpinningDavintoLogo />
-            <SectionLabel className="justify-center pt-5">{t("hero.label")}</SectionLabel>
+            <SectionLabel className="justify-center pt-5 [&>span]:hidden">
+              {t("hero.label")}
+            </SectionLabel>
             <SplitText
               as="h1"
               text={t("hero.title")}
@@ -386,6 +392,7 @@ const Home = () => {
 
       <HomeEditorialBanner
         image={`/images/bg/our-story-${language}.webp`}
+        mobileImage={`/images/bg/our-story-${language}-mobile.webp`}
         eyebrow={t("ourStory.eyebrow")}
         title={t("ourStory.title")}
         body={t("ourStory.body")}
@@ -431,6 +438,7 @@ const Home = () => {
 
       <HomeEditorialBanner
         image={`/images/bg/home-track-order-${language}.webp`}
+        mobileImage={`/images/bg/home-track-order-${language}-mobile.webp`}
         eyebrow={t("trackOrder.eyebrow")}
         title={t("trackOrder.title")}
         body={t("trackOrder.body")}

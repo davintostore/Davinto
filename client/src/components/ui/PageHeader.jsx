@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Container from "./Container";
 import SectionLabel from "./SectionLabel";
 import SplitText from "../animation/SplitText";
@@ -22,6 +22,34 @@ const HeaderBackgroundVideo = ({ video }) => {
   });
   const [isVideoAvailable, setIsVideoAvailable] = useState(true);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [isAutoplayBlocked, setIsAutoplayBlocked] = useState(false);
+  const loadRetryCountRef = useRef(0);
+
+  const playVideo = useCallback(async () => {
+    const currentVideo = videoRef.current;
+
+    if (!currentVideo) return false;
+
+    currentVideo.muted = true;
+    currentVideo.defaultMuted = true;
+    currentVideo.playsInline = true;
+
+    try {
+      const playPromise = currentVideo.play();
+
+      if (playPromise && typeof playPromise.then === "function") {
+        await playPromise;
+      }
+
+      setIsVideoPlaying(true);
+      setIsAutoplayBlocked(false);
+      return true;
+    } catch {
+      setIsVideoPlaying(false);
+      setIsAutoplayBlocked(true);
+      return false;
+    }
+  }, []);
 
   useEffect(() => {
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -30,6 +58,9 @@ const HeaderBackgroundVideo = ({ video }) => {
     const syncVideoState = () => {
       setShouldRenderVideo(!motionQuery.matches && !connection?.saveData);
       setIsVideoAvailable(true);
+      setIsVideoPlaying(false);
+      setIsAutoplayBlocked(false);
+      loadRetryCountRef.current = 0;
     };
 
     syncVideoState();
@@ -49,37 +80,16 @@ const HeaderBackgroundVideo = ({ video }) => {
 
     if (!currentVideo) return undefined;
 
-    let isCancelled = false;
+    void playVideo();
+    return undefined;
+  }, [isVideoAvailable, playVideo, shouldRenderVideo]);
 
-    currentVideo.muted = true;
-    currentVideo.defaultMuted = true;
-    currentVideo.playsInline = true;
+  const retryPlaybackAfterLoad = () => {
+    if (isVideoPlaying || loadRetryCountRef.current >= 2) return;
 
-    const playVideo = async () => {
-      try {
-        const playPromise = currentVideo.play();
-
-        if (playPromise && typeof playPromise.then === "function") {
-          await playPromise;
-        }
-
-        if (!isCancelled) {
-          setIsVideoPlaying(true);
-        }
-      } catch {
-        if (!isCancelled) {
-          setIsVideoPlaying(false);
-          setIsVideoAvailable(false);
-        }
-      }
-    };
-
-    playVideo();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [isVideoAvailable, shouldRenderVideo]);
+    loadRetryCountRef.current += 1;
+    void playVideo();
+  };
 
   return (
     <>
@@ -104,13 +114,30 @@ const HeaderBackgroundVideo = ({ video }) => {
           poster={video.poster || undefined}
           aria-hidden="true"
           tabIndex={-1}
-          onLoadStart={() => setIsVideoPlaying(false)}
+          onLoadStart={() => {
+            loadRetryCountRef.current = 0;
+            setIsVideoPlaying(false);
+          }}
+          onLoadedMetadata={retryPlaybackAfterLoad}
+          onCanPlay={retryPlaybackAfterLoad}
           onPlaying={() => setIsVideoPlaying(true)}
-          onError={() => setIsVideoAvailable(false)}
+          onError={() => {
+            setIsVideoAvailable(false);
+            setIsAutoplayBlocked(false);
+          }}
         >
           {video.webm && <source src={video.webm} type="video/webm" />}
           {video.mp4 && <source src={video.mp4} type="video/mp4" />}
         </video>
+      )}
+      {shouldRenderVideo && isVideoAvailable && isAutoplayBlocked && (
+        <button
+          type="button"
+          className="absolute bottom-4 right-4 z-20 border border-[#c7a852]/70 bg-[#1c1917]/85 px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-[#f5f0e8] backdrop-blur-sm transition hover:bg-[#c7a852] hover:text-[#1c1917]"
+          onClick={() => void playVideo()}
+        >
+          Play video
+        </button>
       )}
     </>
   );

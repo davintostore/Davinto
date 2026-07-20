@@ -155,6 +155,8 @@ const PublicLayout = () => {
         ? "text-[#f5f0e8] after:scale-x-100"
         : "text-[#f5f0e8] after:scale-x-0 hover:text-[#f5f0e8] hover:after:scale-x-100"
     }`;
+  const mobilePrimaryNavClass =
+    "public-mobile-menu__primary-link flex items-center justify-between border-b border-[#8b8075]/20 py-4 transition hover:text-[#882c30]";
 
   const openSearchDrawer = () => {
     setIsMenuOpen(false);
@@ -392,7 +394,11 @@ const PublicLayout = () => {
       {!isFocusedRoute && (
       <header
         className={`fixed inset-x-0 top-0 z-50 bg-[#1c1917] text-[#f5f0e8] transition-transform duration-300 ease-out ${
-          isHeaderHidden ? "-translate-y-full" : "translate-y-0"
+          isMenuOpen
+            ? "transform-none"
+            : isHeaderHidden
+              ? "-translate-y-full"
+              : "translate-y-0"
         }`}
       >
         <div className="overflow-hidden bg-[#882c30]">
@@ -615,12 +621,20 @@ const PublicLayout = () => {
         </Container>
 
         {isMenuOpen && (
-          <div
-            ref={mobileMenuRef}
-            id="public-mobile-navigation"
-            className="public-mobile-menu max-h-[calc(100svh-6.5rem)] overflow-y-auto border-t border-[#8b8075]/20 bg-[#f5f0e8] text-[#1c1917] lg:hidden"
-            tabIndex={-1}
-          >
+          <>
+            <button
+              type="button"
+              className="public-mobile-menu-backdrop fixed inset-x-0 bottom-0 top-[6.5rem] z-10 bg-black/45 lg:hidden"
+              onClick={() => setIsMenuOpen(false)}
+              aria-label={t("closeNavigation")}
+            />
+            <div
+              ref={mobileMenuRef}
+              id="public-mobile-navigation"
+              dir={language === "ar" ? "rtl" : "ltr"}
+              className="public-mobile-menu fixed bottom-0 left-0 right-auto top-[6.5rem] z-20 w-[min(88vw,24rem)] overflow-y-auto border-r border-t border-[#8b8075]/20 bg-[#f5f0e8] text-[#1c1917] shadow-2xl lg:hidden"
+              tabIndex={-1}
+            >
             <Container className="py-5">
               <nav
                 className="grid"
@@ -633,7 +647,7 @@ const PublicLayout = () => {
                     end={link.path === "/"}
                     onClick={() => setIsMenuOpen(false)}
                     className={({ isActive }) =>
-                      `flex items-center justify-between border-b border-[#8b8075]/20 py-4 text-sm font-black uppercase tracking-[0.2em] transition hover:text-[#882c30] ${
+                      `${mobilePrimaryNavClass} ${
                         isActive ? "text-[#882c30]" : "text-[#1c1917]"
                       }`
                     }
@@ -649,7 +663,7 @@ const PublicLayout = () => {
                   onClick={() =>
                     setIsMobileCategoriesOpen((current) => !current)
                   }
-                  className={`davinto-press-muted flex items-center justify-between border-b border-[#8b8075]/20 py-4 text-sm font-black uppercase tracking-[0.2em] hover:text-[#882c30] ${
+                  className={`${mobilePrimaryNavClass} ${
                     isCategoriesNavActive ? "text-[#882c30]" : "text-[#1c1917]"
                   }`}
                 >
@@ -709,7 +723,7 @@ const PublicLayout = () => {
                     end={link.path === "/"}
                     onClick={() => setIsMenuOpen(false)}
                     className={({ isActive }) =>
-                      `flex items-center justify-between border-b border-[#8b8075]/20 py-4 text-sm font-black uppercase tracking-[0.2em] transition hover:text-[#882c30] ${
+                      `${mobilePrimaryNavClass} ${
                         isActive ? "text-[#882c30]" : "text-[#1c1917]"
                       }`
                     }
@@ -781,7 +795,8 @@ const PublicLayout = () => {
                 <Button className="w-full">{t("checkout")}</Button>
               </Link>
             </Container>
-          </div>
+            </div>
+          </>
         )}
 
       </header>

@@ -146,6 +146,7 @@ const TrackOrder = () => {
         description={t("orders:track.headerDescription")}
         backgroundVideo={{
           mp4: "/videos/track-order/track-order.mp4",
+          poster: "/videos/track-order/track-order-poster.webp",
         }}
         className="bg-[#f5f0e8] text-[#1c1917]"
       />

@@ -1,0 +1,11 @@
+ .../images/bg/home-track-order-ar-mobile.webp      | Bin [31m0[m -> [32m31650[m bytes
+ .../images/bg/home-track-order-en-mobile.webp      | Bin [31m0[m -> [32m31650[m bytes
+ client/public/images/bg/our-story-ar-mobile.webp   | Bin [31m0[m -> [32m36048[m bytes
+ client/public/images/bg/our-story-en-mobile.webp   | Bin [31m0[m -> [32m36048[m bytes
+ .../components/category/EditorialCategoryCard.jsx  |  35 [32m++++++[m[31m--[m
+ client/src/components/layout/PublicLayout.jsx      |  37 [32m++++++[m[31m---[m
+ client/src/components/ui/PageHeader.jsx            |  91 [32m+++++++++++++[m[31m--------[m
+ client/src/index.css                               |  64 [32m+++++++++++++++[m
+ client/src/pages/public/Home.jsx                   |  12 [32m++[m[31m-[m
+ client/src/pages/public/TrackOrder.jsx             |   1 [32m+[m
+ 10 files changed, 189 insertions(+), 51 deletions(-)
