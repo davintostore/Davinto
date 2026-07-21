@@ -157,6 +157,10 @@ const PublicLayout = () => {
     }`;
   const mobilePrimaryNavClass =
     "public-mobile-menu__primary-link flex items-center justify-between border-b border-[#8b8075]/20 py-4 transition hover:text-[#882c30]";
+  const mobileMenuSideClass =
+    language === "ar"
+      ? "public-mobile-menu--right border-l"
+      : "public-mobile-menu--left border-r";
 
   const openSearchDrawer = () => {
     setIsMenuOpen(false);
@@ -620,21 +624,26 @@ const PublicLayout = () => {
           </div>
         </Container>
 
-        {isMenuOpen && (
-          <>
-            <button
-              type="button"
-              className="public-mobile-menu-backdrop fixed inset-x-0 bottom-0 top-[6.5rem] z-10 bg-black/45 lg:hidden"
-              onClick={() => setIsMenuOpen(false)}
-              aria-label={t("closeNavigation")}
-            />
-            <div
-              ref={mobileMenuRef}
-              id="public-mobile-navigation"
-              dir={language === "ar" ? "rtl" : "ltr"}
-              className="public-mobile-menu fixed bottom-0 left-0 right-auto top-[6.5rem] z-20 w-[min(88vw,24rem)] overflow-y-auto border-r border-t border-[#8b8075]/20 bg-[#f5f0e8] text-[#1c1917] shadow-2xl lg:hidden"
-              tabIndex={-1}
-            >
+        <>
+          <button
+            type="button"
+            className="public-mobile-menu-backdrop fixed inset-x-0 bottom-0 top-[6.5rem] z-10 bg-black/45 lg:hidden"
+            data-open={isMenuOpen}
+            onClick={() => setIsMenuOpen(false)}
+            aria-label={t("closeNavigation")}
+            aria-hidden={!isMenuOpen}
+            tabIndex={isMenuOpen ? 0 : -1}
+          />
+          <div
+            ref={mobileMenuRef}
+            id="public-mobile-navigation"
+            dir={language === "ar" ? "rtl" : "ltr"}
+            className={`public-mobile-menu ${mobileMenuSideClass} fixed bottom-0 top-[6.5rem] z-20 w-[min(88vw,24rem)] overflow-y-auto border-[#8b8075]/20 bg-[#f5f0e8] text-[#1c1917] shadow-2xl lg:hidden`}
+            data-open={isMenuOpen}
+            aria-hidden={!isMenuOpen}
+            inert={!isMenuOpen}
+            tabIndex={-1}
+          >
             <Container className="py-5">
               <nav
                 className="grid"
@@ -795,18 +804,11 @@ const PublicLayout = () => {
                 <Button className="w-full">{t("checkout")}</Button>
               </Link>
             </Container>
-            </div>
-          </>
-        )}
+          </div>
+        </>
 
       </header>
       )}
-
-      <div
-        key={`route-progress-${location.pathname}`}
-        className="davinto-route-progress"
-        aria-hidden="true"
-      />
 
       <main className={`min-h-screen ${isFocusedRoute ? "pt-0" : "pt-[6.5rem]"}`}>
         <div key={location.pathname} className="davinto-route-transition">

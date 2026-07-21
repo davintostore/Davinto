@@ -246,23 +246,8 @@ img {
   animation: davintoPageEnter 320ms ease-out both;
 }
 
-.davinto-route-progress {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 120;
-  height: 2px;
-  width: 100%;
-  pointer-events: none;
-  transform-origin: left center;
-  background: linear-gradient(
-    90deg,
-    rgba(199, 168, 82, 0),
-    var(--davinto-gold),
-    rgba(245, 240, 232, 0.86)
-  );
-  box-shadow: 0 0 18px rgba(199, 168, 82, 0.34);
-  animation: davintoRouteProgress 420ms ease-out both;
+.page-shell .davinto-route-transition {
+  animation: none;
 }
 
 @keyframes davintoPageEnter {
@@ -272,27 +257,6 @@ img {
 
   to {
     opacity: 1;
-  }
-}
-
-@keyframes davintoRouteProgress {
-  0% {
-    opacity: 0;
-    transform: scaleX(0);
-  }
-
-  12% {
-    opacity: 1;
-  }
-
-  72% {
-    opacity: 1;
-    transform: scaleX(0.82);
-  }
-
-  100% {
-    opacity: 0;
-    transform: scaleX(1);
   }
 }
 
@@ -1124,18 +1088,37 @@ html[dir="rtl"] .cart-drawer-panel--physical-right {
   color: var(--davinto-cream);
 }
 
-.public-mobile-menu,
-html[dir="rtl"] .public-mobile-menu,
-html[lang="ar"] .public-mobile-menu {
-  right: auto !important;
-  left: 0 !important;
-  animation: davintoMobileMenuEnter 260ms ease-out both;
+.public-mobile-menu {
+  transition: transform 260ms ease-out;
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
 }
 
+.public-mobile-menu--left {
+  right: auto;
+  left: 0;
+  transform: translateX(-100%);
+}
+
+.public-mobile-menu--right {
+  right: 0;
+  left: auto;
+  transform: translateX(100%);
+}
+
+.public-mobile-menu[data-open="true"] {
+  transform: translateX(0);
+}
+
 .public-mobile-menu-backdrop {
-  animation: davintoMobileMenuBackdropEnter 180ms ease-out both;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease-out;
+}
+
+.public-mobile-menu-backdrop[data-open="true"] {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .public-mobile-menu__primary-link {
@@ -1155,26 +1138,6 @@ html[dir="rtl"] .page-shell .public-mobile-menu__primary-link,
 html[lang="ar"] .page-shell .public-mobile-menu__primary-link {
   letter-spacing: 0;
   text-transform: none;
-}
-
-@keyframes davintoMobileMenuEnter {
-  from {
-    transform: translateX(-100%);
-  }
-
-  to {
-    transform: translateX(0);
-  }
-}
-
-@keyframes davintoMobileMenuBackdropEnter {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
 }
 
 .public-footer a:not(.public-footer-logo-link):hover,
@@ -2039,10 +2002,6 @@ select:-webkit-autofill {
 
   .davinto-route-transition {
     animation: none !important;
-  }
-
-  .davinto-route-progress {
-    display: none !important;
   }
 
   .davinto-reveal,
