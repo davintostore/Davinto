@@ -144,39 +144,43 @@ const HomeEditorialBanner = ({
   to,
   language,
   type,
-}) => (
-  <section
-    className={`owner-home-banner owner-home-banner--${type} relative flex overflow-hidden bg-cover bg-no-repeat text-[#1c1917]`}
-    style={{
-      "--owner-home-banner-image": `url("${image}")`,
-      "--owner-home-banner-mobile-image": `url("${mobileImage}")`,
-    }}
-    aria-label={title}
-  >
-    {type === "story" && (
-      <div
-        className={`owner-home-banner__overlay pointer-events-none absolute inset-0 ${
-          language === "ar" ? "owner-home-banner__overlay--rtl" : ""
-        }`}
-        aria-hidden="true"
-      />
-    )}
-    <Container className="owner-home-banner__container relative flex w-full items-center">
-      <div
-        dir={language === "ar" ? "rtl" : "ltr"}
-        className={`owner-home-banner__copy flex w-full flex-col ${
-          language === "ar"
-            ? "owner-home-banner__copy--rtl ml-auto items-end text-right"
-            : "owner-home-banner__copy--ltr mr-auto items-start"
-        }`}
-      >
+}) => {
+  const bannerTitle =
+    type === "story" && language === "en" ? "More Than Just a\nT-Shirt" : title;
+
+  return (
+    <section
+      className={`owner-home-banner owner-home-banner--${type} relative flex overflow-hidden bg-cover bg-no-repeat text-[#1c1917]`}
+      style={{
+        "--owner-home-banner-image": `url("${image}")`,
+        "--owner-home-banner-mobile-image": `url("${mobileImage}")`,
+      }}
+      aria-label={bannerTitle}
+    >
+      {type === "story" && (
+        <div
+          className={`owner-home-banner__overlay pointer-events-none absolute inset-0 ${
+            language === "ar" ? "owner-home-banner__overlay--rtl" : ""
+          }`}
+          aria-hidden="true"
+        />
+      )}
+      <Container className="owner-home-banner__container relative flex w-full items-center">
+        <div
+          dir={language === "ar" ? "rtl" : "ltr"}
+          className={`owner-home-banner__copy flex w-full flex-col ${
+            language === "ar"
+              ? "owner-home-banner__copy--rtl ml-auto items-end text-right"
+              : "owner-home-banner__copy--ltr mr-auto items-start"
+          }`}
+        >
           <StickerLabel className="owner-home-banner__sticker">
             {eyebrow}
           </StickerLabel>
           <SplitText
             as="h2"
-            text={title}
-            splitType={title.includes("\n") ? "lines" : "words"}
+            text={bannerTitle}
+            splitType={bannerTitle.includes("\n") ? "lines" : "words"}
             className="owner-home-banner__title font-serif"
             textAlign={language === "ar" ? "right" : "left"}
           />
@@ -194,10 +198,11 @@ const HomeEditorialBanner = ({
               aria-hidden="true"
             />
           </Link>
-      </div>
-    </Container>
-  </section>
-);
+        </div>
+      </Container>
+    </section>
+  );
+};
 
 const Home = () => {
   const { t, i18n } = useTranslation(["home", "common"]);

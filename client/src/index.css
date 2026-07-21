@@ -699,13 +699,32 @@ html[lang="ar"] .page-shell label {
 }
 
 .cart-drawer-panel {
+  --davinto-drawer-start: 100%;
   animation: davintoDrawerEnter 260ms ease-out both;
+}
+
+.cart-drawer-panel[data-open] {
+  animation: none;
+  transform: translateX(var(--davinto-drawer-start));
+  transition: transform 260ms ease-out;
+}
+
+.cart-drawer-panel[data-open="true"] {
+  transform: translateX(0);
+}
+
+.cart-drawer-panel--physical-left,
+html[dir="rtl"] .cart-drawer-panel--physical-left {
+  right: auto !important;
+  left: 0 !important;
+  --davinto-drawer-start: -100%;
 }
 
 .cart-drawer-panel--physical-right,
 html[dir="rtl"] .cart-drawer-panel--physical-right {
   right: 0 !important;
   left: auto !important;
+  --davinto-drawer-start: 100%;
 }
 
 .cart-drawer-scroll {
@@ -912,7 +931,7 @@ html[dir="rtl"] .cart-drawer-panel--physical-right {
 
 @keyframes davintoDrawerEnter {
   from {
-    transform: translateX(100%);
+    transform: translateX(var(--davinto-drawer-start, 100%));
   }
 
   to {
@@ -1089,34 +1108,25 @@ html[dir="rtl"] .cart-drawer-panel--physical-right {
 }
 
 .public-mobile-menu {
-  transition: transform 260ms ease-out;
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
 }
 
 .public-mobile-menu--left {
-  right: auto;
-  left: 0;
-  transform: translateX(-100%);
+  --davinto-drawer-start: -100%;
 }
 
 .public-mobile-menu--right {
-  right: 0;
-  left: auto;
-  transform: translateX(100%);
+  --davinto-drawer-start: 100%;
 }
 
-.public-mobile-menu[data-open="true"] {
-  transform: translateX(0);
-}
-
-.public-mobile-menu-backdrop {
+.davinto-drawer-backdrop {
   opacity: 0;
   pointer-events: none;
-  transition: opacity 180ms ease-out;
+  transition: opacity 260ms ease-out;
 }
 
-.public-mobile-menu-backdrop[data-open="true"] {
+.davinto-drawer-backdrop[data-open="true"] {
   opacity: 1;
   pointer-events: auto;
 }
@@ -1466,12 +1476,16 @@ html[dir="rtl"] .page-shell .owner-home-banner__copy--rtl {
   font-size: 1rem;
 }
 
-.owner-home-banner--track .owner-home-banner__title {
+.owner-home-banner:is(.owner-home-banner--story, .owner-home-banner--track)
+  .owner-home-banner__title {
   font-size: clamp(4.75rem, 7.4vw, 7rem);
+  line-height: 0.92;
 }
 
-.owner-home-banner--track .owner-home-banner__body {
+.owner-home-banner:is(.owner-home-banner--story, .owner-home-banner--track)
+  .owner-home-banner__body {
   font-size: 1.12rem;
+  line-height: 1.7;
   color: #5b524b;
 }
 
@@ -1480,10 +1494,15 @@ html[dir="rtl"] .page-shell .owner-home-banner__copy--rtl {
 }
 
 .owner-home-banner--story .owner-home-banner__title {
-  max-width: 20rem;
+  max-width: min(56rem, calc(100vw - 2rem));
   margin-top: 1.25rem;
-  font-size: clamp(2.8rem, 3.45vw, 3.6rem);
-  line-height: 1.02;
+}
+
+.owner-home-banner--story
+  .owner-home-banner__copy--ltr
+  .owner-home-banner__title
+  [data-split-line="true"] {
+  white-space: nowrap;
 }
 
 .owner-home-banner--story {
@@ -1509,9 +1528,6 @@ html[dir="rtl"] .owner-home-banner--track {
 .owner-home-banner--story .owner-home-banner__body {
   max-width: 19rem;
   margin-top: 1.45rem;
-  color: #5b524b;
-  font-size: 0.82rem;
-  line-height: 1.6;
 }
 
 .owner-home-banner--story .owner-home-banner__action {
@@ -1674,14 +1690,17 @@ html[lang="ar"] .page-shell .owner-home-banner__title {
   }
 
   .owner-home-banner__title,
-  .owner-home-banner--track .owner-home-banner__title {
+  .owner-home-banner:is(.owner-home-banner--story, .owner-home-banner--track)
+    .owner-home-banner__title {
     margin-top: 1rem;
     font-size: clamp(3.2rem, 14.5vw, 3.85rem);
     line-height: 0.94;
   }
 
-  .owner-home-banner--track .owner-home-banner__body {
+  .owner-home-banner:is(.owner-home-banner--story, .owner-home-banner--track)
+    .owner-home-banner__body {
     font-size: 0.95rem;
+    line-height: 1.65;
   }
 
   .owner-home-banner--track .owner-home-banner__action {
@@ -1693,17 +1712,22 @@ html[lang="ar"] .page-shell .owner-home-banner__title {
   }
 
   .owner-home-banner--story .owner-home-banner__title {
-    max-width: 17rem;
+    max-width: calc(100vw - 2rem);
     margin-top: 1rem;
-    font-size: clamp(2.25rem, 10vw, 2.85rem);
-    line-height: 1.02;
+  }
+
+  .owner-home-banner--story
+    .owner-home-banner__copy--ltr
+    .owner-home-banner__title {
+    font-size: min(
+      clamp(3.2rem, 14.5vw, 3.85rem),
+      calc((100vw - 2rem) / 7.55)
+    );
   }
 
   .owner-home-banner--story .owner-home-banner__body {
     max-width: 17rem;
     margin-top: 1.25rem;
-    font-size: 0.78rem;
-    line-height: 1.58;
   }
 
   .owner-home-banner--story .owner-home-banner__action {

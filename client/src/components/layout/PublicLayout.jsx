@@ -33,6 +33,8 @@ import {
   getLocalizedSettings,
 } from "../../utils/localizedContent";
 
+const DRAWER_TRANSITION_MS = 260;
+
 const policyLinks = [
   { key: "privacy", path: "/privacy-policy" },
   { key: "refund", path: "/refund-policy" },
@@ -112,6 +114,8 @@ const PublicLayout = () => {
   const hideFooter = location.pathname === "/checkout";
   const showCustomerNav =
     !showAdminDashboardLink && !isCustomerLoading && isCustomerAuthenticated;
+  const [isMenuMounted, setIsMenuMounted] = useState(false);
+  const [isMenuVisible, setIsMenuVisible] = useState(false);
   const { data: settingsData } = useQuery({
     queryKey: ["public-settings"],
     queryFn: getPublicSettingsRequest,
@@ -135,8 +139,10 @@ const PublicLayout = () => {
     { label: t("trackOrder"), path: "/track-order" },
   ];
   const mobileMenuRef = useFocusTrap({
-    isActive: isMenuOpen && !isFocusedRoute,
+    isActive: isMenuMounted && isMenuOpen && !isFocusedRoute,
     onEscape: () => setIsMenuOpen(false),
+    lockScroll: true,
+    lockHtmlScroll: true,
   });
   const accountPath = isCustomerAuthenticated ? "/account" : "/signin";
   const accountLabel = isCustomerAuthenticated ? t("account") : t("signIn");
@@ -159,12 +165,21 @@ const PublicLayout = () => {
     "public-mobile-menu__primary-link flex items-center justify-between border-b border-[#8b8075]/20 py-4 transition hover:text-[#882c30]";
   const mobileMenuSideClass =
     language === "ar"
-      ? "public-mobile-menu--right border-l"
-      : "public-mobile-menu--left border-r";
+      ? "cart-drawer-panel--physical-right public-mobile-menu--right border-l"
+      : "cart-drawer-panel--physical-left public-mobile-menu--left border-r";
 
   const openSearchDrawer = () => {
     setIsMenuOpen(false);
     setIsSearchOpen(true);
+  };
+  const toggleMobileMenu = () => {
+    if (isMenuOpen) {
+      setIsMenuOpen(false);
+      return;
+    }
+
+    setIsMenuMounted(true);
+    setIsMenuOpen(true);
   };
 
   useOverlayBackClose({
@@ -199,6 +214,32 @@ const PublicLayout = () => {
       window.cancelAnimationFrame(frameId);
     };
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (isMenuMounted && isMenuOpen && !isFocusedRoute) {
+      const frameId = window.requestAnimationFrame(() => {
+        setIsMenuVisible(true);
+      });
+
+      return () => {
+        window.cancelAnimationFrame(frameId);
+      };
+    }
+
+    if (!isMenuMounted) return undefined;
+
+    const frameId = window.requestAnimationFrame(() => {
+      setIsMenuVisible(false);
+    });
+    const timeoutId = window.setTimeout(() => {
+      setIsMenuMounted(false);
+    }, DRAWER_TRANSITION_MS);
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.clearTimeout(timeoutId);
+    };
+  }, [isFocusedRoute, isMenuMounted, isMenuOpen]);
 
   useEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
@@ -284,7 +325,7 @@ const PublicLayout = () => {
   }, [isCategoriesOpen]);
 
   useEffect(() => {
-    if (!isMenuOpen || isFocusedRoute) return undefined;
+    if (!isMenuMounted || !isMenuOpen || isFocusedRoute) return undefined;
 
     const menuNode = mobileMenuRef.current;
     const triggerNode = mobileMenuTriggerRef.current;
@@ -351,7 +392,7 @@ const PublicLayout = () => {
         );
       }
     };
-  }, [isFocusedRoute, isMenuOpen, mobileMenuRef]);
+  }, [isFocusedRoute, isMenuMounted, isMenuOpen, mobileMenuRef]);
 
   useEffect(() => {
     if (isFocusedRoute) return undefined;
@@ -427,7 +468,7 @@ const PublicLayout = () => {
             <button
               ref={mobileMenuTriggerRef}
               type="button"
-              onClick={() => setIsMenuOpen((current) => !current)}
+              onClick={toggleMobileMenu}
               className="davinto-press-icon flex h-11 w-11 items-center justify-center text-[#f5f0e8] transition hover:text-[#c7a852] lg:hidden"
               aria-label={
                 isMenuOpen ? t("closeNavigation") : t("openNavigation")
@@ -624,24 +665,31 @@ const PublicLayout = () => {
           </div>
         </Container>
 
-        <>
+        {isMenuMounted && (
+        <div
+          ref={mobileMenuRef}
+          className="fixed inset-x-0 bottom-0 top-[6.5rem] z-[80] lg:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label={t("mobileNavigation")}
+          tabIndex={-1}
+        >
           <button
             type="button"
-            className="public-mobile-menu-backdrop fixed inset-x-0 bottom-0 top-[6.5rem] z-10 bg-black/45 lg:hidden"
-            data-open={isMenuOpen}
+            className="davinto-drawer-backdrop absolute inset-0 bg-[#1c1917]/45"
+            data-open={isMenuVisible}
             onClick={() => setIsMenuOpen(false)}
             aria-label={t("closeNavigation")}
-            aria-hidden={!isMenuOpen}
-            tabIndex={isMenuOpen ? 0 : -1}
+            aria-hidden={!isMenuVisible}
+            tabIndex={-1}
           />
-          <div
-            ref={mobileMenuRef}
+          <aside
             id="public-mobile-navigation"
             dir={language === "ar" ? "rtl" : "ltr"}
-            className={`public-mobile-menu ${mobileMenuSideClass} fixed bottom-0 top-[6.5rem] z-20 w-[min(88vw,24rem)] overflow-y-auto border-[#8b8075]/20 bg-[#f5f0e8] text-[#1c1917] shadow-2xl lg:hidden`}
-            data-open={isMenuOpen}
-            aria-hidden={!isMenuOpen}
-            inert={!isMenuOpen}
+            className={`public-cream-panel cart-drawer-panel public-mobile-menu ${mobileMenuSideClass} absolute inset-y-0 flex w-[min(88vw,24rem)] flex-col overflow-y-auto border-[#8b8075]/20 bg-[#f5f0e8] text-[#1c1917] shadow-2xl`}
+            data-open={isMenuVisible}
+            aria-hidden={!isMenuVisible}
+            inert={!isMenuVisible}
             tabIndex={-1}
           >
             <Container className="py-5">
@@ -804,8 +852,9 @@ const PublicLayout = () => {
                 <Button className="w-full">{t("checkout")}</Button>
               </Link>
             </Container>
-          </div>
-        </>
+          </aside>
+        </div>
+        )}
 
       </header>
       )}
