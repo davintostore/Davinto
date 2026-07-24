@@ -203,6 +203,13 @@ const signupCustomer = asyncHandler(async (req, res) => {
     typeof req.body?.password === "string" ? req.body.password : "";
   const hasPhone = Object.prototype.hasOwnProperty.call(req.body || {}, "phone");
   const rawPhone = hasPhone ? req.body.phone : undefined;
+  const hasPreferredLocale = Object.prototype.hasOwnProperty.call(
+    req.body || {},
+    "preferredLocale"
+  );
+  const preferredLocale = hasPreferredLocale
+    ? normalizeText(req.body.preferredLocale).toLowerCase()
+    : "en";
 
   if (!name || !email || !password) {
     throw createHttpError("Name, email, and password are required.");
@@ -222,6 +229,10 @@ const signupCustomer = asyncHandler(async (req, res) => {
 
   if (password.length > 128) {
     throw createHttpError("Password cannot exceed 128 characters.");
+  }
+
+  if (!["en", "ar"].includes(preferredLocale)) {
+    throw createHttpError("Preferred locale must be en or ar.");
   }
 
   let phone;
@@ -258,7 +269,7 @@ const signupCustomer = asyncHandler(async (req, res) => {
       phone,
       password,
       status: "active",
-      preferredLocale: "en",
+      preferredLocale,
     });
   } catch (error) {
     rethrowCustomerPersistenceError(error);

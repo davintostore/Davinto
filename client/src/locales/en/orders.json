@@ -34,6 +34,7 @@
     "label": "Tracking",
     "find": "Find your order",
     "orderNumber": "Order Number",
+    "orderNumberHelper": "Enter only the digits after DV-, for example 1015.",
     "email": "Order Email",
     "required": "Order number and email are required.",
     "notFound": "Order not found.",

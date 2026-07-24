@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import Button from "../../components/ui/Button";
@@ -28,6 +33,27 @@ import { getOrderItemImage } from "../../utils/resolveLocalImages";
 
 const ORDER_HANDOFF_KEY = "davinto_order_handoff";
 const LEGACY_LAST_ORDER_KEY = "davinto_last_order";
+const GUEST_SIGNUP_HANDOFF_KEY = "davinto_guest_signup_handoff";
+const GUEST_SIGNUP_HANDOFF_VERSION = 1;
+
+const normalizeSignupField = (value, maxLength) => {
+  if (typeof value !== "string") return "";
+
+  return value.trim().slice(0, maxLength);
+};
+
+const buildGuestSignupHandoff = (order, fallbackLocale) => ({
+  version: GUEST_SIGNUP_HANDOFF_VERSION,
+  name: normalizeSignupField(order?.customerInfo?.fullName, 100),
+  email: normalizeSignupField(order?.customerInfo?.email, 254).toLowerCase(),
+  phone: normalizeSignupField(order?.customerInfo?.phone, 32),
+  preferredLocale:
+    order?.locale === "ar" || order?.locale === "en"
+      ? order.locale
+      : fallbackLocale === "ar"
+        ? "ar"
+        : "en",
+});
 
 const shouldFirePurchaseForOrder = (order) => {
   if (!order?.orderNumber) return false;
@@ -45,12 +71,14 @@ const OrderSuccess = () => {
     "common",
     "navigation",
     "checkout",
+    "auth",
   ]);
   const language = i18n.resolvedLanguage === "ar" ? "ar" : "en";
   const formatMoney = (value) => formatCurrency(value, language);
   const location = useLocation();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { isCustomerAuthenticated } = useCustomerAuth();
+  const { isCustomerAuthenticated, isCustomerLoading } = useCustomerAuth();
 
   // SEO
   useSeo({
@@ -136,6 +164,33 @@ const OrderSuccess = () => {
     ["failed", "invalid", "missing"].includes(paymentResult) ||
     (paymentResult && paymentResult !== "success");
 
+  const showGuestSignup =
+    order?.checkoutMode === "guest" &&
+    !isCustomerLoading &&
+    !isCustomerAuthenticated;
+
+  const handleCreateAccount = () => {
+    if (!showGuestSignup) return;
+
+    const guestSignupHandoff = buildGuestSignupHandoff(order, language);
+
+    try {
+      sessionStorage.setItem(
+        GUEST_SIGNUP_HANDOFF_KEY,
+        JSON.stringify(guestSignupHandoff)
+      );
+    } catch {
+      // Navigation state still carries the same minimal profile handoff.
+    }
+
+    navigate("/signup?source=order-success", {
+      state: {
+        from: { pathname: "/account" },
+        guestSignupHandoff,
+      },
+    });
+  };
+
   return (
     <>
       <PageHeader
@@ -144,10 +199,10 @@ const OrderSuccess = () => {
         description={t("orders:success.headerDescription")}
       />
 
-      <section className="fashion-section">
+      <section className="order-success-page fashion-section">
         <Container>
           {!orderNumber ? (
-            <Card className="py-14 text-center">
+            <Card className="order-success-light-card py-14 text-center text-[#1c1917]">
               <SectionLabel className="justify-center">
                 {t("orders:success.missingLabel")}
               </SectionLabel>
@@ -156,7 +211,7 @@ const OrderSuccess = () => {
                 {t("orders:success.missingTitle")}
               </h2>
 
-              <p className="mx-auto mt-6 max-w-xl text-sm leading-7 text-[#f5f0e8]/52">
+              <p className="mx-auto mt-6 max-w-xl text-sm leading-7 text-[#8b8075]">
                 {t("orders:success.missingDescription")}
               </p>
 
@@ -174,47 +229,47 @@ const OrderSuccess = () => {
             </Card>
           ) : (
             <div className="grid gap-6 lg:grid-cols-[1fr_420px] lg:items-start">
-              <Card className="p-6 sm:p-9">
+              <Card className="order-success-light-card p-6 text-[#1c1917] sm:p-9">
                 <SectionLabel>{t("orders:success.confirmedLabel")}</SectionLabel>
 
                 <h2 className="editorial-heading text-6xl sm:text-8xl">
                   {t("orders:success.thankYou")}
                 </h2>
 
-                <p className="mt-6 max-w-2xl text-sm leading-8 text-[#f5f0e8]/58">
+                <p className="mt-6 max-w-2xl text-sm leading-8 text-[#8b8075]">
                   {t("orders:success.description")}
                 </p>
 
                 {showPaymentSuccess && (
-                  <div className="mt-6 border border-[#c7a852]/35 bg-[#c7a852]/10 px-4 py-3 text-sm text-[#f5f0e8]">
+                  <div className="mt-6 border border-[#c7a852]/35 bg-[#c7a852]/10 px-4 py-3 text-sm text-[#1c1917]">
                     {t("orders:success.paymentSuccess")}
                   </div>
                 )}
 
                 {showPaymentFailed && (
-                  <div className="mt-6 border border-[#b8585d]/45 bg-[#882c30]/18 px-4 py-3 text-sm text-[#f5d7d8]">
+                  <div className="mt-6 border border-[#b8585d]/45 bg-[#882c30]/10 px-4 py-3 text-sm font-semibold text-[#882c30]">
                     {t("orders:success.paymentFailed")}
                   </div>
                 )}
 
                 <div className="mt-8 grid gap-4 md:grid-cols-2">
-                  <div className="status-panel">
+                  <div className="order-success-status-panel status-panel">
                     <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
                       {t("orders:success.orderNumber")}
                     </p>
 
-                    <p className="mt-3 font-serif text-2xl font-semibold text-[#f5f0e8]">
+                    <p className="mt-3 font-serif text-2xl font-semibold text-[#1c1917]">
                       {orderNumber}
                     </p>
                   </div>
 
                   {email && (
-                    <div className="status-panel">
+                    <div className="order-success-status-panel status-panel">
                       <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
                         {t("orders:success.orderEmail")}
                       </p>
 
-                      <p className="mt-3 break-all text-sm font-bold text-[#f5f0e8]">
+                      <p className="mt-3 break-all text-sm font-bold text-[#1c1917]">
                         {email}
                       </p>
                     </div>
@@ -223,29 +278,29 @@ const OrderSuccess = () => {
 
                 {order && (
                   <div className="mt-6 grid gap-4 md:grid-cols-3">
-                    <div className="status-panel">
+                    <div className="order-success-status-panel status-panel">
                       <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
                         {t("orders:success.orderStatus")}
                       </p>
-                      <p className="mt-3 text-sm font-bold uppercase text-white">
+                      <p className="mt-3 text-sm font-bold uppercase text-[#1c1917]">
                         {getOrderStatusLabel(t, order.orderStatus)}
                       </p>
                     </div>
 
-                    <div className="status-panel">
+                    <div className="order-success-status-panel status-panel">
                       <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
                         {t("orders:success.payment")}
                       </p>
-                      <p className="mt-3 text-sm font-bold uppercase text-white">
+                      <p className="mt-3 text-sm font-bold uppercase text-[#1c1917]">
                         {getPaymentStatusLabel(t, order.paymentStatus)}
                       </p>
                     </div>
 
-                    <div className="status-panel">
+                    <div className="order-success-status-panel status-panel">
                       <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
                         {t("common:total")}
                       </p>
-                      <p className="mt-3 text-lg font-black text-white">
+                      <p className="mt-3 text-lg font-black text-[#1c1917]">
                         {formatMoney(order.total)}
                       </p>
                     </div>
@@ -259,7 +314,7 @@ const OrderSuccess = () => {
                         {t("orders:success.cardPending")}
                       </p>
 
-                      <p className="mt-3 text-sm leading-7 text-[#f5f0e8]/65">
+                      <p className="mt-3 text-sm leading-7 text-[#8b8075]">
                         {t("orders:success.cardPendingDescription")}
                       </p>
                     </div>
@@ -281,14 +336,14 @@ const OrderSuccess = () => {
                         return (
                           <div
                             key={`${bundle.slug}-${index}`}
-                            className="text-sm text-[#f5f0e8]/72"
+                            className="text-sm text-[#1c1917]"
                           >
                             <p>
                               {localizedBundle.title}: -
                               {formatMoney(bundle.discountAmount)}
                             </p>
                             {localizedBundle.description && (
-                              <p className="mt-1 text-xs leading-6 text-[#f5f0e8]/52">
+                              <p className="mt-1 text-xs leading-6 text-[#8b8075]">
                                 {localizedBundle.description}
                               </p>
                             )}
@@ -315,7 +370,7 @@ const OrderSuccess = () => {
                         return (
                           <div
                             key={`${offer.slug}-${index}`}
-                            className="text-sm text-[#f5f0e8]/72"
+                            className="text-sm text-[#1c1917]"
                           >
                             <p>
                               {localizedOffer.title}
@@ -326,7 +381,7 @@ const OrderSuccess = () => {
                                   : ""}
                             </p>
                             {localizedOffer.description && (
-                              <p className="mt-1 text-xs leading-6 text-[#f5f0e8]/52">
+                              <p className="mt-1 text-xs leading-6 text-[#8b8075]">
                                 {localizedOffer.description}
                               </p>
                             )}
@@ -343,7 +398,7 @@ const OrderSuccess = () => {
                       {t("common:discountCode")}
                     </p>
 
-                    <p className="mt-3 text-sm font-bold text-[#f5f0e8]/72">
+                    <p className="mt-3 text-sm font-bold text-[#1c1917]">
                       {order.discountCode.code}: -
                       {formatMoney(order.discountCode.discountAmount)}
                     </p>
@@ -369,11 +424,20 @@ const OrderSuccess = () => {
                       </Button>
                     </Link>
                   )}
+
+                  {showGuestSignup && (
+                    <Button
+                      variant="secondary"
+                      onClick={handleCreateAccount}
+                    >
+                      {t("auth:signup.orderSuccessCreateAccount")}
+                    </Button>
+                  )}
                 </div>
               </Card>
 
               {order && (
-                <Card className="border-[#c7a852]/30 bg-[#f5f0e8] p-6">
+                <Card className="order-success-summary-card border-[#c7a852]/30 bg-[#f5f0e8] p-6 text-[#1c1917]">
                   <SectionLabel>{t("orders:success.summary")}</SectionLabel>
 
                   <div className="space-y-4">
@@ -387,7 +451,7 @@ const OrderSuccess = () => {
                             item._id ||
                             `${item.product}-${item.color?.name}-${item.size?.label}`
                           }
-                          className="flex gap-3 border-b border-[#f5f0e8]/10 pb-4"
+                          className="flex gap-3 border-b border-[#8b8075]/25 pb-4"
                         >
                           <div className="h-20 w-16 shrink-0 overflow-hidden border border-[#8b8075]/30 bg-[#1c1917]">
                             {displayImage ? (
@@ -404,11 +468,11 @@ const OrderSuccess = () => {
                           </div>
 
                           <div className="min-w-0 flex-1">
-                            <p className="truncate font-serif text-base font-semibold text-[#f5f0e8]">
+                            <p className="truncate font-serif text-base font-semibold text-[#1c1917]">
                               {item.name}
                             </p>
 
-                            <p className="mt-1 text-xs text-white/40">
+                            <p className="mt-1 text-xs text-[#8b8075]">
                               {item.color?.name} / {item.size?.label} ×{" "}
                               {item.quantity}
                             </p>
@@ -423,57 +487,59 @@ const OrderSuccess = () => {
                   </div>
 
                   <div className="mt-5 space-y-3 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-white/45">
+                    <div className="flex justify-between text-[#1c1917]">
+                      <span className="text-[#8b8075]">
                         {t("common:subtotal")}
                       </span>
-                      <span>{formatMoney(order.subtotal)}</span>
+                      <span className="font-semibold text-[#1c1917]">
+                        {formatMoney(order.subtotal)}
+                      </span>
                     </div>
 
-                    <div className="flex justify-between">
-                      <span className="text-white/45">
+                    <div className="flex justify-between text-[#1c1917]">
+                      <span className="text-[#8b8075]">
                         {t("common:productSavings")}
                       </span>
-                      <span className="text-emerald-100">
+                      <span className="font-semibold text-[#1c1917]">
                         {formatMoney(order.productSavings)}
                       </span>
                     </div>
 
-                    <div className="flex justify-between">
-                      <span className="text-white/45">
+                    <div className="flex justify-between text-[#1c1917]">
+                      <span className="text-[#8b8075]">
                         {t("common:bundleDiscount")}
                       </span>
-                      <span className="text-emerald-100">
+                      <span className="font-semibold text-[#1c1917]">
                         -{formatMoney(order.bundleDiscountTotal)}
                       </span>
                     </div>
 
-                    <div className="flex justify-between">
-                      <span className="text-white/45">
+                    <div className="flex justify-between text-[#1c1917]">
+                      <span className="text-[#8b8075]">
                         {t("common:offerDiscount")}
                       </span>
-                      <span className="text-emerald-100">
+                      <span className="font-semibold text-[#1c1917]">
                         -{formatMoney(order.offerDiscountTotal)}
                       </span>
                     </div>
 
-                    <div className="flex justify-between">
-                      <span className="text-white/45">
+                    <div className="flex justify-between text-[#1c1917]">
+                      <span className="text-[#8b8075]">
                         {t("common:discountCode")}
                       </span>
-                      <span className="text-emerald-100">
+                      <span className="font-semibold text-[#1c1917]">
                         -{formatMoney(order.discountTotal)}
                       </span>
                     </div>
 
-                    <div className="flex justify-between">
-                      <span className="text-white/45">
+                    <div className="flex justify-between text-[#1c1917]">
+                      <span className="text-[#8b8075]">
                         {t("common:delivery")}
                       </span>
-                      <span>
+                      <span className="font-semibold text-[#1c1917]">
                         {formatMoney(order.deliveryFee)}
                         {order.deliverySnapshot?.freeDeliveryApplied && (
-                          <span className="ml-2 text-emerald-100">
+                          <span className="ml-2 text-[#1c1917]">
                             {t("common:free")}
                           </span>
                         )}
@@ -481,16 +547,16 @@ const OrderSuccess = () => {
                     </div>
 
                     {localizedDeliverySnapshot?.notes && (
-                      <p className="border border-[#f5f0e8]/10 bg-[#f5f0e8]/3 p-3 text-xs leading-6 text-[#f5f0e8]/45">
+                      <p className="border border-[#8b8075]/25 bg-[#1c1917]/[0.025] p-3 text-xs leading-6 text-[#8b8075]">
                         {localizedDeliverySnapshot.notes}
                       </p>
                     )}
 
                     {(localizedPaymentSnapshot?.label ||
                       localizedPaymentSnapshot?.instructions) && (
-                      <div className="border border-[#f5f0e8]/10 bg-[#f5f0e8]/3 p-3 text-xs leading-6 text-[#f5f0e8]/45">
+                      <div className="border border-[#8b8075]/25 bg-[#1c1917]/[0.025] p-3 text-xs leading-6 text-[#8b8075]">
                         {localizedPaymentSnapshot?.label && (
-                          <p className="font-bold text-[#f5f0e8]/70">
+                          <p className="font-bold text-[#1c1917]">
                             {localizedPaymentSnapshot.label}
                           </p>
                         )}
@@ -502,7 +568,7 @@ const OrderSuccess = () => {
                       </div>
                     )}
 
-                    <div className="flex justify-between border-t border-[#c7a852]/25 pt-4 font-serif text-xl font-semibold">
+                    <div className="flex justify-between border-t border-[#c7a852]/25 pt-4 font-serif text-xl font-semibold text-[#1c1917]">
                       <span>{t("common:total")}</span>
                       <span>{formatMoney(order.total)}</span>
                     </div>

@@ -1004,26 +1004,73 @@ html[dir="rtl"] .cart-drawer-panel--physical-right {
   box-shadow: 0 18px 48px rgba(28, 25, 23, 0.08);
 }
 
-.page-shell .davinto-input,
-.page-shell .davinto-select,
-.page-shell .davinto-textarea {
+:is(.page-shell, .davinto-public-portal)
+  :is(
+    .davinto-input,
+    .davinto-select,
+    .davinto-textarea,
+    .public-cream-control
+  ):not(.davinto-control--dark) {
   border-color: rgba(139, 128, 117, 0.45);
   border-radius: 0.5rem;
   background: var(--davinto-cream);
   color: var(--davinto-near-black);
+  caret-color: var(--davinto-near-black);
+  color-scheme: light;
 }
 
-.page-shell .davinto-input:focus,
-.page-shell .davinto-select:focus,
-.page-shell .davinto-textarea:focus {
+:is(.page-shell, .davinto-public-portal)
+  :is(
+    .davinto-input,
+    .davinto-select,
+    .davinto-textarea,
+    .public-cream-control
+  ):not(.davinto-control--dark)::placeholder {
+  color: var(--davinto-warm-grey);
+  opacity: 1;
+}
+
+:is(.page-shell, .davinto-public-portal)
+  :is(
+    .davinto-input,
+    .davinto-select,
+    .davinto-textarea,
+    .public-cream-control
+  ):not(.davinto-control--dark):focus {
   border-color: var(--davinto-gold);
   background: var(--davinto-cream);
   box-shadow: 0 0 0 2px rgba(199, 168, 82, 0.2);
 }
 
-.page-shell .davinto-input:disabled {
+:is(.page-shell, .davinto-public-portal)
+  :is(
+    .davinto-input,
+    .davinto-select,
+    .davinto-textarea,
+    .public-cream-control
+  ):not(.davinto-control--dark):is(:disabled, [readonly]) {
   background: rgba(139, 128, 117, 0.12);
-  color: var(--davinto-warm-grey);
+  color: var(--davinto-near-black);
+  -webkit-text-fill-color: var(--davinto-near-black);
+  opacity: 1;
+}
+
+:is(.page-shell, .davinto-public-portal)
+  :is(
+    .davinto-input,
+    .davinto-select,
+    .davinto-textarea,
+    .public-cream-control
+  ):not(.davinto-control--dark)::selection {
+  background: rgba(199, 168, 82, 0.42);
+  color: var(--davinto-near-black);
+}
+
+:is(.page-shell, .davinto-public-portal)
+  .davinto-select:not(.davinto-control--dark)
+  option {
+  background: var(--davinto-cream);
+  color: var(--davinto-near-black);
 }
 
 :is(.page-shell, .davinto-public-portal) .davinto-primary-action {
@@ -1986,6 +2033,53 @@ select:-webkit-autofill {
   -webkit-text-fill-color: var(--davinto-paper);
   box-shadow: 0 0 0 1000px var(--davinto-ink-soft) inset;
   transition: background-color 9999s ease-out;
+}
+
+/* Public light controls must override the legacy dark/admin autofill treatment. */
+:is(.page-shell, .davinto-public-portal)
+  :is(
+    .davinto-input,
+    .davinto-select,
+    .davinto-textarea,
+    .public-cream-control
+  ):not(.davinto-control--dark):-webkit-autofill,
+:is(.page-shell, .davinto-public-portal)
+  :is(
+    .davinto-input,
+    .davinto-select,
+    .davinto-textarea,
+    .public-cream-control
+  ):not(.davinto-control--dark):-webkit-autofill:hover,
+:is(.page-shell, .davinto-public-portal)
+  :is(
+    .davinto-input,
+    .davinto-select,
+    .davinto-textarea,
+    .public-cream-control
+  ):not(.davinto-control--dark):-webkit-autofill:focus {
+  border-color: var(--davinto-gold);
+  background-color: var(--davinto-cream);
+  color: var(--davinto-near-black);
+  caret-color: var(--davinto-near-black);
+  -webkit-text-fill-color: var(--davinto-near-black);
+  box-shadow:
+    0 0 0 1000px var(--davinto-cream) inset,
+    0 0 0 2px rgba(199, 168, 82, 0.2);
+}
+
+.page-shell .public-order-number-input::selection {
+  background: rgba(199, 168, 82, 0.42);
+  color: var(--davinto-near-black);
+}
+
+.page-shell .public-order-number-input:-webkit-autofill,
+.page-shell .public-order-number-input:-webkit-autofill:hover,
+.page-shell .public-order-number-input:-webkit-autofill:focus {
+  background-color: var(--davinto-cream);
+  color: var(--davinto-near-black);
+  caret-color: var(--davinto-near-black);
+  -webkit-text-fill-color: var(--davinto-near-black);
+  box-shadow: 0 0 0 1000px var(--davinto-cream) inset;
 }
 
 @media (prefers-reduced-motion: reduce) {

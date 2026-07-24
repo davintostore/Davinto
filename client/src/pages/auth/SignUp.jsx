@@ -10,6 +10,71 @@ import SectionLabel from "../../components/ui/SectionLabel";
 import useSeo from "../../hooks/useSeo";
 import { useCustomerAuth } from "../../context/customerAuthContext";
 
+const GUEST_SIGNUP_HANDOFF_KEY = "davinto_guest_signup_handoff";
+const GUEST_SIGNUP_HANDOFF_VERSION = 1;
+
+const normalizeHandoffText = (value, maxLength) => {
+  if (typeof value !== "string") return "";
+
+  return value.trim().slice(0, maxLength);
+};
+
+const sanitizeGuestSignupHandoff = (candidate) => {
+  if (
+    !candidate ||
+    typeof candidate !== "object" ||
+    candidate.version !== GUEST_SIGNUP_HANDOFF_VERSION
+  ) {
+    return null;
+  }
+
+  const name = normalizeHandoffText(candidate.name, 100);
+  const email = normalizeHandoffText(candidate.email, 254).toLowerCase();
+  const phone = normalizeHandoffText(candidate.phone, 32);
+  const preferredLocale =
+    candidate.preferredLocale === "ar" ? "ar" : "en";
+
+  if (!name || !/^\S+@\S+\.\S+$/.test(email)) return null;
+
+  return {
+    version: GUEST_SIGNUP_HANDOFF_VERSION,
+    name,
+    email,
+    phone,
+    preferredLocale,
+  };
+};
+
+const readGuestSignupHandoff = (location) => {
+  const navigationHandoff = sanitizeGuestSignupHandoff(
+    location.state?.guestSignupHandoff
+  );
+
+  if (navigationHandoff) return navigationHandoff;
+
+  const isOrderSuccessRefresh =
+    new URLSearchParams(location.search).get("source") === "order-success";
+
+  if (!isOrderSuccessRefresh) return null;
+
+  try {
+    const storedHandoff = sessionStorage.getItem(GUEST_SIGNUP_HANDOFF_KEY);
+    return storedHandoff
+      ? sanitizeGuestSignupHandoff(JSON.parse(storedHandoff))
+      : null;
+  } catch {
+    return null;
+  }
+};
+
+const clearGuestSignupHandoff = () => {
+  try {
+    sessionStorage.removeItem(GUEST_SIGNUP_HANDOFF_KEY);
+  } catch {
+    // The authenticated session is still valid if browser storage is blocked.
+  }
+};
+
 const getIntendedDestination = (location) => {
   const from = location.state?.from;
 
@@ -27,6 +92,11 @@ const SignUp = () => {
   const { signup, isCustomerAuthenticated, isCustomerLoading } =
     useCustomerAuth();
 
+  const [guestSignupHandoff] = useState(() =>
+    readGuestSignupHandoff(location)
+  );
+  const isOrderHandoff = Boolean(guestSignupHandoff);
+
   // SEO
   useSeo({
     title: t("signup.seoTitle"),
@@ -34,17 +104,21 @@ const SignUp = () => {
     robots: "noindex,nofollow",
   });
 
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
+  const [formData, setFormData] = useState(() => ({
+    name: guestSignupHandoff?.name || "",
+    email: guestSignupHandoff?.email || "",
+    phone: guestSignupHandoff?.phone || "",
+    preferredLocale: guestSignupHandoff?.preferredLocale || "",
     password: "",
     confirmPassword: "",
-  });
+  }));
   const [error, setError] = useState("");
+  const [emailAlreadyRegistered, setEmailAlreadyRegistered] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const destination = getIntendedDestination(location);
+  const destination = isOrderHandoff
+    ? "/account"
+    : getIntendedDestination(location);
 
   if (!isCustomerLoading && isCustomerAuthenticated) {
     return <Navigate to={destination} replace />;
@@ -59,6 +133,7 @@ const SignUp = () => {
     }));
 
     if (error) setError("");
+    if (emailAlreadyRegistered) setEmailAlreadyRegistered(false);
   };
 
   const validateForm = () => {
@@ -75,7 +150,7 @@ const SignUp = () => {
       return t("signup.passwordLength");
     }
 
-    if (formData.password !== formData.confirmPassword) {
+    if (!isOrderHandoff && formData.password !== formData.confirmPassword) {
       return t("signup.passwordMismatch");
     }
 
@@ -102,16 +177,28 @@ const SignUp = () => {
       payload.phone = formData.phone.trim();
     }
 
+    if (isOrderHandoff) {
+      payload.preferredLocale = formData.preferredLocale;
+    }
+
     try {
       setIsSubmitting(true);
       setError("");
+      setEmailAlreadyRegistered(false);
 
       await signup(payload);
+      clearGuestSignupHandoff();
       navigate(destination, { replace: true });
     } catch (err) {
       const isServerError = Number(err?.response?.status || 0) >= 500;
+      const isEmailConflict =
+        Number(err?.response?.status || 0) === 409 &&
+        /email/i.test(err?.response?.data?.message || err?.message || "");
+
+      setEmailAlreadyRegistered(isEmailConflict);
       setError(
-        (isServerError && t("signup.serverError")) ||
+        (isEmailConflict && t("signup.emailAlreadyRegistered")) ||
+          (isServerError && t("signup.serverError")) ||
           err?.friendlyMessage ||
           err?.message ||
           t("signup.error")
@@ -127,17 +214,31 @@ const SignUp = () => {
 
       <Container className="relative">
         <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-          <Card className="order-2 mx-auto w-full max-w-xl border-[#c7a852]/30 bg-[#f5f0e8] p-7 sm:p-10 lg:order-1">
-            <p className="font-serif text-4xl font-semibold">
+          <Card className="order-2 mx-auto w-full max-w-xl border-[#c7a852]/30 bg-[#f5f0e8] p-7 text-[#1c1917] sm:p-10 lg:order-1">
+            <p className="font-serif text-4xl font-semibold text-[#1c1917]">
               {t("signup.title")}
             </p>
-            <p className="mt-3 text-sm leading-7 text-[#f5f0e8]/48">
-              {t("signup.description")}
+            <p className="mt-3 text-sm leading-7 text-[#8b8075]">
+              {isOrderHandoff
+                ? t("signup.orderSuccessDescription")
+                : t("signup.description")}
             </p>
 
             {error && (
-              <div className="mt-6 border border-[#b8585d]/45 bg-[#882c30]/18 px-4 py-3 text-sm text-[#f5d7d8]">
-                {error}
+              <div
+                className="mt-6 border border-[#b8585d]/45 bg-[#882c30]/10 px-4 py-3 text-sm font-semibold text-[#882c30]"
+                role="alert"
+              >
+                <p>{error}</p>
+                {emailAlreadyRegistered && (
+                  <Link
+                    to="/signin"
+                    state={{ from: { pathname: "/account" } }}
+                    className="mt-2 inline-block font-black underline decoration-2 underline-offset-4 transition hover:text-[#1c1917]"
+                  >
+                    {t("signup.emailAlreadyRegisteredSignIn")}
+                  </Link>
+                )}
               </div>
             )}
 
@@ -149,6 +250,7 @@ const SignUp = () => {
                 onChange={updateField}
                 placeholder={t("signup.namePlaceholder")}
                 autoComplete="name"
+                readOnly={isOrderHandoff}
               />
 
               <Input
@@ -159,6 +261,7 @@ const SignUp = () => {
                 onChange={updateField}
                 placeholder="you@example.com"
                 autoComplete="email"
+                readOnly={isOrderHandoff}
               />
 
               <Input
@@ -169,9 +272,29 @@ const SignUp = () => {
                 onChange={updateField}
                 placeholder={t("signup.phonePlaceholder")}
                 autoComplete="tel"
+                readOnly={isOrderHandoff}
               />
 
-              <div className="grid gap-5 sm:grid-cols-2">
+              {isOrderHandoff && (
+                <Input
+                  label={t("signup.preferredLocale")}
+                  name="preferredLocale"
+                  value={t(
+                    `signup.${
+                      formData.preferredLocale === "ar"
+                        ? "localeArabic"
+                        : "localeEnglish"
+                    }`
+                  )}
+                  readOnly
+                />
+              )}
+
+              <div
+                className={
+                  isOrderHandoff ? "" : "grid gap-5 sm:grid-cols-2"
+                }
+              >
                 <Input
                   label={t("signup.password")}
                   name="password"
@@ -182,15 +305,17 @@ const SignUp = () => {
                   autoComplete="new-password"
                 />
 
-                <Input
-                  label={t("signup.confirmPassword")}
-                  name="confirmPassword"
-                  type="password"
-                  value={formData.confirmPassword}
-                  onChange={updateField}
-                  placeholder={t("signup.confirmPlaceholder")}
-                  autoComplete="new-password"
-                />
+                {!isOrderHandoff && (
+                  <Input
+                    label={t("signup.confirmPassword")}
+                    name="confirmPassword"
+                    type="password"
+                    value={formData.confirmPassword}
+                    onChange={updateField}
+                    placeholder={t("signup.confirmPlaceholder")}
+                    autoComplete="new-password"
+                  />
+                )}
               </div>
 
               <Button type="submit" className="w-full" disabled={isSubmitting}>
@@ -198,12 +323,12 @@ const SignUp = () => {
               </Button>
             </form>
 
-            <p className="mt-7 border-t border-[#f5f0e8]/10 pt-6 text-center text-sm text-[#f5f0e8]/48">
+            <p className="mt-7 border-t border-[#8b8075]/25 pt-6 text-center text-sm text-[#8b8075]">
               {t("signup.existing")}{" "}
               <Link
                 to="/signin"
                 state={{ from: location.state?.from }}
-                className="font-bold text-[#c7a852] transition hover:text-[#f5f0e8]"
+                className="font-bold text-[#882c30] transition hover:text-[#1c1917]"
               >
                 {t("signup.signin")}
               </Link>

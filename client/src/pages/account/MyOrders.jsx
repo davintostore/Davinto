@@ -64,10 +64,10 @@ const getOrderStatusStyle = (status) => {
   }
 
   if (status === "cancelled") {
-    return "border-[#b8585d]/45 bg-[#882c30]/18 text-[#f5d7d8]";
+    return "border-[#b8585d]/45 bg-[#882c30]/18 text-[color:#f5d7d8]";
   }
 
-  return "border-[#c7a852]/30 bg-[#c7a852]/9 text-[#f5f0e8]";
+  return "border-[#c7a852]/40 bg-[#c7a852]/10 text-[color:var(--davinto-cream)]";
 };
 
 const getPaymentStatusStyle = (status) => {
@@ -76,10 +76,10 @@ const getPaymentStatusStyle = (status) => {
   }
 
   if (["failed", "expired"].includes(status)) {
-    return "border-[#b8585d]/45 bg-[#882c30]/18 text-[#f5d7d8]";
+    return "border-[#b8585d]/45 bg-[#882c30]/18 text-[color:#f5d7d8]";
   }
 
-  return "border-[#f5f0e8]/14 bg-[#f5f0e8]/4 text-[#f5f0e8]/68";
+  return "border-[#d8d0c5]/25 bg-[#d8d0c5]/[0.06] text-[color:#d8d0c5]";
 };
 
 const requestWithCustomerRefresh = async (request, refreshSession) => {
@@ -117,7 +117,7 @@ const OrderDetail = ({ orderId }) => {
 
   if (isLoading) {
     return (
-      <div className="border-t border-[#f5f0e8]/10 px-5 py-8 text-sm text-[#f5f0e8]/48 sm:px-7">
+      <div className="my-orders-card__loading border-t border-[#d8d0c5]/20 px-5 py-8 text-sm text-[color:#d8d0c5] sm:px-7">
         {t("orders:my.loadingDetail")}
       </div>
     );
@@ -125,7 +125,7 @@ const OrderDetail = ({ orderId }) => {
 
   if (isError || !data?.order) {
     return (
-      <div className="border-t border-[#b8585d]/30 bg-[#882c30]/12 px-5 py-5 text-sm text-[#f5d7d8] sm:px-7">
+      <div className="my-orders-card__error border-t border-[#b8585d]/40 bg-[#882c30]/20 px-5 py-5 text-sm text-[color:#f5d7d8] sm:px-7">
         {error?.friendlyMessage ||
           error?.message ||
           t("orders:my.detailError")}
@@ -144,13 +144,13 @@ const OrderDetail = ({ orderId }) => {
   );
 
   return (
-    <div className="border-t border-[#c7a852]/22 bg-[#f5f0e8] px-5 py-7 sm:px-7">
+    <div className="my-orders-detail border-t border-[#c7a852]/30 bg-[#f5f0e8] px-5 py-7 text-[#1c1917] sm:px-7">
       <div className="grid gap-7 xl:grid-cols-[1fr_340px]">
         <div className="space-y-7">
           <div>
             <SectionLabel>{t("orders:my.pieces")}</SectionLabel>
 
-            <div className="divide-y divide-[#f5f0e8]/10 border-y border-[#f5f0e8]/10">
+            <div className="divide-y divide-[#8b8075]/25 border-y border-[#8b8075]/25">
               {order.items?.map((rawItem) => {
                 const item = getLocalizedOrderItem(rawItem, language);
                 const displayImage = getOrderItemImage(rawItem);
@@ -180,10 +180,10 @@ const OrderDetail = ({ orderId }) => {
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <p className="font-serif text-xl font-semibold">
+                      <p className="font-serif text-xl font-semibold text-[#1c1917]">
                         {item.name}
                       </p>
-                      <p className="mt-2 text-xs text-[#f5f0e8]/45">
+                      <p className="mt-2 text-xs text-[#8b8075]">
                         {item.color?.name || t("common:color")} /{" "}
                         {item.size?.label || t("common:size")} /{" "}
                         {t("common:qty", { count: item.quantity })}
@@ -206,11 +206,11 @@ const OrderDetail = ({ orderId }) => {
           </div>
 
           <div className="grid gap-5 md:grid-cols-2">
-            <div className="fashion-panel p-5">
+            <div className="my-orders-detail__delivery fashion-panel p-5 text-[#1c1917]">
               <p className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-[#c7a852]">
                 {t("orders:my.deliverySnapshot")}
               </p>
-              <div className="mt-4 space-y-2 text-sm leading-7 text-[#f5f0e8]/60">
+              <div className="mt-4 space-y-2 text-sm leading-7 text-[#1c1917]">
                 <p>{order.customerInfo?.fullName}</p>
                 <p>{order.customerInfo?.phone}</p>
                 {order.customerInfo?.secondPhone && (
@@ -227,16 +227,16 @@ const OrderDetail = ({ orderId }) => {
               </div>
             </div>
 
-            <div className="fashion-panel p-5">
+            <div className="my-orders-detail__payment fashion-panel p-5 text-[#1c1917]">
               <p className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-[#c7a852]">
                 {t("orders:my.payment")}
               </p>
-              <p className="mt-4 font-serif text-2xl font-semibold">
+              <p className="mt-4 font-serif text-2xl font-semibold text-[#1c1917]">
                 {localizedPaymentSnapshot?.label ||
                   getPaymentMethodLabel(t, order.paymentMethod)}
               </p>
               {localizedPaymentSnapshot?.instructions && (
-                <p className="mt-3 text-sm leading-7 text-[#f5f0e8]/55">
+                <p className="mt-3 text-sm leading-7 text-[#8b8075]">
                   {localizedPaymentSnapshot.instructions}
                 </p>
               )}
@@ -258,12 +258,12 @@ const OrderDetail = ({ orderId }) => {
                   return (
                     <div
                       key={`${bundle.slug}-${index}`}
-                      className="flex justify-between gap-4 border-l-2 border-[#c7a852] bg-[#c7a852]/7 p-4 text-sm"
+                      className="my-orders-detail__saving flex justify-between gap-4 border-l-2 border-[#c7a852] bg-[#c7a852]/[0.07] p-4 text-sm text-[#1c1917]"
                     >
                       <span>
                         {localizedBundle.title}
                         {localizedBundle.description && (
-                          <span className="mt-1 block text-xs leading-6 text-[#f5f0e8]/52">
+                          <span className="mt-1 block text-xs leading-6 text-[#8b8075]">
                             {localizedBundle.description}
                           </span>
                         )}
@@ -284,12 +284,12 @@ const OrderDetail = ({ orderId }) => {
                   return (
                     <div
                       key={`${offer.slug}-${index}`}
-                      className="flex justify-between gap-4 border-l-2 border-[#c7a852] bg-[#c7a852]/7 p-4 text-sm"
+                      className="my-orders-detail__saving flex justify-between gap-4 border-l-2 border-[#c7a852] bg-[#c7a852]/[0.07] p-4 text-sm text-[#1c1917]"
                     >
                       <span>
                         {localizedOffer.title}
                         {localizedOffer.description && (
-                          <span className="mt-1 block text-xs leading-6 text-[#f5f0e8]/52">
+                          <span className="mt-1 block text-xs leading-6 text-[#8b8075]">
                             {localizedOffer.description}
                           </span>
                         )}
@@ -304,7 +304,7 @@ const OrderDetail = ({ orderId }) => {
                 })}
 
                 {order.discountCode?.code && (
-                  <div className="flex justify-between gap-4 border-l-2 border-[#c7a852] bg-[#c7a852]/7 p-4 text-sm">
+                  <div className="my-orders-detail__saving flex justify-between gap-4 border-l-2 border-[#c7a852] bg-[#c7a852]/[0.07] p-4 text-sm text-[#1c1917]">
                     <span>
                       {t("orders:my.code", {
                         code: order.discountCode.code,
@@ -326,10 +326,10 @@ const OrderDetail = ({ orderId }) => {
                 {order.statusHistory.map((entry, index) => (
                   <div
                     key={`${entry.status}-${entry.changedAt}-${index}`}
-                    className="border-l-2 border-[#882c30] bg-[#f5f0e8]/3 p-4"
+                    className="my-orders-detail__timeline-entry border-l-2 border-[#882c30] bg-[#8b8075]/[0.06] p-4 text-[#1c1917]"
                   >
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                      <p className="text-sm font-black uppercase tracking-[0.12em]">
+                      <p className="text-sm font-black uppercase tracking-[0.12em] text-[#1c1917]">
                         {getOrderStatusLabel(t, entry.status)}
                       </p>
                       <p className="text-xs text-[#8b8075]">
@@ -337,7 +337,7 @@ const OrderDetail = ({ orderId }) => {
                       </p>
                     </div>
                     {entry.note && (
-                      <p className="mt-2 text-xs leading-6 text-[#f5f0e8]/48">
+                      <p className="mt-2 text-xs leading-6 text-[#8b8075]">
                         {entry.note}
                       </p>
                     )}
@@ -349,10 +349,10 @@ const OrderDetail = ({ orderId }) => {
         </div>
 
         <aside className="xl:sticky xl:top-32">
-          <Card className="border-[#c7a852]/30 bg-[#1c1917] p-6">
+          <div className="my-orders-total-card rounded-[0.35rem] border border-[#c7a852]/30 bg-[#1c1917] p-6 text-[color:var(--davinto-cream)]">
             <SectionLabel>{t("orders:my.orderTotal")}</SectionLabel>
 
-            <div className="divide-y divide-[#f5f0e8]/10 border-y border-[#f5f0e8]/10 text-sm">
+            <div className="divide-y divide-[#d8d0c5]/15 border-y border-[#d8d0c5]/15 text-sm">
               {[
                 [t("common:subtotal"), order.subtotal],
                 [
@@ -377,10 +377,12 @@ const OrderDetail = ({ orderId }) => {
                   key={label}
                   className="flex items-center justify-between gap-4 py-3.5"
                 >
-                  <span className="text-[#f5f0e8]/45">{label}</span>
+                  <span className="text-[color:#d8d0c5]">{label}</span>
                   <span
                     className={
-                      Number(value) < 0 ? "text-[#c7a852]" : "font-bold"
+                      Number(value) < 0
+                        ? "text-[#c7a852]"
+                        : "font-bold text-[color:var(--davinto-cream)]"
                     }
                   >
                     {Number(value) < 0
@@ -392,20 +394,20 @@ const OrderDetail = ({ orderId }) => {
             </div>
 
             <div className="flex items-end justify-between gap-4 pt-6">
-              <span className="text-[0.62rem] font-black uppercase tracking-[0.22em] text-[#8b8075]">
+              <span className="text-[0.62rem] font-black uppercase tracking-[0.22em] text-[color:#d8d0c5]">
                 {t("common:total")}
               </span>
-              <span className="font-serif text-3xl font-semibold">
+              <span className="font-serif text-3xl font-semibold text-[color:var(--davinto-cream)]">
                 {formatMoney(order.total)}
               </span>
             </div>
 
             {localizedDeliverySnapshot?.notes && (
-              <p className="mt-5 border-t border-[#f5f0e8]/10 pt-5 text-xs leading-6 text-[#f5f0e8]/45">
+              <p className="mt-5 border-t border-[#d8d0c5]/15 pt-5 text-xs leading-6 text-[color:#d8d0c5]">
                 {localizedDeliverySnapshot.notes}
               </p>
             )}
-          </Card>
+          </div>
         </aside>
       </div>
     </div>
@@ -475,12 +477,12 @@ const MyOrders = () => {
 
       <section className="fashion-section">
         <Container>
-          <div className="mb-8 grid gap-4 border-y border-[#f5f0e8]/12 py-6 md:grid-cols-[1fr_220px_220px] md:items-end">
+          <div className="mb-8 grid gap-4 border-y border-[#8b8075]/25 py-6 md:grid-cols-[1fr_220px_220px] md:items-end">
             <div>
               <p className="text-[0.62rem] font-black uppercase tracking-[0.25em] text-[#c7a852]">
                 {t("orders:my.linkedOrders", { count: data?.total || 0 })}
               </p>
-              <p className="mt-2 text-sm leading-7 text-[#f5f0e8]/48">
+              <p className="mt-2 text-sm leading-7 text-[#8b8075]">
                 {t("orders:my.guestNote")}
               </p>
             </div>
@@ -525,7 +527,7 @@ const MyOrders = () => {
           {isError && (
             <Card className="border-[#b8585d]/40 bg-[#882c30]/14">
               <SectionLabel>{t("orders:my.unable")}</SectionLabel>
-              <p className="text-sm text-[#f5d7d8]">
+              <p className="text-sm text-[#882c30]">
                 {error?.friendlyMessage ||
                   error?.message ||
                   t("orders:my.loadError")}
@@ -546,7 +548,7 @@ const MyOrders = () => {
               <h2 className="editorial-heading text-6xl sm:text-8xl">
                 {t("orders:my.emptyTitle")}
               </h2>
-              <p className="mx-auto mt-6 max-w-xl text-sm leading-8 text-[#f5f0e8]/50">
+              <p className="mx-auto mt-6 max-w-xl text-sm leading-8 text-[#8b8075]">
                 {t("orders:my.emptyDescription")}
               </p>
               <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
@@ -565,41 +567,81 @@ const MyOrders = () => {
                 return (
                   <article
                     key={order.id}
-                    className="overflow-hidden border border-[#8b8075]/30 bg-[#1c1917]"
+                    className="my-orders-card overflow-hidden border border-[#8b8075]/45 bg-[#1c1917] text-[color:var(--davinto-cream)]"
                   >
                     <div className="p-5 sm:p-7">
                       <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
                         <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-3">
-                            <h2 className="font-serif text-3xl font-semibold">
-                              {order.orderNumber}
-                            </h2>
-                            <span
-                              className={`border px-3 py-1 text-[0.58rem] font-black uppercase tracking-[0.16em] ${getOrderStatusStyle(
-                                order.orderStatus
-                              )}`}
-                            >
-                              {getOrderStatusLabel(t, order.orderStatus)}
-                            </span>
-                            <span
-                              className={`border px-3 py-1 text-[0.58rem] font-black uppercase tracking-[0.16em] ${getPaymentStatusStyle(
-                                order.paymentStatus
-                              )}`}
-                            >
-                              {getPaymentStatusLabel(t, order.paymentStatus)}
-                            </span>
+                          <div className="flex flex-wrap items-end gap-x-7 gap-y-5">
+                            <div className="my-orders-card__order-number">
+                              <p className="text-[0.58rem] font-black uppercase tracking-[0.18em] text-[#c7a852]">
+                                {t("orders:track.orderNumber")}
+                              </p>
+                              <h2
+                                className="mt-1 font-serif text-3xl font-semibold text-[color:var(--davinto-cream)]"
+                                dir="ltr"
+                              >
+                                {order.orderNumber}
+                              </h2>
+                            </div>
+
+                            <div className="my-orders-card__order-status">
+                              <p className="mb-2 text-[0.58rem] font-black uppercase tracking-[0.18em] text-[#c7a852]">
+                                {t("orders:my.orderStatus")}
+                              </p>
+                              <span
+                                className={`inline-flex border px-3 py-1 text-[0.58rem] font-black uppercase tracking-[0.16em] ${getOrderStatusStyle(
+                                  order.orderStatus
+                                )}`}
+                              >
+                                {getOrderStatusLabel(t, order.orderStatus)}
+                              </span>
+                            </div>
+
+                            <div className="my-orders-card__payment-status">
+                              <p className="mb-2 text-[0.58rem] font-black uppercase tracking-[0.18em] text-[#c7a852]">
+                                {t("orders:my.paymentStatus")}
+                              </p>
+                              <span
+                                className={`inline-flex border px-3 py-1 text-[0.58rem] font-black uppercase tracking-[0.16em] ${getPaymentStatusStyle(
+                                  order.paymentStatus
+                                )}`}
+                              >
+                                {getPaymentStatusLabel(t, order.paymentStatus)}
+                              </span>
+                            </div>
                           </div>
 
-                          <div className="mt-4 flex flex-wrap gap-x-7 gap-y-2 text-xs text-[#f5f0e8]/45">
-                            <span>{formatDate(order.createdAt, true)}</span>
-                            <span>
-                              {getPaymentMethodLabel(t, order.paymentMethod)}
-                            </span>
-                            <span>
-                              {t("common:itemCount", {
-                                count: order.itemCount,
-                              })}
-                            </span>
+                          <div className="my-orders-card__metadata mt-5 grid gap-4 border-y border-[#d8d0c5]/15 py-4 text-xs sm:grid-cols-3">
+                            <div>
+                              <p className="text-[0.56rem] font-black uppercase tracking-[0.16em] text-[#c7a852]">
+                                {t("common:created", { date: "" }).trim()}
+                              </p>
+                              <time
+                                className="mt-1 block text-[color:#d8d0c5]"
+                                dateTime={order.createdAt}
+                              >
+                                {formatDate(order.createdAt, true)}
+                              </time>
+                            </div>
+                            <div>
+                              <p className="text-[0.56rem] font-black uppercase tracking-[0.16em] text-[#c7a852]">
+                                {t("orders:track.paymentMethod")}
+                              </p>
+                              <p className="mt-1 text-[color:#d8d0c5]">
+                                {getPaymentMethodLabel(t, order.paymentMethod)}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-[0.56rem] font-black uppercase tracking-[0.16em] text-[#c7a852]">
+                                {t("common:items")}
+                              </p>
+                              <p className="mt-1 text-[color:#d8d0c5]">
+                                {t("common:itemCount", {
+                                  count: order.itemCount,
+                                })}
+                              </p>
+                            </div>
                           </div>
 
                           <div className="mt-6 flex flex-wrap gap-3">
@@ -613,7 +655,7 @@ const MyOrders = () => {
                               return (
                                 <div
                                   key={`${item.name}-${item.color?.name}-${item.size?.label}-${index}`}
-                                  className="flex w-full gap-3 border border-[#f5f0e8]/10 bg-[#1c1917]/45 p-3 sm:w-auto sm:min-w-64"
+                                  className="my-orders-card__item flex w-full gap-3 border border-[#d8d0c5]/15 bg-[#1c1917]/45 p-3 text-[color:var(--davinto-cream)] sm:w-auto sm:min-w-64"
                                 >
                                   <div className="h-16 w-12 shrink-0 overflow-hidden bg-[#1c1917]">
                                     {displayImage ? (
@@ -629,10 +671,10 @@ const MyOrders = () => {
                                     )}
                                   </div>
                                   <div className="min-w-0">
-                                    <p className="truncate text-sm font-bold">
+                                    <p className="truncate text-sm font-bold text-[color:var(--davinto-cream)]">
                                       {item.name}
                                     </p>
-                                    <p className="mt-1 text-xs text-[#8b8075]">
+                                    <p className="mt-1 text-xs text-[color:#d8d0c5]">
                                       {item.color?.name} / {item.size?.label} /{" "}
                                       {t("common:qty", {
                                         count: item.quantity,
@@ -646,9 +688,14 @@ const MyOrders = () => {
                         </div>
 
                         <div className="flex shrink-0 flex-col gap-4 xl:items-end">
-                          <p className="font-serif text-3xl font-semibold">
-                            {formatMoney(order.total)}
-                          </p>
+                          <div className="my-orders-card__total xl:text-end">
+                            <p className="text-[0.58rem] font-black uppercase tracking-[0.18em] text-[#c7a852]">
+                              {t("common:total")}
+                            </p>
+                            <p className="mt-1 font-serif text-3xl font-semibold text-[color:var(--davinto-cream)]">
+                              {formatMoney(order.total)}
+                            </p>
+                          </div>
                           {Number(order.totalDiscount || 0) > 0 && (
                             <p className="text-xs text-[#c7a852]">
                               {t("common:saved", {
@@ -658,8 +705,7 @@ const MyOrders = () => {
                           )}
                           <Button
                             type="button"
-                            variant="secondary"
-                            className="gap-2"
+                            className="my-orders-card__toggle gap-2"
                             onClick={() =>
                               setExpandedOrderId(isExpanded ? "" : order.id)
                             }
@@ -689,7 +735,7 @@ const MyOrders = () => {
           )}
 
           {!isLoading && !isError && pages > 1 && (
-            <div className="mt-8 flex items-center justify-between border-t border-[#f5f0e8]/12 pt-6">
+            <div className="mt-8 flex items-center justify-between border-t border-[#8b8075]/25 pt-6">
               <Button
                 variant="secondary"
                 disabled={page <= 1}
@@ -718,8 +764,8 @@ const MyOrders = () => {
             </div>
           )}
 
-          <div className="mt-10 flex flex-col items-start justify-between gap-5 border-t border-[#f5f0e8]/12 pt-7 sm:flex-row sm:items-center">
-            <p className="max-w-2xl text-sm leading-7 text-[#f5f0e8]/48">
+          <div className="mt-10 flex flex-col items-start justify-between gap-5 border-t border-[#8b8075]/25 pt-7 sm:flex-row sm:items-center">
+            <p className="max-w-2xl text-sm leading-7 text-[#8b8075]">
               {t("orders:my.lookingForGuest")}
             </p>
             <Link to="/track-order">

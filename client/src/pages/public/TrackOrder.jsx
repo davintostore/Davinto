@@ -29,6 +29,21 @@ import {
 import { hideBrokenImage } from "../../utils/imageFallback";
 import { getOrderItemImage } from "../../utils/resolveLocalImages";
 
+const ORDER_NUMBER_PREFIX = "DV-";
+
+const normalizeOrderDigits = (value = "") =>
+  String(value)
+    .replace(/[\u0660-\u0669]/g, (digit) =>
+      String(digit.charCodeAt(0) - 0x0660)
+    )
+    .replace(/[\u06f0-\u06f9]/g, (digit) =>
+      String(digit.charCodeAt(0) - 0x06f0)
+    )
+    .replace(/[^0-9]/g, "");
+
+const getFullOrderNumber = (orderDigits) =>
+  `${ORDER_NUMBER_PREFIX}${orderDigits}`;
+
 const TrackOrder = () => {
   const { t, i18n } = useTranslation(["orders", "common", "checkout"]);
   const language = i18n.resolvedLanguage === "ar" ? "ar" : "en";
@@ -45,8 +60,9 @@ const TrackOrder = () => {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [initialTrackingCredentials] = useState(() => ({
-    orderNumber:
-      location.state?.orderNumber || searchParams.get("orderNumber") || "",
+    orderDigits: normalizeOrderDigits(
+      location.state?.orderNumber || searchParams.get("orderNumber") || ""
+    ),
     email:
       location.state?.email ||
       searchParams.get("email") ||
@@ -55,7 +71,7 @@ const TrackOrder = () => {
   }));
 
   const [formData, setFormData] = useState({
-    orderNumber: initialTrackingCredentials.orderNumber,
+    orderDigits: initialTrackingCredentials.orderDigits,
     email: initialTrackingCredentials.email,
   });
 
@@ -70,7 +86,9 @@ const TrackOrder = () => {
       setTrackedOrder(response.order);
       setFormData((current) => ({
         ...current,
-        orderNumber: response.order?.orderNumber || current.orderNumber,
+        orderDigits:
+          normalizeOrderDigits(response.order?.orderNumber) ||
+          current.orderDigits,
         email: response.order?.customerInfo?.email || current.email,
       }));
       setError("");
@@ -84,10 +102,13 @@ const TrackOrder = () => {
   });
 
   useEffect(() => {
-    const { orderNumber, email } = initialTrackingCredentials;
+    const { orderDigits, email } = initialTrackingCredentials;
 
-    if (orderNumber && email) {
-      trackMutation.mutate({ orderNumber, email });
+    if (orderDigits && email) {
+      trackMutation.mutate({
+        orderNumber: getFullOrderNumber(orderDigits),
+        email,
+      });
     }
 
     if (searchParams.has("lookupToken")) {
@@ -98,27 +119,39 @@ const TrackOrder = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const updateField = (event) => {
-    const { name, value } = event.target;
-
+  const updateEmail = (event) => {
     setFormData((current) => ({
       ...current,
-      [name]: value,
+      email: event.target.value,
     }));
 
     if (error) setError("");
   };
 
+  const updateOrderDigits = (value) => {
+    setFormData((current) => ({
+      ...current,
+      orderDigits: normalizeOrderDigits(value),
+    }));
+
+    if (error) setError("");
+  };
+
+  const handleOrderNumberPaste = (event) => {
+    event.preventDefault();
+    updateOrderDigits(event.clipboardData.getData("text"));
+  };
+
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    if (!formData.orderNumber.trim() || !formData.email.trim()) {
+    if (!formData.orderDigits || !formData.email.trim()) {
       setError(t("orders:track.required"));
       return;
     }
 
     trackMutation.mutate({
-      orderNumber: formData.orderNumber.trim(),
+      orderNumber: getFullOrderNumber(formData.orderDigits),
       email: formData.email.trim(),
     });
   };
@@ -154,7 +187,7 @@ const TrackOrder = () => {
       <section className="fashion-section">
         <Container>
           <div className="grid gap-6 lg:grid-cols-[420px_1fr] lg:items-start">
-            <Card className="border-[#c7a852]/28 bg-[#f5f0e8] p-6 sm:p-8">
+            <Card className="public-order-surface border-[#c7a852]/28 bg-[#f5f0e8] p-6 text-[#1c1917] sm:p-8">
               <SectionLabel>{t("orders:track.label")}</SectionLabel>
 
               <h2 className="mb-7 font-serif text-3xl font-semibold">
@@ -162,39 +195,80 @@ const TrackOrder = () => {
               </h2>
 
               {error && (
-                <div className="mb-5 border border-[#b8585d]/45 bg-[#882c30]/18 px-4 py-3 text-sm text-[#f5d7d8]">
+                <div
+                  className="public-order-error mb-5 border border-[#882c30]/35 bg-[#882c30]/8 px-4 py-3 text-sm text-[#882c30]"
+                  role="alert"
+                >
                   {error}
                 </div>
               )}
 
               {showPaymentSuccess && (
-                <div className="mb-5 border border-[#c7a852]/35 bg-[#c7a852]/10 px-4 py-3 text-sm text-[#f5f0e8]">
+                <div className="public-order-notice mb-5 border border-[#c7a852]/35 bg-[#c7a852]/10 px-4 py-3 text-sm text-[#1c1917]">
                   {t("orders:track.paymentSuccess")}
                 </div>
               )}
 
               {showPaymentFailed && (
-                <div className="mb-5 border border-[#b8585d]/45 bg-[#882c30]/18 px-4 py-3 text-sm text-[#f5d7d8]">
+                <div
+                  className="public-order-error mb-5 border border-[#882c30]/35 bg-[#882c30]/8 px-4 py-3 text-sm text-[#882c30]"
+                  role="alert"
+                >
                   {t("orders:track.paymentFailed")}
                 </div>
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                <Input
-                  label={t("orders:track.orderNumber")}
-                  name="orderNumber"
-                  value={formData.orderNumber}
-                  onChange={updateField}
-                  placeholder="DV-1001"
-                />
+                <div className="public-order-number-field">
+                  <label
+                    htmlFor="track-order-number"
+                    className="mb-2.5 block text-[0.66rem] font-black uppercase tracking-[0.22em] text-[#c7a852]"
+                  >
+                    {t("orders:track.orderNumber")}
+                  </label>
+
+                  <div
+                    className="public-order-number-group flex rounded-[0.5rem] border border-[#8b8075]/45 bg-[#f5f0e8] text-[#1c1917] transition focus-within:border-[#c7a852] focus-within:ring-2 focus-within:ring-[#c7a852]/20"
+                    dir="ltr"
+                  >
+                    <span
+                      className="pointer-events-none flex select-none items-center border-r border-[#8b8075]/30 px-4 py-3.5 text-sm font-bold text-[#1c1917]"
+                      aria-hidden="true"
+                    >
+                      {ORDER_NUMBER_PREFIX}
+                    </span>
+
+                    <input
+                      id="track-order-number"
+                      name="orderDigits"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={formData.orderDigits}
+                      onChange={(event) => updateOrderDigits(event.target.value)}
+                      onPaste={handleOrderNumberPaste}
+                      placeholder="1015"
+                      aria-describedby="track-order-number-help"
+                      className="public-order-number-input min-w-0 flex-1 bg-transparent px-3 py-3.5 text-left text-sm text-[#1c1917] caret-[#1c1917] outline-none placeholder:text-[#8b8075]"
+                    />
+                  </div>
+
+                  <p
+                    id="track-order-number-help"
+                    className="public-order-secondary mt-2 text-xs leading-5 text-[#8b8075]"
+                  >
+                    {t("orders:track.orderNumberHelper")}
+                  </p>
+                </div>
 
                 <Input
                   label={t("orders:track.email")}
                   name="email"
                   type="email"
                   value={formData.email}
-                  onChange={updateField}
+                  onChange={updateEmail}
                   placeholder="you@example.com"
+                  className="public-order-input !text-[#1c1917] !caret-[#1c1917]"
                 />
 
                 <Button
@@ -211,7 +285,7 @@ const TrackOrder = () => {
             </Card>
 
             {!trackedOrder ? (
-              <Card className="py-16 text-center">
+              <Card className="public-order-surface py-16 text-center text-[#1c1917]">
                 <SectionLabel className="justify-center">
                   {t("orders:track.status")}
                 </SectionLabel>
@@ -220,57 +294,57 @@ const TrackOrder = () => {
                   {t("orders:track.waiting")}
                 </h2>
 
-                <p className="mx-auto mt-6 max-w-xl text-sm leading-7 text-[#f5f0e8]/52">
+                <p className="public-order-secondary mx-auto mt-6 max-w-xl text-sm leading-7 text-[#8b8075]">
                   {t("orders:track.waitingDescription")}
                 </p>
               </Card>
             ) : (
               <div className="space-y-5">
-                <Card>
+                <Card className="public-order-surface text-[#1c1917]">
                   <SectionLabel>{t("orders:track.found")}</SectionLabel>
 
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <h2 className="font-serif text-4xl font-semibold">
+                      <h2 className="public-order-primary font-serif text-4xl font-semibold text-[#1c1917]">
                         {trackedOrder.orderNumber}
                       </h2>
 
-                      <p className="mt-2 text-sm text-[#f5f0e8]/45">
+                      <p className="public-order-secondary mt-2 text-sm text-[#8b8075]">
                         {t("common:created", {
                           date: formatDate(trackedOrder.createdAt),
                         })}
                       </p>
                     </div>
 
-                    <p className="font-serif text-3xl font-semibold">
+                    <p className="public-order-primary font-serif text-3xl font-semibold text-[#1c1917]">
                       {formatMoney(trackedOrder.total)}
                     </p>
                   </div>
 
                   <div className="mt-6 grid gap-4 md:grid-cols-3">
-                    <div className="status-panel">
+                    <div className="public-order-status-panel status-panel border-[#8b8075]/30 bg-[#8b8075]/8">
                       <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
                         {t("orders:track.orderStatus")}
                       </p>
-                      <p className="mt-3 text-sm font-bold uppercase text-white">
+                      <p className="public-order-primary mt-3 text-sm font-bold uppercase text-[#1c1917]">
                         {getOrderStatusLabel(t, trackedOrder.orderStatus)}
                       </p>
                     </div>
 
-                    <div className="status-panel">
+                    <div className="public-order-status-panel status-panel border-[#8b8075]/30 bg-[#8b8075]/8">
                       <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
                         {t("orders:track.paymentStatus")}
                       </p>
-                      <p className="mt-3 text-sm font-bold uppercase text-white">
+                      <p className="public-order-primary mt-3 text-sm font-bold uppercase text-[#1c1917]">
                         {getPaymentStatusLabel(t, trackedOrder.paymentStatus)}
                       </p>
                     </div>
 
-                    <div className="status-panel">
+                    <div className="public-order-status-panel status-panel border-[#8b8075]/30 bg-[#8b8075]/8">
                       <p className="text-xs font-black uppercase tracking-[0.24em] text-[#c7a852]">
                         {t("orders:track.paymentMethod")}
                       </p>
-                      <p className="mt-3 text-sm font-bold uppercase text-white">
+                      <p className="public-order-primary mt-3 text-sm font-bold uppercase text-[#1c1917]">
                         {getPaymentMethodLabel(t, trackedOrder.paymentMethod)}
                       </p>
                     </div>
@@ -280,7 +354,7 @@ const TrackOrder = () => {
                 {(trackedOrder.appliedBundles?.length > 0 ||
                   trackedOrder.appliedOffers?.length > 0 ||
                   trackedOrder.discountCode?.code) && (
-                  <Card>
+                  <Card className="public-order-surface text-[#1c1917]">
                     <SectionLabel>
                       {t("orders:track.appliedSavings")}
                     </SectionLabel>
@@ -295,26 +369,26 @@ const TrackOrder = () => {
                         return (
                           <div
                             key={`${bundle.slug}-${index}`}
-                            className="border-l-2 border-[#c7a852] bg-[#c7a852]/7 p-4"
+                            className="public-order-savings-panel border-s-2 border-[#c7a852] bg-[#c7a852]/7 p-4 text-[#1c1917]"
                           >
                             <div className="flex justify-between gap-4">
                               <div>
-                                <p className="text-sm font-black uppercase text-white">
+                                <p className="public-order-primary text-sm font-black uppercase text-[#1c1917]">
                                   {localizedBundle.title}
                                 </p>
-                                <p className="mt-1 text-xs text-[#f5f0e8]/62">
+                                <p className="public-order-secondary mt-1 text-xs text-[#8b8075]">
                                   {t("orders:track.bundleApplication", {
                                     count: bundle.applications,
                                   })}
                                 </p>
                                 {localizedBundle.description && (
-                                  <p className="mt-2 text-xs leading-6 text-[#f5f0e8]/52">
+                                  <p className="public-order-secondary mt-2 text-xs leading-6 text-[#8b8075]">
                                     {localizedBundle.description}
                                   </p>
                                 )}
                               </div>
 
-                              <p className="text-sm font-black text-emerald-100">
+                              <p className="public-order-savings-value text-sm font-black text-[#1c1917]">
                                 -{formatMoney(bundle.discountAmount)}
                               </p>
                             </div>
@@ -331,26 +405,26 @@ const TrackOrder = () => {
                         return (
                           <div
                             key={`${offer.slug}-${index}`}
-                            className="border-l-2 border-[#c7a852] bg-[#c7a852]/7 p-4"
+                            className="public-order-savings-panel border-s-2 border-[#c7a852] bg-[#c7a852]/7 p-4 text-[#1c1917]"
                           >
                             <div className="flex justify-between gap-4">
                               <div>
-                                <p className="text-sm font-black uppercase text-white">
+                                <p className="public-order-primary text-sm font-black uppercase text-[#1c1917]">
                                   {localizedOffer.title}
                                 </p>
-                                <p className="mt-1 text-xs text-[#f5f0e8]/62">
+                                <p className="public-order-secondary mt-1 text-xs text-[#8b8075]">
                                   {offer.freeDeliveryApplied
                                     ? t("orders:track.offerFree")
                                     : t("orders:track.offer")}
                                 </p>
                                 {localizedOffer.description && (
-                                  <p className="mt-2 text-xs leading-6 text-[#f5f0e8]/52">
+                                  <p className="public-order-secondary mt-2 text-xs leading-6 text-[#8b8075]">
                                     {localizedOffer.description}
                                   </p>
                                 )}
                               </div>
 
-                              <p className="text-sm font-black text-emerald-100">
+                              <p className="public-order-savings-value text-sm font-black text-[#1c1917]">
                                 {offer.discountAmount > 0
                                   ? `-${formatMoney(offer.discountAmount)}`
                                   : t("checkout:freeDelivery")}
@@ -361,18 +435,18 @@ const TrackOrder = () => {
                       })}
 
                       {trackedOrder.discountCode?.code && (
-                        <div className="border-l-2 border-[#c7a852] bg-[#c7a852]/7 p-4">
+                        <div className="public-order-savings-panel border-s-2 border-[#c7a852] bg-[#c7a852]/7 p-4 text-[#1c1917]">
                           <div className="flex justify-between gap-4">
                             <div>
-                              <p className="text-sm font-black uppercase text-white">
+                              <p className="public-order-primary text-sm font-black uppercase text-[#1c1917]">
                                 {trackedOrder.discountCode.code}
                               </p>
-                              <p className="mt-1 text-xs text-[#f5f0e8]/62">
+                              <p className="public-order-secondary mt-1 text-xs text-[#8b8075]">
                                 {t("common:discountCode")}
                               </p>
                             </div>
 
-                            <p className="text-sm font-black text-emerald-100">
+                            <p className="public-order-savings-value text-sm font-black text-[#1c1917]">
                               -
                               {formatMoney(
                                 trackedOrder.discountCode.discountAmount
@@ -385,71 +459,73 @@ const TrackOrder = () => {
                   </Card>
                 )}
 
-                <Card>
+                <Card className="public-order-surface text-[#1c1917]">
                   <SectionLabel>{t("orders:track.totals")}</SectionLabel>
 
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-white/45">
+                      <span className="public-order-secondary text-[#8b8075]">
                         {t("common:subtotal")}
                       </span>
-                      <span>{formatMoney(trackedOrder.subtotal)}</span>
+                      <span className="public-order-primary text-[#1c1917]">
+                        {formatMoney(trackedOrder.subtotal)}
+                      </span>
                     </div>
 
                     <div className="flex justify-between">
-                      <span className="text-white/45">
+                      <span className="public-order-secondary text-[#8b8075]">
                         {t("common:productSavings")}
                       </span>
-                      <span className="text-emerald-100">
+                      <span className="public-order-savings-value text-[#882c30]">
                         {formatMoney(trackedOrder.productSavings)}
                       </span>
                     </div>
 
                     <div className="flex justify-between">
-                      <span className="text-white/45">
+                      <span className="public-order-secondary text-[#8b8075]">
                         {t("common:bundleDiscount")}
                       </span>
-                      <span className="text-emerald-100">
+                      <span className="public-order-savings-value text-[#882c30]">
                         -{formatMoney(trackedOrder.bundleDiscountTotal)}
                       </span>
                     </div>
 
                     <div className="flex justify-between">
-                      <span className="text-white/45">
+                      <span className="public-order-secondary text-[#8b8075]">
                         {t("common:offerDiscount")}
                       </span>
-                      <span className="text-emerald-100">
+                      <span className="public-order-savings-value text-[#882c30]">
                         -{formatMoney(trackedOrder.offerDiscountTotal)}
                       </span>
                     </div>
 
                     <div className="flex justify-between">
-                      <span className="text-white/45">
+                      <span className="public-order-secondary text-[#8b8075]">
                         {t("common:discountCode")}
                       </span>
-                      <span className="text-emerald-100">
+                      <span className="public-order-savings-value text-[#882c30]">
                         -{formatMoney(trackedOrder.discountTotal)}
                       </span>
                     </div>
 
                     <div className="flex justify-between">
-                      <span className="text-white/45">
+                      <span className="public-order-secondary text-[#8b8075]">
                         {t("common:totalDiscount")}
                       </span>
-                      <span className="text-emerald-100">
+                      <span className="public-order-savings-value text-[#882c30]">
                         -{formatMoney(trackedOrder.totalDiscount)}
                       </span>
                     </div>
 
                     <div className="flex justify-between">
-                      <span className="text-white/45">
+                      <span className="public-order-secondary text-[#8b8075]">
                         {t("common:delivery")}
                       </span>
-                      <span>
+                      <span className="public-order-primary text-[#1c1917]">
                         {formatMoney(trackedOrder.deliveryFee)}
                         {trackedOrder.deliverySnapshot
                           ?.freeDeliveryApplied && (
-                          <span className="ml-2 text-emerald-100">
+                          <span className="public-order-savings-value ms-2 text-[#882c30]">
                             {t("common:free")}
                           </span>
                         )}
@@ -457,16 +533,16 @@ const TrackOrder = () => {
                     </div>
 
                     {localizedDeliverySnapshot?.notes && (
-                      <p className="border border-[#f5f0e8]/10 bg-[#f5f0e8]/3 p-3 text-xs leading-6 text-[#f5f0e8]/45">
+                      <p className="public-order-secondary border border-[#8b8075]/25 bg-[#8b8075]/8 p-3 text-xs leading-6 text-[#8b8075]">
                         {localizedDeliverySnapshot.notes}
                       </p>
                     )}
 
                     {(localizedPaymentSnapshot?.label ||
                       localizedPaymentSnapshot?.instructions) && (
-                      <div className="border border-[#f5f0e8]/10 bg-[#f5f0e8]/3 p-3 text-xs leading-6 text-[#f5f0e8]/45">
+                      <div className="public-order-secondary border border-[#8b8075]/25 bg-[#8b8075]/8 p-3 text-xs leading-6 text-[#8b8075]">
                         {localizedPaymentSnapshot?.label && (
-                          <p className="font-bold text-[#f5f0e8]/70">
+                          <p className="public-order-primary font-bold text-[#1c1917]">
                             {localizedPaymentSnapshot.label}
                           </p>
                         )}
@@ -478,14 +554,14 @@ const TrackOrder = () => {
                       </div>
                     )}
 
-                    <div className="flex justify-between border-t border-[#c7a852]/25 pt-4 font-serif text-xl font-semibold">
+                    <div className="public-order-total flex justify-between border-t border-[#c7a852]/25 pt-4 font-serif text-xl font-semibold text-[#1c1917]">
                       <span>{t("common:total")}</span>
                       <span>{formatMoney(trackedOrder.total)}</span>
                     </div>
                   </div>
                 </Card>
 
-                <Card>
+                <Card className="public-order-surface text-[#1c1917]">
                   <SectionLabel>{t("common:items")}</SectionLabel>
 
                   <div className="space-y-4">
@@ -499,7 +575,7 @@ const TrackOrder = () => {
                             item._id ||
                             `${item.name}-${item.color?.name}-${item.size?.label}`
                           }
-                          className="flex gap-3 border-b border-[#f5f0e8]/10 pb-4 last:border-b-0 last:pb-0"
+                          className="public-order-item flex gap-3 border-b border-[#8b8075]/25 pb-4 last:border-b-0 last:pb-0"
                         >
                           <div className="h-20 w-16 shrink-0 overflow-hidden border border-[#8b8075]/30 bg-[#1c1917]">
                             {displayImage ? (
@@ -516,16 +592,16 @@ const TrackOrder = () => {
                           </div>
 
                           <div className="min-w-0 flex-1">
-                            <p className="truncate font-serif text-base font-semibold text-[#f5f0e8]">
+                            <p className="public-order-primary truncate font-serif text-base font-semibold text-[#1c1917]">
                               {item.name}
                             </p>
 
-                            <p className="mt-1 text-xs text-white/40">
+                            <p className="public-order-secondary mt-1 text-xs text-[#8b8075]">
                               {item.color?.name} / {item.size?.label} ×{" "}
                               {item.quantity}
                             </p>
 
-                            <p className="mt-2 text-sm font-bold text-[#c7a852]">
+                            <p className="public-order-price mt-2 text-sm font-bold text-[#1c1917]">
                               {formatMoney(item.lineSubtotal)}
                             </p>
                           </div>
@@ -536,26 +612,26 @@ const TrackOrder = () => {
                 </Card>
 
                 {trackedOrder.statusHistory?.length > 0 && (
-                  <Card>
+                  <Card className="public-order-surface text-[#1c1917]">
                     <SectionLabel>{t("orders:track.timeline")}</SectionLabel>
 
                     <div className="space-y-3">
                       {trackedOrder.statusHistory.map((entry, index) => (
                         <div
                           key={`${entry.status}-${index}`}
-                          className="border-l-2 border-[#882c30] bg-[#f5f0e8]/3 p-4"
+                          className="public-order-timeline-entry border-s-2 border-[#882c30] bg-[#8b8075]/8 p-4"
                         >
-                          <p className="text-sm font-black uppercase text-white">
+                          <p className="public-order-primary text-sm font-black uppercase text-[#1c1917]">
                             {getOrderStatusLabel(t, entry.status)}
                           </p>
 
                           {entry.note && (
-                            <p className="mt-2 text-xs leading-6 text-white/45">
+                            <p className="public-order-secondary mt-2 text-xs leading-6 text-[#8b8075]">
                               {entry.note}
                             </p>
                           )}
 
-                          <p className="mt-2 text-xs text-white/30">
+                          <p className="public-order-secondary mt-2 text-xs text-[#8b8075]">
                             {formatDate(entry.changedAt)}
                           </p>
                         </div>
